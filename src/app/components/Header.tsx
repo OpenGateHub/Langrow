@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 const Header = () => {
   return (
@@ -7,8 +8,24 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="text-xl font-bold font-archivo text-primary">
-              Logo
+            <Link href="/" className="flex items-center gap-1">
+              <div className="w-5 h-5 relative flex items-start translate-y-[-2px]">
+                <Image
+                  src="/logo-primary.png"
+                  alt="Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              <Image
+                src="/logo-text-primary.png"
+                alt="Logo Text"
+                width={140}
+                height={28}
+                className="h-7 w-auto"
+                priority
+              />
             </Link>
           </div>
 
@@ -20,7 +37,6 @@ const Header = () => {
             <button className="text-gray-600 hover:text-primary px-3 py-2 text-sm font-medium font-archivo">
               Sobre Nosotros
             </button>
-        
           </div>
 
           {/* Sign Up Button */}
