@@ -11,16 +11,16 @@ export default function Home() {
           {/* Hero Content */}
           <div>
             {/* Hero Title */}
-            <h1 className="font-poppins text-[64px] font-bold leading-[1.1] w-[700px]">
+            <h1 className="font-poppins text-[64px] font-bold leading-[1.1] w-[700px] opacity-0 animate-fade-in">
               <span className="text-orange">Tus objetivos son</span><br />
               <span className="text-white">nuestra prioridad</span>
             </h1>
             {/* Subtitle */}
-            <p className="font-poppins text-[24px] text-primary mt-6 leading-tight w-[700px]">
+            <p className="font-poppins text-[24px] text-primary mt-6 leading-tight w-[700px] opacity-0 animate-fade-in delay-200">
               Alcanza tus metas profesionales con nuestras clases online 100% personalizadas.
             </p>
             {/* CTA Button */}
-            <button className="mt-8 bg-orange hover:bg-orange/90 text-white font-poppins font-black px-8 py-4 rounded-[20px]">
+            <button className="mt-8 bg-orange hover:bg-orange/90 text-white font-poppins font-black px-8 py-4 rounded-[20px] opacity-0 animate-fade-in delay-400">
               <span className="block text-lg leading-tight">RESERVA TU</span>
               <span className="block text-lg leading-tight">CLASE AHORA</span>
             </button>
@@ -38,7 +38,7 @@ export default function Home() {
           />
         </div>
         {/* Persona image at bottom right */}
-        <div className="absolute bottom-0 right-0 w-[70%]">
+        <div className="absolute bottom-0 right-0 w-[70%] opacity-0 animate-slide-in">
           <Image
             src="/persona.png"
             alt="Persona"
