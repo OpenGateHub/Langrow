@@ -11,6 +11,10 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        primary: "rgb(var(--color-primary) / <alpha-value>)",
+        "primary-hover": "rgb(var(--color-primary-hover) / <alpha-value>)",
+        secondary: "rgb(var(--color-secondary) / <alpha-value>)",
+        orange: "rgb(var(--color-orange) / <alpha-value>)",
       },
     },
   },
