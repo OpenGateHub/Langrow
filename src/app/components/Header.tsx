@@ -9,7 +9,7 @@ const Header = () => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link href="/" className="flex items-center gap-1">
-              <div className="w-5 h-5 relative flex items-start translate-y-[-2px]">
+              <div className="w-5 h-5 relative flex items-start translate-y-[1px]">
                 <Image
                   src="/logo-primary.png"
                   alt="Logo"
@@ -18,14 +18,16 @@ const Header = () => {
                   priority
                 />
               </div>
-              <Image
-                src="/logo-text-primary.png"
-                alt="Logo Text"
-                width={140}
-                height={28}
-                className="h-7 w-auto"
-                priority
-              />
+              <div className="translate-y-[3px]">
+                <Image
+                  src="/logo-text-primary.png"
+                  alt="Logo Text"
+                  width={140}
+                  height={28}
+                  className="h-7 w-auto"
+                  priority
+                />
+              </div>
             </Link>
           </div>
 
