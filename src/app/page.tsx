@@ -1,4 +1,5 @@
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 import Image from 'next/image'
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 
@@ -184,6 +185,8 @@ export default function Home() {
           </AnimateOnScroll>
         </div>
       </section>
+
+      <Footer />
     </main>
   );
 }
