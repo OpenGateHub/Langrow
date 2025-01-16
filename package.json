@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@calcom/embed-react": "^1.5.2",
     "mercadopago": "^2.2.0",
     "next": "15.1.2",
     "react": "^19.0.0",

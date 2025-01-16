@@ -22,10 +22,10 @@ export default function Home() {
               Alcanza tus metas profesionales con nuestras clases online 100% personalizadas.
             </p>
             {/* CTA Button */}
-            <button className="mt-8 bg-orange hover:bg-orange/90 text-white font-poppins font-black px-6 md:px-8 py-3 md:py-4 rounded-[20px] opacity-0 animate-fade-in delay-400">
+            <a href="/booking" className="inline-block mt-8 bg-orange hover:bg-orange/90 text-white font-poppins font-black px-6 md:px-8 py-3 md:py-4 rounded-[20px] opacity-0 animate-fade-in delay-400">
               <span className="block text-base md:text-lg leading-tight">RESERVA TU</span>
               <span className="block text-base md:text-lg leading-tight">CLASE AHORA</span>
-            </button>
+            </a>
           </div>
         </div>
         {/* Centered logo at bottom */}
@@ -73,9 +73,9 @@ export default function Home() {
 
           <AnimateOnScroll delay={200}>
             <div className="flex justify-center mt-6 md:mt-8">
-              <button className="border border-white text-white font-poppins font-bold px-4 md:px-6 py-2 rounded-full bg-transparent hover:bg-white/10 transition-colors text-sm">
+              <a href="/booking" className="border border-white text-white font-poppins font-bold px-4 md:px-6 py-2 rounded-full bg-transparent hover:bg-white/10 transition-colors text-sm">
                 RESERVAR
-              </button>
+              </a>
             </div>
           </AnimateOnScroll>
 
