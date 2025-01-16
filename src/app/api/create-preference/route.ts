@@ -3,7 +3,8 @@ import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { PaymentItem } from '@/types/payment';
 
 const client = new MercadoPagoConfig({ 
-  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN! 
+  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
+  
 });
 
 export async function POST(request: Request) {
