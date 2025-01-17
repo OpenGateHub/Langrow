@@ -9,16 +9,16 @@ export default function Home() {
       <Header />
       {/* Hero Section */}
       <section className="bg-secondary min-h-[calc(100vh-4rem)] rounded-b-[120px] relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 relative z-50">
           {/* Hero Content */}
           <div>
             {/* Hero Title */}
-            <h1 className="font-poppins text-[40px] md:text-[64px] font-bold leading-[1.1] w-full md:w-[700px] opacity-0 animate-fade-in">
-              <span className="text-orange">Tus objetivos son</span><br />
+            <h1 className="font-poppins text-[40px] md:text-[64px] font-bold leading-[1.1] w-full md:w-[700px] opacity-0 animate-fade-in z-500">
+              <span className="text-orange z-5">Tus objetivos son</span><br />
               <span className="text-white">nuestra prioridad</span>
             </h1>
             {/* Subtitle */}
-            <p className="font-poppins text-[18px] md:text-[24px] text-primary mt-6 leading-tight w-full md:w-[700px] opacity-0 animate-fade-in delay-200">
+            <p className="font-poppins text-[18px] md:text-[24px] text-white mt-6 leading-tight w-full md:w-[700px] opacity-0 animate-fade-in delay-200">
               Alcanza tus metas profesionales con nuestras clases online 100% personalizadas.
             </p>
             {/* CTA Button */}
@@ -40,7 +40,7 @@ export default function Home() {
           />
         </div>
         {/* Persona image at bottom right */}
-        <div className="absolute bottom-0 right-0 w-[90%] md:w-[70%] opacity-0 animate-slide-in">
+        <div className="absolute bottom-0 right-0 w-[90%] md:w-[70%] opacity-0 animate-slide-in z-0">
           <Image
             src="/persona.png"
             alt="Persona"
