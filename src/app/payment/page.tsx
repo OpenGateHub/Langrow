@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
@@ -10,7 +10,7 @@ interface PaymentPreference {
   init_point: string;
 }
 
-export default function PaymentPage() {
+function PaymentPageComponent() {
   // const router = useRouter();
   const searchParams = useSearchParams();
   const bookingId = searchParams?.get("bookingId") || "";
@@ -140,5 +140,13 @@ export default function PaymentPage() {
       </div>
       <Footer />
     </main>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PaymentPageComponent />
+    </Suspense>
   );
 }
