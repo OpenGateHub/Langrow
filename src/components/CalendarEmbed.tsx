@@ -17,14 +17,13 @@ export default function CalendarEmbed({ calLink, config = {} }: CalendarEmbedPro
   useEffect(() => {
     (async function () {
       const cal = await getCalApi();
-      // @ts-expect-error - Cal.com's types are not fully compatible
       cal("on", {
         action: "bookingSuccessful",
-        callback: (e: CustomEvent) => {
+        callback: (e: CustomEvent<unknown>) => {
           console.log("Booking event:", e); // For debugging
           
           // Safely access the booking data
-          const detail = e.detail as any;
+          const detail = e.detail as Record<string, any>;
           const booking = detail?.data?.booking;
           const eventType = detail?.data?.eventType;
           

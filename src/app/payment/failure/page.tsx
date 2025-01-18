@@ -9,8 +9,8 @@ export default function PaymentFailure() {
   const router = useRouter();
   
   useEffect(() => {
-    const payment_id = searchParams.get('payment_id');
-    const status = searchParams.get('status');
+    const payment_id = searchParams?.get('payment_id');
+    const status = searchParams?.get('status');
     
     if (!payment_id || !status) {
       router.push('/');

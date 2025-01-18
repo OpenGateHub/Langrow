@@ -11,7 +11,7 @@ interface PaymentPreference {
 }
 
 export default function PaymentPage() {
-  const router = useRouter();
+  // const router = useRouter();
   const searchParams = useSearchParams();
   const bookingId = searchParams?.get("bookingId") || "";
   const eventTypeId = searchParams?.get("eventTypeId") || "";
