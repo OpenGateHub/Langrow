@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function PaymentSuccess() {
+function PaymentSuccessComponent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -34,3 +34,11 @@ export default function PaymentSuccess() {
     </div>
   );
 } 
+
+export default function PaymentSuccess() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PaymentSuccessComponent />
+    </Suspense>
+  );
+}
