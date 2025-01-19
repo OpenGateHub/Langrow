@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Archivo, Poppins } from "next/font/google";
 import "./globals.css";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -28,7 +31,9 @@ export default function RootLayout({
       <body
         className={`${archivo.variable} ${poppins.variable} antialiased bg-primary`}
       >
+          <Header />
         {children}
+        <Footer />
       </body>
     </html>
   );

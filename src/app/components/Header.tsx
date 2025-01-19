@@ -33,17 +33,21 @@ const Header = () => {
 
           {/* Navigation Buttons */}
           <div className="hidden md:flex space-x-8">
-            <button className="text-gray-600 hover:text-primary px-3 py-2 text-sm font-medium font-archivo">
-              Contacto
-            </button>
-            <button className="text-gray-600 hover:text-primary px-3 py-2 text-sm font-medium font-archivo">
-              Sobre Nosotros
-            </button>
+          <Link href="/contact-us">
+              <button className="text-gray-600 hover:text-primary px-3 py-2 text-sm font-medium font-archivo">
+                Contacto
+              </button>
+            </Link>
+            <Link href="/about-us">
+              <button className="text-gray-600 hover:text-primary px-3 py-2 text-sm font-medium font-archivo">
+                Sobre Nosotros
+              </button>
+            </Link>
           </div>
 
           {/* Sign Up Button */}
           <div>
-            <button className="bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded-full text-sm font-semibold font-archivo">
+            <button className="bg-primary hover:bg-primary-hover transition duration-200 text-white px-6 py-2 rounded-full text-sm font-semibold font-archivo">
               Sign Up
             </button>
           </div>

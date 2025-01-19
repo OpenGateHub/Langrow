@@ -1,12 +1,9 @@
-import Header from "./components/Header";
-import Footer from "./components/Footer";
 import Image from 'next/image'
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 
 export default function Home() {
   return (
     <main>
-      <Header />
       {/* Hero Section */}
       <section className="bg-secondary min-h-[calc(100vh-4rem)] rounded-b-[120px] relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 relative z-50">
@@ -185,8 +182,6 @@ export default function Home() {
           </AnimateOnScroll>
         </div>
       </section>
-
-      <Footer />
     </main>
   );
 }
