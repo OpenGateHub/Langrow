@@ -39,6 +39,7 @@ export default function AdminRegister() {
     const password = formData.get("password") as string;
     const firstName = formData.get("firstName") as string;
     const lastName = formData.get("lastName") as string;
+    const inviteCode = formData.get("inviteCode") as string;
 
     if (!isLoaded) {
       setLoading(false);
@@ -46,25 +47,33 @@ export default function AdminRegister() {
     }
 
     try {
-      // Crear usuario con metadata para administrador
-      await signUp.create({
-        emailAddress: email,
-        password,
-        firstName,
-        lastName,
-        unsafeMetadata: {
-          role: "org:admin", // Asignar rol aquí
-        },
+      // Validar el código de invitación en el backend
+      const response = await fetch("/api/validate-captcha-and-register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          firstName,
+          lastName,
+          unsafeMetadata: {
+            role: "org:admin", // Asignar rol aquí
+          },
+          inviteCode,
+          captcha: captchaValue,
+        }),
       });
 
-      // Preparar la verificación del correo
-      await signUp.prepareEmailAddressVerification();
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Error en el registro");
+      }
 
       alert("Registro exitoso. Por favor, verifica tu correo.");
       router.push("/admin/login");
     } catch (err) {
       console.error("Error durante el registro del administrador:", err);
-      setErrorMessage("Hubo un error. Intenta nuevamente.");
+      setErrorMessage((err as Error).message || "Hubo un error. Intenta nuevamente.");
     } finally {
       setLoading(false);
     }
@@ -82,7 +91,6 @@ export default function AdminRegister() {
         />
       </div>
       <div className="bg-white bg-opacity-70 shadow-lg rounded-3xl flex w-4/5 max-w-5xl overflow-hidden">
-        {/* Left Section */}
         <div className="flex-1 bg-cover bg-center relative hidden lg:block pl-5">
           <div className="absolute inset-0"></div>
           <div className="absolute inset-0 flex flex-col justify-center items-start text-left text-black px-12">
@@ -102,7 +110,6 @@ export default function AdminRegister() {
           </div>
         </div>
 
-        {/* Right Section */}
         <div className="flex-1 p-8 sm:p-12 bg-gray">
           <h2 className="text-2xl font-semibold mb-6 text-left">
             Registro de Administradores
@@ -177,13 +184,33 @@ export default function AdminRegister() {
               />
             </div>
 
-            {/* CAPTCHA */}
+            <div>
+              <label
+                htmlFor="inviteCode"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Código de invitación
+              </label>
+              <input
+                type="text"
+                id="inviteCode"
+                name="inviteCode"
+                required
+                placeholder="Ingrese su código de invitación"
+                className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
+              />
+            </div>
+
             <div>
               {RecaptchaComponent()}
               {captchaError && (
                 <p className="text-sm text-red-600 mt-2">{captchaError}</p>
               )}
             </div>
+
+            {errorMessage && (
+              <p className="text-red-500 text-sm mt-2">{errorMessage}</p>
+            )}
 
             <button
               type="submit"
