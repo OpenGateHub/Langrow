@@ -1,15 +1,33 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { SignInButton, useSignUp } from "@clerk/nextjs";
 import Link from "next/link";
+import useRecaptcha from "@/hooks/useRecaptcha";
 
 export default function RegisterPage() {
   const { isLoaded, signUp } = useSignUp();
+  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
+  const {
+    captchaValue,
+    captchaError,
+    validateCaptcha,
+    RecaptchaComponent,
+  } = useRecaptcha(siteKey);
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setErrorMessage("");
+
+    if (!validateCaptcha()) {
+      setLoading(false);
+      return;
+    }
 
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
@@ -20,7 +38,10 @@ export default function RegisterPage() {
     const lastName = formData.get("lastName") as string;
     const role = formData.get("role") as string;
 
-    if (!isLoaded) return;
+    if (!isLoaded) {
+      setLoading(false);
+      return;
+    }
 
     try {
       await signUp.create({
@@ -28,14 +49,16 @@ export default function RegisterPage() {
         password,
         firstName,
         lastName,
-        unsafeMetadata: { role }, 
+        unsafeMetadata: { role },
       });
 
       await signUp.prepareEmailAddressVerification();
       alert("Revisa tu correo para confirmar tu cuenta.");
     } catch (err) {
       console.error("Error al registrarse:", err);
-      alert("Hubo un error al registrarte. Por favor, intenta nuevamente.");
+      setErrorMessage("Hubo un error al registrarte. Por favor, intenta nuevamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,7 +96,7 @@ export default function RegisterPage() {
 
         {/* Right Section */}
         <div className="flex-1 p-8 sm:p-12 bg-gray">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Regístrate</h2>
+          <h2 className="text-2xl font-bold mb-6 text-left">Regístrate</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex space-x-4">
               <div className="flex-1">
@@ -163,11 +186,20 @@ export default function RegisterPage() {
               </select>
             </div>
 
+            {/* CAPTCHA */}
+            <div>
+              {RecaptchaComponent()}
+              {captchaError && (
+                <p className="text-sm text-red-600 mt-2">{captchaError}</p>
+              )}
+            </div>
+
             <button
               type="submit"
+              disabled={loading}
               className="w-full bg-secondary hover:bg-primary-hover text-white font-bold py-2 rounded-md shadow-sm transition"
             >
-              Regístrate
+              {loading ? "Registrando..." : "Regístrate"}
             </button>
           </form>
 
