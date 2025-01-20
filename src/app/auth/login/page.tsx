@@ -2,21 +2,43 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { useSignIn, SignInButton } from "@clerk/nextjs"; // Cambiar a SignInButton
+import Link from "next/link";
 
 export default function LoginPage() {
+  const { signIn, isLoaded } = useSignIn(); // Hook de Clerk para manejo de inicio de sesión
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData({ ...formData, [id]: value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form Data Submitted:", formData);
+    if (!isLoaded) return; // Esperar a que Clerk esté cargado
+    setErrorMessage(null);
+
+    try {
+      const { email, password } = formData;
+      const result = await signIn.create({
+        identifier: email,
+        password,
+      });
+
+      if (result.status === "complete") {
+        console.log("Inicio de sesión exitoso");
+      } else {
+        console.log(result);
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.errors?.[0]?.message || "Error al iniciar sesión");
+      console.error("Error al iniciar sesión:", err);
+    }
   };
 
   return (
@@ -38,7 +60,9 @@ export default function LoginPage() {
         </div>
 
         {/* Heading */}
-        <h2 className="text-2xl font-semibold mb-6 text-center">¡Bienvenido de vuelta!</h2>
+        <h2 className="text-2xl font-semibold mb-6 text-center">
+          ¡Bienvenido de vuelta!
+        </h2>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -70,6 +94,10 @@ export default function LoginPage() {
             />
           </div>
 
+          {errorMessage && (
+            <p className="text-sm text-red-500">{errorMessage}</p>
+          )}
+
           <button
             type="submit"
             className="w-full bg-secondary hover:bg-primary-hover text-white font-bold py-2 rounded-md shadow-sm transition"
@@ -79,15 +107,19 @@ export default function LoginPage() {
         </form>
 
         <div className="flex items-center justify-between mt-6">
-          <button className="flex items-center bg-white border border-gray-300 rounded-md px-4 py-2 shadow-sm hover:bg-gray-50 transition">
-            <img src="/google-icon.svg" alt="Google" className="w-5 h-5 mr-2" />
-            Sign in with Google
-          </button>
+          {/* Botón para iniciar sesión con Google */}
+          <SignInButton mode="redirect">
+            <button className="flex items-center  bg-white border border-gray-300 rounded-md px-4 py-2 shadow-sm hover:bg-gray-200 transition duration-200">
+              <img src="/google.png" alt="Google" className="w-5 h-5 mr-2" />
+              Inicia sesión con Google
+            </button>
+          </SignInButton>
+
           <p className="text-sm text-gray-600 ml-3">
-            ¿No tienes una cuenta? {" "}
-            <a href="/register" className="text-secondary font-bold hover:underline">
+            ¿No tienes una cuenta?{" "}
+            <Link href="/auth/register" className="text-secondary font-bold hover:underline">
               Regístrate
-            </a>
+            </Link>
           </p>
         </div>
       </div>

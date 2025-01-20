@@ -47,9 +47,11 @@ const Header = () => {
 
           {/* Sign Up Button */}
           <div>
+          <Link href="/auth/login">
             <button className="bg-primary hover:bg-primary-hover transition duration-200 text-white px-6 py-2 rounded-full text-sm font-semibold font-archivo">
               Iniciar Sesión
             </button>
+          </Link>
           </div>
         </div>
       </div>

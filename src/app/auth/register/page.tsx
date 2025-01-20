@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { SignInButton, useSignUp } from "@clerk/nextjs";
+import Link from "next/link";
 
 export default function RegisterPage() {
   const { isLoaded, signUp } = useSignUp();
@@ -153,7 +154,7 @@ export default function RegisterPage() {
           <div className="flex flex-row items-center ">
             <div className="flex items-center justify-between mt-6">
               <SignInButton mode="modal">
-                <button className="flex items-center bg-white border border-gray-300 rounded-md px-4 py-2 shadow-sm hover:bg-gray-50 transition">
+                <button className="flex items-center bg-white border border-gray-300 rounded-md px-4 py-2 shadow-sm hover:bg-gray-200 transition duration-200">
                   <img
                     src="/google.png"
                     alt="Google"
@@ -168,12 +169,12 @@ export default function RegisterPage() {
             <div className="mt-4 text-center">
               <p className="text-sm text-gray-600 ml-2 mt-1">
                 ¿Ya tienes una cuenta?{" "}
-                <a
-                  href="/login"
+                <Link
+                  href="/auth/login"
                   className="text-secondary font-bold hover:underline"
                 >
                   Ingresa
-                </a>
+                </Link>
               </p>
             </div>
           </div>
