@@ -108,7 +108,7 @@ export default function Home() {
               <div className="rounded-[30px] bg-white/[0.05] p-6 flex flex-col items-center h-full">
                 <div className="w-24 md:w-32">
                   <Image
-                    src="/Content Creator.png"
+                    src="/home-content-creator.png"
                     alt="Content Creator"
                     width={200}
                     height={200}
