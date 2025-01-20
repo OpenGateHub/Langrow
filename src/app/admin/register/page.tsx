@@ -48,7 +48,7 @@ export default function AdminRegister() {
 
     try {
       // Validar el código de invitación en el backend
-      const response = await fetch("/api/validate-captcha-and-register", {
+      const response = await fetch("/api/register-admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
