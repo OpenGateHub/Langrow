@@ -18,16 +18,21 @@ const createClerkUser = async (data: any) => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log(`Request method: ${req.method}`); 
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method Not Allowed" });
   }
+  console.log("Request body:", req.body); // Log del cuerpo de la solicitud
+
 
   const { email, password, firstName, lastName, inviteCode } = req.body;
 
   // Validar que se pase un código de invitación
   if (!inviteCode) {
     return res.status(400).json({ message: "Código de invitación requerido" });
+    
   }
+
 
   // Verificar que el código de invitación sea válido
   if (inviteCode !== process.env.ADMIN_INVITE_CODE) {
@@ -43,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       last_name: lastName,
       public_metadata: { role: "org:admin" },
     });
-
+    console.log("Usuario creado:", user);
     return res.status(201).json({
       message: "Usuario creado exitosamente",
       user,

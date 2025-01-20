@@ -28,6 +28,7 @@ export default function AdminRegister() {
     setErrorMessage("");
 
     if (!validateCaptcha()) {
+      setErrorMessage("Por favor, completa la verificación del CAPTCHA.");
       setLoading(false);
       return;
     }
@@ -56,9 +57,6 @@ export default function AdminRegister() {
           password,
           firstName,
           lastName,
-          unsafeMetadata: {
-            role: "org:admin", // Asignar rol aquí
-          },
           inviteCode,
           captcha: captchaValue,
         }),
