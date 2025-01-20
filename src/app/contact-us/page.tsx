@@ -89,7 +89,7 @@ export default function ContactPage() {
           />
         </div>
 
-        <div className="bg-white/65 backdrop-blur-lg p-8 md:p-10 rounded-lg shadow-lg w-full max-w-lg my-3">
+        <div className="bg-white/65 backdrop-blur-lg p-8 md:p-10 rounded-3xl shadow-lg w-full max-w-lg my-3">
           <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">
             Contacta con Nosotros
           </h1>
@@ -108,7 +108,7 @@ export default function ContactPage() {
                 onChange={handleChange}
                 required
                 placeholder="Pedro"
-                className="mt-1 block w-full rounded-md shadow-sm focus:border-primary sm:text-sm bg-gray-300 p-2 transition-colors duration-200 ease-in-out"
+                className="mt-1 block w-full rounded-md shadow-sm focus:border-primary sm:text-sm bg-[rgba(209,213,219,0.5)] p-2 transition-colors duration-200 ease-in-out"
               />
             </div>
 
@@ -125,7 +125,7 @@ export default function ContactPage() {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="+54"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm bg-gray-300 p-2"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm bg-[rgba(209,213,219,0.5)] p-2"
               />
             </div>
 
@@ -143,7 +143,7 @@ export default function ContactPage() {
                 onChange={handleChange}
                 required
                 placeholder="ejemplo@gmail.com"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm bg-gray-300 p-2"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm bg-[rgba(209,213,219,0.5)] p-2"
               />
             </div>
 
@@ -161,7 +161,7 @@ export default function ContactPage() {
                 required
                 rows={4}
                 placeholder="Escribe tu mensaje"
-                className="mt-1 block w-full bg-gray-300 p-2 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                className="mt-1 block w-full bg-[rgba(209,213,219,0.5)] p-2 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
               />
             </div>
               {/* CAPTCHA */}

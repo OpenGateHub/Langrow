@@ -9,6 +9,10 @@
     --color-secondary: 0 140 91; /* #008C5B */
     --color-orange: 255 139 91; /* #FF8B5B */
   }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+  }
 }
 
 @keyframes fadeIn {
