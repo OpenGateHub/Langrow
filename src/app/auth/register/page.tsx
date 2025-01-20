@@ -18,6 +18,7 @@ export default function RegisterPage() {
     const password = formData.get("password") as string;
     const firstName = formData.get("firstName") as string;
     const lastName = formData.get("lastName") as string;
+    const role = formData.get("role") as string;
 
     if (!isLoaded) return;
 
@@ -27,6 +28,7 @@ export default function RegisterPage() {
         password,
         firstName,
         lastName,
+        unsafeMetadata: { role }, 
       });
 
       await signUp.prepareEmailAddressVerification();
@@ -140,6 +142,25 @@ export default function RegisterPage() {
                 placeholder="********"
                 className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
               />
+            </div>
+
+            {/* Selección de rol */}
+            <div>
+              <label
+                htmlFor="role"
+                className="block text-sm font-medium text-gray-700"
+              >
+                ¿Qué quieres hacer?
+              </label>
+              <select
+                id="role"
+                name="role"
+                required
+                className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="org:alumno">Quiero aprender inglés</option>
+                <option value="org:profesor">Quiero dar clases</option>
+              </select>
             </div>
 
             <button
