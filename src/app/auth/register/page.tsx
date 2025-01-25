@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Image from "next/image";
-import { SignInButton, useSignUp } from "@clerk/nextjs";
+import { SignInButton } from "@clerk/nextjs";
+import { useSignUp } from "@clerk/clerk-react";
 import Link from "next/link";
 import useRecaptcha from "@/hooks/useRecaptcha";
 
@@ -18,6 +20,7 @@ export default function RegisterPage() {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isVerificating, setIsVerificating] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +56,7 @@ export default function RegisterPage() {
       });
 
       await signUp.prepareEmailAddressVerification();
+      setIsVerificating(true);
       alert("Revisa tu correo para confirmar tu cuenta.");
     } catch (err) {
       console.error("Error al registrarse:", err);
@@ -61,6 +65,27 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
+  const handleEmailValidation = async  (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    try {
+      const result = await signUp?.attemptEmailAddressVerification({
+        code: formData.get("verificationToken") as string
+      });
+      console.log(result);
+      setIsVerificating(false);
+      navigate("/app/home");
+    } catch (e) {
+      // @ts-expect-error
+      console.error(e.message);
+      setErrorMessage("Hubo un error al registrarte. Por favor, intenta nuevamente.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center relative">
@@ -97,112 +122,144 @@ export default function RegisterPage() {
         {/* Right Section */}
         <div className="flex-1 p-8 sm:p-12 bg-gray">
           <h2 className="text-2xl font-bold mb-6 text-left">Regístrate</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex space-x-4">
-              <div className="flex-1">
+          {!isVerificating && (
+            <form name={"register-user"} onSubmit={handleSubmit} className="space-y-4">
+              <div className="flex space-x-4">
+                <div className="flex-1">
+                  <label
+                    htmlFor="firstName"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Nombre/s
+                  </label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    required
+                    placeholder="Pedro"
+                    className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Apellido
+                  </label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    required
+                    placeholder="Sánchez"
+                    className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+              </div>
+
+              <div>
                 <label
-                  htmlFor="firstName"
+                  htmlFor="email"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Nombre/s
+                  Correo electrónico
                 </label>
                 <input
-                  type="text"
-                  id="firstName"
-                  name="firstName"
+                  type="email"
+                  id="email"
+                  name="email"
                   required
-                  placeholder="Pedro"
+                  placeholder="ejemplo@gmail.com"
                   className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
                 />
               </div>
-              <div className="flex-1">
+
+              <div>
                 <label
-                  htmlFor="lastName"
+                  htmlFor="password"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Apellido
+                  Contraseña
                 </label>
                 <input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
+                  type="password"
+                  id="password"
+                  name="password"
                   required
-                  placeholder="Sánchez"
+                  placeholder="********"
                   className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
                 />
               </div>
-            </div>
 
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
+              {/* Selección de rol */}
+              <div>
+                <label
+                  htmlFor="role"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  ¿Qué quieres hacer?
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  required
+                  className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
+                >
+                  <option value="org:alumno">Quiero aprender inglés</option>
+                  <option value="org:profesor">Quiero dar clases</option>
+                </select>
+              </div>
+
+              {/* CAPTCHA */}
+              <div>
+                {RecaptchaComponent()}
+                {captchaError && (
+                  <p className="text-sm text-red-600 mt-2">{captchaError}</p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-secondary hover:bg-primary-hover text-white font-bold py-2 rounded-md shadow-sm transition"
               >
-                Correo electrónico
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                placeholder="ejemplo@gmail.com"
-                className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Contraseña
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                required
-                placeholder="********"
-                className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
-              />
-            </div>
-
-            {/* Selección de rol */}
-            <div>
-              <label
-                htmlFor="role"
-                className="block text-sm font-medium text-gray-700"
-              >
-                ¿Qué quieres hacer?
-              </label>
-              <select
-                id="role"
-                name="role"
-                required
-                className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
-              >
-                <option value="org:alumno">Quiero aprender inglés</option>
-                <option value="org:profesor">Quiero dar clases</option>
-              </select>
-            </div>
-
-            {/* CAPTCHA */}
-            <div>
-              {RecaptchaComponent()}
-              {captchaError && (
-                <p className="text-sm text-red-600 mt-2">{captchaError}</p>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-secondary hover:bg-primary-hover text-white font-bold py-2 rounded-md shadow-sm transition"
-            >
-              {loading ? "Registrando..." : "Regístrate"}
-            </button>
-          </form>
-
+                {loading ? "Registrando..." : "Regístrate"}
+              </button>
+            </form>
+          )}
+          {isVerificating && (
+            <form name={"validate-user"} onSubmit={handleEmailValidation} className="space-y-4">
+              <div className="flex space-x-4">
+                <div className="flex-1">
+                  <label
+                    htmlFor="verificationToken"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Codigo de verificación
+                  </label>
+                  <input
+                    type="text"
+                    id="verificationToken"
+                    name="verificationToken"
+                    required
+                    placeholder="XXXXXX"
+                    className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+                <div className="flex-1">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-secondary hover:bg-primary-hover text-white font-bold py-2 rounded-md shadow-sm transition"
+                  >
+                    {loading ? "Verificando..." : "Verificar"}
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
           {/* Google Login */}
           <div className="flex flex-row items-center ">
             <div className="flex items-center justify-between mt-6">
