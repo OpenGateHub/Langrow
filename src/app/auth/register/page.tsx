@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from 'next/navigation';
 import Image from "next/image";
 import { SignInButton } from "@clerk/nextjs";
 import { useSignUp } from "@clerk/clerk-react";
@@ -10,6 +10,8 @@ import useRecaptcha from "@/hooks/useRecaptcha";
 
 export default function RegisterPage() {
   const { isLoaded, signUp } = useSignUp();
+  const router = useRouter();
+
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
   const {
     captchaValue,
@@ -77,10 +79,9 @@ export default function RegisterPage() {
       });
       console.log(result);
       setIsVerificating(false);
-      navigate("/app/home");
+      router.push('/app/home');
     } catch (e) {
-      // @ts-expect-error
-      console.error(e.message);
+      console.error(e);
       setErrorMessage("Hubo un error al registrarte. Por favor, intenta nuevamente.");
     } finally {
       setLoading(false);
