@@ -19,18 +19,19 @@ export async function POST(req: Request) {
   }
 
   try {
-    const user = await createClerkUser({
+    /*const user = await createClerkUser({
       email_address: email,
       password,
       first_name: firstName,
       last_name: lastName,
       public_metadata: { role: "org:admin" },
-    });
+    });*/
 
     return NextResponse.json(
-      { message: "Usuario creado exitosamente", user },
+      { message: "Usuario creado exitosamente" },
       { status: 201 }
     );
+
   } catch (err: any) {
     console.error(err);
     return NextResponse.json(
