@@ -16,7 +16,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/find-a-tutor" className="hover:underline">
+                <Link href="/browse-tutor" className="hover:underline">
                   Encontrá un Profesor
                 </Link>
               </li>
