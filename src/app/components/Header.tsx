@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { FaArrowRight } from 'react-icons/fa';
+
 
 const Header = () => {
   return (
@@ -33,7 +35,12 @@ const Header = () => {
 
           {/* Navigation Buttons */}
           <div className="hidden md:flex space-x-8">
-          <Link href="/contact-us">
+          <Link href="/find-a-tutor">
+              <button className="text-gray-600 hover:text-primary px-3 py-2 text-sm font-medium font-archivo">
+                Encontrá un Profesor
+              </button>
+            </Link>
+            <Link href="/contact-us">
               <button className="text-gray-600 hover:text-primary px-3 py-2 text-sm font-medium font-archivo">
                 Contacto
               </button>
@@ -47,11 +54,12 @@ const Header = () => {
 
           {/* Sign Up Button */}
           <div>
-          <Link href="/auth/login">
-            <button className="bg-primary hover:bg-primary-hover transition duration-200 text-white px-6 py-2 rounded-full text-sm font-semibold font-archivo">
-              Iniciar Sesión
-            </button>
-          </Link>
+            <Link href="/auth/login">
+              <button className="flex items-center border border-primary text-primary hover:bg-primary hover:text-white transition duration-300 ease-in-out px-6 py-2 rounded-full text-sm font-semibold">
+                Iniciar Sesión
+                <FaArrowRight className="ml-2 w-4 h-4" />
+              </button>
+            </Link>
           </div>
         </div>
       </div>

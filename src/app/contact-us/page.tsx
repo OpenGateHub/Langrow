@@ -91,7 +91,7 @@ export default function ContactPage() {
 
         <div className="bg-white/65 backdrop-blur-lg p-8 md:p-10 rounded-3xl shadow-lg w-full max-w-lg my-3">
           <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">
-            Contacta con Nosotros
+            Contactanos
           </h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
