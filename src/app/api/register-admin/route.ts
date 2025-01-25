@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import type { NextApiRequest, NextApiResponse } from "next";
 
 const createClerkUser = async (data: any) => {
   const response = await fetch("https://api.clerk.dev/v1/users", {
@@ -17,24 +17,30 @@ const createClerkUser = async (data: any) => {
   return await response.json();
 };
 
-export async function POST(req: Request) {
-  const { email, password, firstName, lastName, inviteCode } = await req.json();
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log(`Request method: ${req.method}`); 
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method Not Allowed" });
+  }
+  console.log("Request body:", req.body); // Log del cuerpo de la solicitud
 
+
+  const { email, password, firstName, lastName, inviteCode } = req.body;
+
+  // Validar que se pase un código de invitación
   if (!inviteCode) {
-    return NextResponse.json(
-      { message: "Código de invitación requerido" },
-      { status: 400 }
-    );
+    return res.status(400).json({ message: "Código de invitación requerido" });
+    
   }
 
+
+  // Verificar que el código de invitación sea válido
   if (inviteCode !== process.env.ADMIN_INVITE_CODE) {
-    return NextResponse.json(
-      { message: "Código de invitación inválido" },
-      { status: 403 }
-    );
+    return res.status(403).json({ message: "Código de invitación inválido" });
   }
 
   try {
+    // Crear el usuario en Clerk con el rol de administrador
     const user = await createClerkUser({
       email_address: email,
       password,
@@ -42,16 +48,13 @@ export async function POST(req: Request) {
       last_name: lastName,
       public_metadata: { role: "org:admin" },
     });
-
-    return NextResponse.json(
-      { message: "Usuario creado exitosamente", user },
-      { status: 201 }
-    );
+    console.log("Usuario creado:", user);
+    return res.status(201).json({
+      message: "Usuario creado exitosamente",
+      user,
+    });
   } catch (err: any) {
     console.error(err);
-    return NextResponse.json(
-      { message: "Error al crear usuario" },
-      { status: 500 }
-    );
+    return res.status(500).json({ message: "Error al crear usuario" });
   }
 }
