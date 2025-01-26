@@ -1,7 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { FaCalendarAlt } from "react-icons/fa";
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
+import { FaStar } from "react-icons/fa";
+
 
 const mockTeachers = [
   {
@@ -12,7 +16,7 @@ const mockTeachers = [
     reviews: 50,
     rating: 4.8,
     availability: "Alta",
-    profileImage: "",
+    profileImage: "/logo-green-orange.png",
   },
   {
     id: 2,
@@ -22,7 +26,7 @@ const mockTeachers = [
     reviews: 120,
     rating: 5.0,
     availability: "Media",
-    profileImage: "",
+    profileImage: "/logo-green-orange.png",
   },
   {
     id: 3,
@@ -32,7 +36,7 @@ const mockTeachers = [
     reviews: 30,
     rating: 4.5,
     availability: "Baja",
-    profileImage: "",
+    profileImage: "/logo-green-orange.png",
   },
 ];
 
@@ -71,7 +75,12 @@ export default function TeachersList() {
   return (
     <main className="bg-white min-h-screen p-8">
       <AnimateOnScroll>
-        <h1 className="text-3xl font-bold text-center mb-8">Elige Tu Experto en Inglés</h1>
+        <h1 className="text-4xl md:text-5xl text-secondary font-bold text-center mb-8 tracking-tight ">
+          <span className="mb-3 ">
+            Elige Tu Experto <br /> en
+          </span>
+          <span className="text-orange"> Inglés</span>
+        </h1>
       </AnimateOnScroll>
       <div className="max-w-4xl mx-auto space-y-4">
         {/* Search and Filters */}
@@ -82,23 +91,22 @@ export default function TeachersList() {
               placeholder="Busca por nombre..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="p-3 border w-full border-gray-300 rounded-2xl shadow-sm focus:ring-primary focus:border-primary"
+              className="p-3 border w-full border-gray-300 rounded-2xl shadow-sm focus:ring-secondary focus:border-secondary"
             />
           </AnimateOnScroll>
 
           <AnimateOnScroll delay={200} className="flex justify-center">
             <button
               onClick={() => setFiltersVisible(!filtersVisible)}
-              className="text-primary font-semibold "
+              className="text-secondary font-semibold"
             >
               {filtersVisible ? "Ocultar Filtros" : "+ Filtros"}
             </button>
           </AnimateOnScroll>
 
           <div
-            className={`transition-all duration-500 ease-in-out overflow-hidden ${
-              filtersVisible ? "max-h-screen" : "max-h-0"
-            }`}
+            className={`transition-all duration-500 ease-in-out overflow-hidden ${filtersVisible ? "max-h-screen" : "max-h-0"
+              }`}
           >
             <AnimateOnScroll>
               <div className="bg-gray-100 p-4 rounded-2xl shadow-sm space-y-4">
@@ -140,27 +148,46 @@ export default function TeachersList() {
         <div className="space-y-4">
           {teachers.map((teacher, index) => (
             <AnimateOnScroll key={teacher.id} delay={index * 100}>
-              <div className="flex items-center bg-white border border-gray-200 rounded-2xl p-4 shadow-md hover:shadow-lg transition-shadow">
-                <Image
-                  src={teacher.profileImage || "/placeholder.png"}
-                  alt={teacher.name}
-                  width={64}
-                  height={64}
-                  className="rounded-full border border-gray-300"
-                />
-                <div className="ml-4 flex-1">
-                  <h2 className="text-lg font-semibold">{teacher.name}</h2>
-                  <p className="text-sm text-gray-600">{teacher.description}</p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {teacher.rating} ★ ({teacher.reviews} reviews) - ${teacher.price}/hora
-                  </p>
-                </div>
-                <button
-                  onClick={() => alert(`Ver perfil de ${teacher.name}`)}
-                  className="bg-primary text-white py-2 px-4 rounded-2xl hover:bg-primary-hover"
+              <div className="flex items-center bg-white border border-gray-200 rounded-2xl py-4 pr-4 shadow-md hover:shadow-lg transition-shadow">
+                <Link
+                  href="/"
+                  className="flex items-center space-x-4 flex-1 group transition-transform duration-200 rounded-lg p-2 relative"
                 >
-                  Ver Perfil
-                </button>
+                  {/* Tooltip */}
+                  <div className="absolute top-[-30px] left-1/2 transform bg-orange text-white text-xs rounded-lg px-3 ml-[-15px] py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    Ver perfil
+                  </div>
+                  <Image
+                    src={teacher.profileImage || "/placeholder.png"}
+                    alt={teacher.name}
+                    width={64}
+                    height={64}
+                    className="rounded-full border border-gray-300 group-hover:scale-110 transition-all duration-200"
+                  />
+                  <div>
+                    <h2 className="text-lg font-semibold text-secondary group-hover:underline transition-all duration-200">
+                      {teacher.name}
+                    </h2>
+                    <p className="text-sm text-gray-600">{teacher.description}</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {teacher.rating} ★ ({teacher.reviews} reviews) - ${teacher.price}/hora
+                    </p>
+                  </div>
+                </Link>
+
+
+                <div className="relative group">
+                  <button className="bg-secondary text-white p-3 rounded-full hover:bg-secondary-hover">
+                    <FaCalendarAlt size={20} />
+                  </button>
+                  {/* Tooltip */}
+                  <div className="absolute top-[-40px] left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs rounded-lg px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-[140px]">
+                    <div className="flex items-center space-x-3 whitespace-nowrap justify-center">
+                      <span>Agendar Clase</span>
+                    </div>
+                    <div className="absolute bottom-[-6pFx] left-1/2 transform -translate-x-1/2 w-3 h-3 bg-primary rotate-45"></div>
+                  </div>
+                </div>
               </div>
             </AnimateOnScroll>
           ))}
