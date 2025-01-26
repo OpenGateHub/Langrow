@@ -163,7 +163,7 @@ export default function TeachersList() {
                     Ver perfil
                   </div>
                   <Image
-                    src={teacher.profileImage || "/placeholder.png"}
+                    src={teacher.profileImage || "/logo-green-orange.png"}
                     alt={teacher.name}
                     width={64}
                     height={64}
