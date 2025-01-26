@@ -14,6 +14,7 @@ export default {
         primary: "rgb(var(--color-primary) / <alpha-value>)",
         "primary-hover": "rgb(var(--color-primary-hover) / <alpha-value>)",
         secondary: "rgb(var(--color-secondary) / <alpha-value>)",
+        "secondary-hover": "rgb(var(--color-secondary-hover) / <alpha-value>)",
         orange: "rgb(var(--color-orange) / <alpha-value>)",
       },
     },
