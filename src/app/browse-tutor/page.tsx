@@ -4,9 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaCalendarAlt } from "react-icons/fa";
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
-import { FaStar } from "react-icons/fa";
 
-
+// Mock data con fechas de próxima clase
 const mockTeachers = [
   {
     id: 1,
@@ -17,6 +16,7 @@ const mockTeachers = [
     rating: 4.8,
     availability: "Alta",
     profileImage: "/logo-green-orange.png",
+    nextClass: "2025-01-29", // Fecha ISO
   },
   {
     id: 2,
@@ -27,6 +27,7 @@ const mockTeachers = [
     rating: 5.0,
     availability: "Media",
     profileImage: "/logo-green-orange.png",
+    nextClass: "2025-01-28",
   },
   {
     id: 3,
@@ -37,8 +38,19 @@ const mockTeachers = [
     rating: 4.5,
     availability: "Baja",
     profileImage: "/logo-green-orange.png",
+    nextClass: "2025-01-30",
   },
 ];
+
+// Función para calcular días hasta la próxima clase
+const calculateDaysToNextClass = (nextClass: string) => {
+  const today = new Date();
+  const nextClassDate = new Date(nextClass);
+  const diffTime = nextClassDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Días de diferencia
+  if (diffDays === 0) return "hoy";
+  return `en ${diffDays} día${diffDays > 1 ? "s" : ""}`;
+};
 
 export default function TeachersList() {
   const [teachers, setTeachers] = useState(mockTeachers);
@@ -47,9 +59,9 @@ export default function TeachersList() {
   const [priceRange, setPriceRange] = useState([0, 50]);
   const [sortBy, setSortBy] = useState("availability");
 
-  // Filter and sort logic
+  // Lógica de filtros y ordenamiento
   useEffect(() => {
-    let filteredTeachers = mockTeachers;
+    let filteredTeachers = [...mockTeachers];
 
     if (searchTerm) {
       filteredTeachers = filteredTeachers.filter((teacher) =>
@@ -75,15 +87,13 @@ export default function TeachersList() {
   return (
     <main className="bg-white min-h-screen p-8">
       <AnimateOnScroll>
-        <h1 className="text-4xl md:text-5xl text-secondary font-bold text-center mb-8 tracking-tight ">
-          <span className="mb-3 ">
-            Elige Tu Experto <br /> en
-          </span>
+        <h1 className="text-4xl md:text-5xl text-secondary font-bold text-center mb-8 tracking-tight">
+          <span className="mb-3">Elige Tu Experto <br /> en</span>
           <span className="text-orange"> Inglés</span>
         </h1>
       </AnimateOnScroll>
       <div className="max-w-4xl mx-auto space-y-4">
-        {/* Search and Filters */}
+        {/* Barra de búsqueda y filtros */}
         <div className="flex flex-col space-y-4">
           <AnimateOnScroll>
             <input
@@ -104,47 +114,42 @@ export default function TeachersList() {
             </button>
           </AnimateOnScroll>
 
-          <div
-            className={`transition-all duration-500 ease-in-out overflow-hidden ${filtersVisible ? "max-h-screen" : "max-h-0"
-              }`}
-          >
-            <AnimateOnScroll>
-              <div className="bg-gray-100 p-4 rounded-2xl shadow-sm space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Rango de precio: {priceRange[0]} - {priceRange[1]}
-                  </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="50"
-                    step="1"
-                    value={priceRange[1]}
-                    onChange={(e) => setPriceRange([0, Number(e.target.value)])}
-                    className="w-full"
-                  />
-                </div>
+          {filtersVisible && (           <div className="bg-gray-100 p-4 rounded-2xl shadow-sm space-y-4 transition-all duration-500 ease-in-out">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Rango de precio: {priceRange[0]} - {priceRange[1]}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="1"
+                value={priceRange[1]}
+                onChange={(e) => setPriceRange([0, Number(e.target.value)])}
+                className="w-full"
+              />
+            </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ordenar por:
-                  </label>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-2xl w-full"
-                  >
-                    <option value="availability">Disponibilidad</option>
-                    <option value="reviews">Cantidad de reviews</option>
-                    <option value="rating">Mejor calificación</option>
-                  </select>
-                </div>
-              </div>
-            </AnimateOnScroll>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ordenar por:
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="p-2 border border-gray-300 rounded-2xl w-full"
+              >
+                <option value="availability">Disponibilidad</option>
+                <option value="reviews">Cantidad de reviews</option>
+                <option value="rating">Mejor calificación</option>
+              </select>
+            </div>
           </div>
+        
+          )}
         </div>
 
-        {/* Teachers List */}
+        {/* Lista de profesores */}
         <div className="space-y-4">
           {teachers.map((teacher, index) => (
             <AnimateOnScroll key={teacher.id} delay={index * 100}>
@@ -154,7 +159,7 @@ export default function TeachersList() {
                   className="flex items-center space-x-4 flex-1 group transition-transform duration-200 rounded-lg p-2 relative"
                 >
                   {/* Tooltip */}
-                  <div className="absolute top-[-30px] left-1/2 transform bg-orange text-white text-xs rounded-lg px-3 ml-[-15px] py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="absolute top-[-30px] left-1/2 transform bg-orange text-white text-xs rounded-lg px-3 ml-[-8px] py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     Ver perfil
                   </div>
                   <Image
@@ -172,9 +177,12 @@ export default function TeachersList() {
                     <p className="text-sm text-gray-500 mt-1">
                       {teacher.rating} ★ ({teacher.reviews} reviews) - ${teacher.price}/hora
                     </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Próxima clase disponible:{" "}
+                      {calculateDaysToNextClass(teacher.nextClass)}
+                    </p>
                   </div>
                 </Link>
-
 
                 <div className="relative group">
                   <button className="bg-secondary text-white p-3 rounded-full hover:bg-secondary-hover">
