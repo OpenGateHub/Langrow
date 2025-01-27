@@ -7,6 +7,8 @@ import { SignInButton } from "@clerk/nextjs";
 import { useSignUp } from "@clerk/clerk-react";
 import Link from "next/link";
 import useRecaptcha from "@/hooks/useRecaptcha";
+import BlockUi from "@/app/components/BlockUi";
+import MessageModal from "@/app/components/Modal";
 
 export default function RegisterPage() {
   const { isLoaded, signUp } = useSignUp();
@@ -20,14 +22,28 @@ export default function RegisterPage() {
     RecaptchaComponent,
   } = useRecaptcha(siteKey);
 
-  const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [isVerificating, setIsVerificating] = useState(false);
+  const [role, setRole] = useState<string| null>(null);
+
+  const [display, setDisplay] = useState(false);
+  const [messageType, setMessageType] = useState<"error" | "success">("error");
+  const [message, setMessage] = useState("");
+
+  const displayMessage = (type: string, message: string) => {
+    if (type === "error" || type === "success") {
+      setMessage(message);
+      setMessageType(type);
+      setDisplay(true);
+    } else {
+      console.error("Invalid message type:", type);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setErrorMessage("");
+    setMessage("");
 
     if (!validateCaptcha()) {
       setLoading(false);
@@ -41,7 +57,8 @@ export default function RegisterPage() {
     const password = formData.get("password") as string;
     const firstName = formData.get("firstName") as string;
     const lastName = formData.get("lastName") as string;
-    const role = formData.get("role") as string;
+    const formRole = formData.get("role") as string;
+    setRole(formRole);
 
     if (!isLoaded) {
       setLoading(false);
@@ -59,10 +76,9 @@ export default function RegisterPage() {
 
       await signUp.prepareEmailAddressVerification();
       setIsVerificating(true);
-      alert("Revisa tu correo para confirmar tu cuenta.");
     } catch (err) {
-      console.error("Error al registrarse:", err);
-      setErrorMessage("Hubo un error al registrarte. Por favor, intenta nuevamente.");
+      console.error(err);
+      displayMessage("error", "Hubo un error al registrarte. Por favor, intenta nuevamente.");
     } finally {
       setLoading(false);
     }
@@ -74,15 +90,24 @@ export default function RegisterPage() {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     try {
-      const result = await signUp?.attemptEmailAddressVerification({
+      await signUp?.attemptEmailAddressVerification({
         code: formData.get("verificationToken") as string
       });
-      console.log(result);
       setIsVerificating(false);
-      router.push('/app/home');
-    } catch (e) {
+      switch (role) {
+        case "org:profesor":
+          router.push('/browse-tutor');
+          break;
+        case "org:student":
+          router.push('/browse-tutor');
+          break
+        default:
+          console.error("No hay pagina por defecto.")
+          break;
+      }
+    } catch (e: any) {
       console.error(e);
-      setErrorMessage("Hubo un error al registrarte. Por favor, intenta nuevamente.");
+      displayMessage("error", "Ha ocurrido un error al validar el token, intente nuevamente más tarde.")
     } finally {
       setLoading(false);
     }
@@ -90,6 +115,11 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center relative">
+      <BlockUi isActive={loading} />
+      <MessageModal isOpen={display}
+          message={message}
+          onClose={() => { setDisplay(false)}}
+          type={messageType} />
       <div className="absolute inset-0 -z-10">
         <Image
           src="/bg-login.jpg"
@@ -235,25 +265,23 @@ export default function RegisterPage() {
               <div className="flex space-x-4">
                 <div className="flex-1">
                   <label
-                    htmlFor="verificationToken"
-                    className="block text-sm font-medium text-gray-700"
+                      htmlFor="verificationToken"
+                      className="block text-sm font-medium text-gray-700"
                   >
                     Codigo de verificación
                   </label>
                   <input
-                    type="text"
-                    id="verificationToken"
-                    name="verificationToken"
-                    required
-                    placeholder="XXXXXX"
-                    className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
+                      type="text"
+                      id="verificationToken"
+                      name="verificationToken"
+                      required
+                      placeholder="XXXXXX"
+                      className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
                   />
-                </div>
-                <div className="flex-1">
                   <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-secondary hover:bg-primary-hover text-white font-bold py-2 rounded-md shadow-sm transition"
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-secondary hover:bg-primary-hover text-white font-bold py-2 mt-2 rounded-md shadow-sm transition"
                   >
                     {loading ? "Verificando..." : "Verificar"}
                   </button>
