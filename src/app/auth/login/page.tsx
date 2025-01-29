@@ -1,17 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { useSignIn, SignInButton } from "@clerk/nextjs"; // Cambiar a SignInButton
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import { useSignIn, SignInButton, useUser } from "@clerk/nextjs"; // Cambiar a SignInButton
+import BlockUi from "@/app/components/BlockUi";
+
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { isSignedIn, isLoaded: loadingUser, user } = useUser();
   const { signIn, isLoaded } = useSignIn(); // Hook de Clerk para manejo de inicio de sesión
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  if (isSignedIn) {
+    router.push('/browse-tutor');
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -20,6 +30,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     if (!isLoaded) return; // Esperar a que Clerk esté cargado
     setErrorMessage(null);
 
@@ -31,18 +42,22 @@ export default function LoginPage() {
       });
 
       if (result.status === "complete") {
-        console.log("Inicio de sesión exitoso");
+        // TODO:: create a home page to redirect there and use that one to check the user role
+        router.push('/browse-tutor');
       } else {
         console.log(result);
       }
     } catch (err: any) {
       setErrorMessage(err?.errors?.[0]?.message || "Error al iniciar sesión");
       console.error("Error al iniciar sesión:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <main className="min-h-screen flex items-center justify-center relative">
+      <BlockUi isActive={loading} />
       <div className="absolute inset-0 -z-10">
         <Image
           src="/bg-login.jpg"
