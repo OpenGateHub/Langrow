@@ -1,9 +1,10 @@
 import React from 'react';
 import HomeTemplate, { HomeTemplateProps } from './../components/homePage/HomePage';
+import { useUser } from "@clerk/nextjs";
 
 export default function HomePage() {
-  // Supongamos que esta variable se determina según tu lógica de autenticación o rol
-  const isTutor = true; // Cambia a false para ver el otro caso
+  const { user } = useUser();
+  const role = user?.publicMetadata?.role || "guest";
 
   const tutorProps: HomeTemplateProps = {
     hero: {
@@ -159,5 +160,5 @@ export default function HomePage() {
     },
   };
 
-  return <HomeTemplate {...(isTutor ? tutorProps : studentProps)} />;
+  return <HomeTemplate {...(role === "teacher" ? tutorProps : studentProps)} />;
 }

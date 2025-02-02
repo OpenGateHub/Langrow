@@ -117,7 +117,7 @@ const Header = () => {
                         </Link>
                       )}
                       <button
-                        onClick={() => signOut()} // Sign out using Clerk
+                        onClick={() => signOut()} 
                         className="block px-4 py-2 text-red-500 hover:bg-gray-100 w-full text-left"
                       >
                         Cerrar Sesión
