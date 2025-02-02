@@ -160,5 +160,5 @@ export default function HomePage() {
     },
   };
 
-  return <HomeTemplate {...(role === "teacher" ? tutorProps : studentProps)} />;
+  return <HomeTemplate {...(role === "profesor" ? tutorProps : studentProps)} />;
 }
