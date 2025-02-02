@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import HomeTemplate, { HomeTemplateProps } from './../components/homePage/HomePage';
 import { useUser } from "@clerk/nextjs";
