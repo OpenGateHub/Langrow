@@ -42,7 +42,7 @@ const mockTutors = [
   {
     id: 2,
     name: "Jane Smith",
-    profileImage: "/profile-pictures/jane-smith.png",
+    profileImage: "/logo-green-orange.png",
     longDescription:
       "Experta en preparación de exámenes IELTS y TOEFL, con estrategias personalizadas para aprobar con confianza.",
     shortDescription: "Experta en preparación de exámenes IELTS y TOEFL.",
@@ -52,13 +52,13 @@ const mockTutors = [
     reviews: [
       {
         name: "Laura Martínez",
-        profilePicture: "/reviewers/reviewer3.png",
+        profilePicture: "/logo-green-orange.png",
         rating: 5,
         review: "Con Jane logré un puntaje de 8.0 en el IELTS. ¡Excelente!",
       },
       {
         name: "Pedro Sánchez",
-        profilePicture: "/reviewers/reviewer4.png",
+        profilePicture: "/logo-green-orange.png",
         rating: 5,
         review: "Sus métodos me dieron confianza durante mi preparación.",
       },
