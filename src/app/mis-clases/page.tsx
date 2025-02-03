@@ -96,7 +96,7 @@ const ClassCard: React.FC<ClassCardProps> = ({ classData, onConfirm }) => {
   const handleButtonClick = () => {
     if (classData.status === "no-confirmada") {
       // Si la clase está sin confirmar, ejecutamos la función para abrir el modal
-      onConfirm && onConfirm();
+      onConfirm?.();
     } else {
       // Para "proxima" o "revisada", se podría redirigir a ver detalles
       console.log("Ver detalles de la clase:", classData.id);
