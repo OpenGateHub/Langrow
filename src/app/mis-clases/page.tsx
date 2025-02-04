@@ -15,7 +15,19 @@ type ClassData = {
 };
 
 const mockClasses: Record<string, ClassData[]> = {
-  "Solicitudes": [],
+  "Solicitudes": [
+    {
+      id: 4,
+      title: "Clase Solicitada",
+      instructor: "Instructor Solicitado",
+      category: "Lectura",
+      date: "Martes, 21 Febrero",
+      time: "03:00 PM - 03:30 PM",
+      duration: "30 min",
+      cost: "3 USD",
+      status: "solicitada",
+    },
+  ],
   "Próximas": [
     {
       id: 1,
@@ -89,16 +101,16 @@ type ClassCardProps = {
 };
 
 const ClassCard: React.FC<ClassCardProps> = ({ classData, onConfirm }) => {
-  // Determinamos el label del botón según el status
+  // Si el status es "no-confirmada" el botón mostrará "Confirmar"; para los demás (incluyendo "solicitada", "proxima" o "revisada") mostrará "Ver"
   const buttonLabel =
     classData.status === "no-confirmada" ? "Confirmar" : "Ver";
 
   const handleButtonClick = () => {
     if (classData.status === "no-confirmada") {
-      // Si la clase está sin confirmar, ejecutamos la función para abrir el modal
+      // Ejecuta la función para abrir el modal si la clase está sin confirmar
       onConfirm?.();
     } else {
-      // Para "proxima" o "revisada", se podría redirigir a ver detalles
+      // Para "solicitada", "proxima" o "revisada" se puede redirigir a ver detalles o realizar otra acción
       console.log("Ver detalles de la clase:", classData.id);
     }
   };
