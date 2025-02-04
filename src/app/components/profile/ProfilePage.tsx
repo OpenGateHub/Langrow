@@ -30,18 +30,18 @@ const ProfilePage = ({
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 space-y-6">
         {/* Header */}
         <div
-          className="relative bg-cover bg-center rounded-lg overflow-hidden"
+          className="relative bg-cover rounded-xl"
           style={{ backgroundImage: `url('/profile-banner.png')` }}
         >
-          <div className="flex items-center p-6 relative space-x-6 text-white bg-black/50 rounded-lg">
+          <div className="flex items-center p-6 relative space-x-6 text-white rounded-lg">
             <Image
-              width={24}
-              height={24}
+              width={50}
+              height={50}
               src={profileImage}
               alt={name}
-              className="rounded-full absolute mt-[120px] z-500 w-24 h-24 border-4 border-white"
+              className="rounded-full absolute mt-[80px] z-500 w-[150px] h-[150px] border-4 border-white"
             />
-            <div>
+            <div className="pl-[140px]">
               <h1 className="text-2xl font-bold">{name}</h1>
               <p className="text-sm">{title}</p>
               <p className="text-sm">{location}</p>

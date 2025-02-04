@@ -11,15 +11,32 @@ const Header = () => {
   const { isSignedIn, isLoaded, user } = useUser();
   const { signOut } = useAuth();
   const [isMenuOpen, setMenuOpen] = useState(false);
-  const pathname = usePathname(); 
+  const pathname = usePathname();
 
-  if (!isLoaded) return null; // Hide the header until the user state is loaded
+  if (!isLoaded) return null; // Oculta el header hasta que se cargue el estado del usuario
 
   const role = user?.publicMetadata?.role || "guest";
   const profileImage = user?.imageUrl || "/placeholder-profile.png";
 
-  // Hide profile/login button on specific pages
+  // Ocultar botón de perfil/login en páginas específicas
   const hideProfileOrLogin = pathname === "/auth/login" || pathname === "/auth/register";
+
+  /* Variables para notificaciones (datos a llenar desde la API) */
+  // Variables para notificaciones de profesor
+  const isTeacherRequest = false; // Cuando un alumno solicita clase
+  const isTeacherScheduled = false; // Cuando la clase se agenda
+  const isTeacherConfirm = false;   // Cuando se requiere confirmar la clase
+
+  // Variables para notificaciones de alumno
+  const isStudentConfirmed = false; // Cuando la clase con el profe fue confirmada
+  const isStudentReagend = false;   // Cuando la clase fue reagendada
+  const isStudentConfirm = false;   // Cuando se requiere confirmar la clase con el tutor
+
+  // Variables para nombres (a completar con datos reales)
+  const studentName = "";     // Ejemplo: "Juan"
+  const studentLastName = ""; // Ejemplo: "Pérez"
+  const teacherName = "";     // Ejemplo: "María"
+  const teacherLastName = ""; // Ejemplo: "González"
 
   return (
     <header className="bg-white shadow-sm">
@@ -91,18 +108,19 @@ const Header = () => {
                   {isMenuOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
                       <Link href="/profile">
-                        <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
+                        <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
                           Perfil
-                        </button>
+                        </span>
                       </Link>
-                      {role === "teacher" && (
+
+                      {role === "profesor" && (
                         <Link href="/teacher/calendar">
                           <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
                             Ver mi Calendario
                           </button>
                         </Link>
                       )}
-                      {role === "student" && (
+                      {role === "alumno" && (
                         <Link href="/student/classes">
                           <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
                             Ver mis Clases
@@ -117,8 +135,9 @@ const Header = () => {
                         </Link>
                       )}
                       <button
-                        onClick={() => signOut()} // Sign out using Clerk
-                        className="block px-4 py-2 text-red-500 hover:bg-gray-100 w-full text-left"
+                        type="button"
+                        onClick={() => signOut()}
+                        className="block px-4 py-2 text-red-500 hover:bg-gray-100 w-full text-left cursor-pointer"
                       >
                         Cerrar Sesión
                       </button>
@@ -134,6 +153,62 @@ const Header = () => {
                 </Link>
               )}
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Subnav: Notificaciones */}
+      <div className="bg-gray-100 py-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-2">
+          {role === "profesor" && (
+            <>
+              {isTeacherRequest && (
+                <Link href="/mis-clases">
+                  <span className="text-sm text-gray-800">
+                    El alumno {studentName} {studentLastName} quiere tener una clase.
+                  </span>
+                </Link>
+              )}
+              {isTeacherScheduled && (
+                <Link href="/mis-clases">
+                  <span className="text-sm text-gray-800">
+                    Se agendó la clase con {studentName} {studentLastName}!
+                  </span>
+                </Link>
+              )}
+              {isTeacherConfirm && (
+                <Link href="/mis-clases">
+                  <span className="text-sm text-gray-800">
+                    Confirma tu clase con {studentName} {studentLastName}.
+                  </span>
+                </Link>
+              )}
+            </>
+          )}
+          {role === "alumno" && (
+            <>
+              {isStudentConfirmed && (
+                <Link href="/mis-clases">
+                  <span className="text-sm text-gray-800">
+                    Tu clase con {teacherName} {teacherLastName} fue confirmada!
+                  </span>
+                </Link>
+              )}
+              {isStudentReagend && (
+                <Link href="/mis-clases">
+                  <span className="text-sm text-gray-800">
+                    Tu clase con {teacherName} {teacherLastName} fue reagendada.
+                  </span>
+                </Link>
+              )}
+              {isStudentConfirm && (
+                <Link href="/mis-clases">
+                  <span className="text-sm text-gray-800">
+                    Confirma tu clase con {teacherName} {teacherLastName}.
+                  </span>
+                </Link>
+              )}
+            </>
           )}
         </div>
       </div>
