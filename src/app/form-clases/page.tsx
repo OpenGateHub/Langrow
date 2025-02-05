@@ -1,24 +1,54 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import WeeklyAgendaModal, { SelectedSlotType, DaySchedule } from "../components/ModalClassRequest";
-import MessageModal from "../components/Modal"; // Ajusta la ruta según corresponda
+import PaymentForm from "../components/payment/PaymentForm"; // Importamos el PaymentForm embebido
 
-const bookingOptions = [
+// Tipo de paquete con datos y estilos
+type Package = {
+  nombre: string;
+  total: number;
+  precioClase: string;
+  ahorro: string;
+  clases: number;
+  bg: string;
+  hoverBg: string;
+};
+
+const packages: Package[] = [
   {
-    id: "unica",
-    label: "Reservar única clase",
+    nombre: "Única Clase",
+    total: 67200,
+    precioClase: "18.000",
+    ahorro: "",
+    clases: 1,
     bg: "bg-blue-700",
     hoverBg: "hover:bg-blue-800",
   },
   {
-    id: "10clases",
-    label: "Reservar 10 clases x 30% de descuento",
+    nombre: "Combo 4 clases",
+    total: 67200,
+    precioClase: "16.800",
+    ahorro: "4.800",
+    clases: 4,
     bg: "bg-green-700",
     hoverBg: "hover:bg-green-800",
   },
   {
-    id: "20clases",
-    label: "Reservar 20 clases x 50% de descuento",
+    nombre: "Combo 8 clases",
+    total: 124800,
+    precioClase: "15.600",
+    ahorro: "9.600",
+    clases: 8,
+    bg: "bg-yellow-700",
+    hoverBg: "hover:bg-yellow-800",
+  },
+  {
+    nombre: "Combo 12 clases",
+    total: 172800,
+    precioClase: "14.400",
+    ahorro: "14.400",
+    clases: 12,
     bg: "bg-red-700",
     hoverBg: "hover:bg-red-800",
   },
@@ -33,7 +63,7 @@ const categories = [
   "Pronunciación",
 ];
 
-// Mock de la agenda disponible para un profesor (se pasa al modal)
+// Agenda disponible para el profesor
 const professorSchedule: DaySchedule[] = [
   { day: "Lunes", slots: ["10:00", "14:00"] },
   { day: "Martes", slots: ["11:00", "15:00"] },
@@ -45,69 +75,48 @@ const professorSchedule: DaySchedule[] = [
 ];
 
 const SolicitudClase: React.FC = () => {
-  const [selectedBooking, setSelectedBooking] = useState<"unica" | "10clases" | "20clases" | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [selectedSchedule, setSelectedSchedule] = useState<SelectedSlotType[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [category, setCategory] = useState<string>("");
   const [motivo, setMotivo] = useState<string>("");
-  const [motivoError, setMotivoError] = useState<string>("");
   const [categoryError, setCategoryError] = useState<string>("");
-  const [scheduleError, setScheduleError] = useState<string>("");
+  const [motivoError, setMotivoError] = useState<string>("");
 
-  // Estado para el MessageModal
-  const [isMessageModalOpen, setIsMessageModalOpen] = useState<boolean>(false);
-  const [messageModalType, setMessageModalType] = useState<"success" | "error">("success");
-  const [messageModalMessage, setMessageModalMessage] = useState<string>("");
+  // Estados para el modal de selección de horarios y la selección guardada
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState<boolean>(false);
+  const [selectedSlots, setSelectedSlots] = useState<SelectedSlotType[]>([]);
 
-  // Al elegir una opción de reserva se reinicia la selección previa
-  const handleBookingClick = (bookingId: "unica" | "10clases" | "20clases") => {
-    setSelectedBooking(bookingId);
-    setSelectedSchedule([]); // Reiniciamos la selección de horarios
-    setIsModalOpen(true);
-  };
+  // Estado para activar el paso de pago
+  const [isPaymentStep, setIsPaymentStep] = useState<boolean>(false);
 
-  // Callback desde el modal de agenda
-  const handleModalSubmit = (slots: SelectedSlotType[]) => {
-    // Actualizamos la selección según lo que retorne el modal
-    if (slots.length === 0) {
-      setScheduleError("Debes seleccionar al menos un horario.");
-      setSelectedSchedule([]); // Aseguramos que quede vacío
-    } else {
-      setScheduleError("");
-      setSelectedSchedule(slots);
+  const router = useRouter();
+
+  const handleOpenScheduleModal = () => {
+    if (!selectedPackage) {
+      alert("Debes seleccionar un paquete.");
+      return;
     }
-    setIsModalOpen(false);
+    setIsScheduleModalOpen(true);
   };
 
-  // Función para obtener la cantidad requerida según la opción de reserva
-  const getRequiredCount = (option: "unica" | "10clases" | "20clases"): number => {
-    if (option === "unica") return 1;
-    if (option === "10clases") return 10;
-    if (option === "20clases") return 20;
-    return 0;
+  const handleScheduleSubmit = (slots: SelectedSlotType[]) => {
+    setSelectedSlots(slots);
+    setIsScheduleModalOpen(false);
   };
 
-  // Al confirmar la reserva se validan todos los campos
-  const handleConfirmReservation = () => {
+  // Al confirmar la reserva se validan todos los campos y la cantidad de horarios seleccionados.
+  // Si todo es correcto, se activa el paso de pago que mostrará el PaymentForm embebido.
+  const handleConfirmReserva = () => {
     let valid = true;
-  
+    if (!selectedPackage) {
+      alert("Debes seleccionar un paquete.");
+      valid = false;
+    }
     if (!category) {
       setCategoryError("Debes seleccionar una categoría.");
       valid = false;
     } else {
       setCategoryError("");
     }
-  
-    const requiredCount = selectedBooking ? getRequiredCount(selectedBooking) : 0;
-    console.log("Requerido:", requiredCount, "Seleccionado:", selectedSchedule.length);
-  
-    if (selectedSchedule.length !== requiredCount) {
-      setScheduleError(`Te faltan reservar clases. Debes seleccionar ${requiredCount} clase(s).`);
-      valid = false;
-    } else {
-      setScheduleError("");
-    }
-  
     if (motivo.trim().length < 50) {
       setMotivoError("El motivo debe tener al menos 50 caracteres.");
       valid = false;
@@ -117,89 +126,108 @@ const SolicitudClase: React.FC = () => {
     } else {
       setMotivoError("");
     }
-  
-    // 🚨 IMPORTANTE: Asegurar que si hay errores, no se continúe
-    if (!valid) {
-      console.log("Validación fallida, no se abrirá el modal de éxito");
-      return;
+    if (selectedPackage && selectedSlots.length !== selectedPackage.clases) {
+      alert(`Debes seleccionar ${selectedPackage.clases} clase(s).`);
+      valid = false;
     }
-  
-    console.log("Reserva confirmada", {
-      selectedBooking,
-      category,
-      motivo,
-      selectedSchedule,
-    });
-  
-    // Mostrar modal de éxito solo si todas las validaciones pasaron
-    setMessageModalType("success");
-    setMessageModalMessage("Reserva confirmada: ¡Éxito obvio!");
-    setIsMessageModalOpen(true);
-  
-    // Reiniciar formulario
-    setSelectedBooking(null);
-    setCategory("");
-    setMotivo("");
-    setSelectedSchedule([]);
-  };
-  
+    if (!valid) return;
 
-  const handleCancel = () => {
-    setSelectedBooking(null);
-    setCategory("");
-    setMotivo("");
-    setMotivoError("");
-    setCategoryError("");
-    setScheduleError("");
-    setSelectedSchedule([]);
+    // Aquí podrías realizar la lógica de confirmación de la reserva y generar bookingId y eventTypeId.
+    // Por ahora, usamos valores de ejemplo.
+    setIsPaymentStep(true);
   };
 
   return (
     <div className="max-w-4xl mx-auto px-6 bg-gray-100 py-6 my-6 rounded-xl min-h-screen">
-      <h1 className="text-3xl font-bold text-center text-gray-900 mb-6">Solicitar Clase</h1>
+      <h1 className="text-3xl font-bold text-center text-gray-900 mb-6">
+        Solicitar Clase
+      </h1>
 
-      {/* Botones para seleccionar el tipo de reserva */}
-      <div className="flex justify-center space-x-4 mb-6">
-        {bookingOptions.map((option) => (
-          <button
-            key={option.id}
-            onClick={() => handleBookingClick(option.id as "unica" | "10clases" | "20clases")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              selectedBooking === option.id
-                ? `${option.bg} ${option.hoverBg} shadow-md text-white`
-                : `${option.bg} text-white ${option.hoverBg} shadow-md`
-            }`}
-          >
-            {option.label}
-          </button>
+      {/* Selección de paquete */}
+      <div className="flex flex-wrap justify-center gap-4 mb-6">
+        {packages.map((pkg, index) => (
+          <div key={index} className="relative group">
+            <button
+              onClick={() => {
+                setSelectedPackage(pkg);
+                setSelectedSlots([]); // Reinicia la selección de horarios al cambiar de paquete
+              }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pkg.bg} ${pkg.hoverBg} ${selectedPackage?.nombre === pkg.nombre
+                ? "shadow-md text-white border-2 border-white"
+                : "text-white"
+                }`}
+            >
+              {pkg.nombre}
+            </button>
+            {Number(pkg.ahorro) > 0 && (
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 z-10 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200">
+                <div className={`${pkg.bg} text-white text-xs rounded py-1 px-2 shadow-lg`}>
+                  ¡Ahorrá ${pkg.ahorro.toLocaleString()}!
+                </div>
+                <div
+                  className="w-0 h-0 border-x-4 border-x-transparent border-t-4 mx-auto"
+                  style={{
+                    borderTopColor:
+                      pkg.bg === "bg-blue-700"
+                        ? "#1D4ED8"
+                        : pkg.bg === "bg-green-700"
+                          ? "#047857"
+                          : pkg.bg === "bg-yellow-700"
+                            ? "#B45309"
+                            : pkg.bg === "bg-red-700"
+                              ? "#B91C1C"
+                              : "#000",
+                  }}
+                ></div>
+              </div>
+            )}
+
+          </div>
         ))}
       </div>
 
-      {/* Resumen de horarios seleccionados (si existen) */}
-      {selectedSchedule.length > 0 && (
-        <div className="mb-4 p-4 border rounded-md bg-gray-50">
-          <h3 className="text-lg font-semibold">Horarios seleccionados:</h3>
-          <ul className="list-disc pl-5">
-            {selectedSchedule.map((slot, index) => (
-              <li key={index}>
-                {slot.day} - {slot.time}
-              </li>
-            ))}
-          </ul>
+      {/* Recuadro de precios */}
+      {selectedPackage && (
+        <div className="mb-4 p-4 border rounded-md bg-gray-50 text-center">
+          <h3 className="text-lg font-semibold">
+            Precio Total: ${selectedPackage.total.toLocaleString("es-AR")}
+          </h3>
+          <p className="text-md">
+            Precio por Clase: ${selectedPackage.precioClase}
+          </p>
         </div>
       )}
-      {scheduleError && <p className="text-red-500 text-sm mb-2">{scheduleError}</p>}
+
+      {/* Botón para abrir el modal de selección de horarios */}
+      {selectedPackage && selectedSlots.length === 0 && (
+        <div className="mb-4 flex justify-center">
+          <button
+            onClick={handleOpenScheduleModal}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-secondary text-white hover:bg-secondary-hover transition-all"
+          >
+            Elegir Horarios
+          </button>
+        </div>
+      )}
+
+      {/* Resumen opcional de horarios seleccionados */}
+      {selectedSlots.length > 0 && (
+        <div className="mb-4 text-center">
+          <p className="text-green-600 font-medium">Horarios seleccionados</p>
+          {/* Aquí podrías mapear y mostrar los horarios elegidos */}
+        </div>
+      )}
 
       {/* Selección de categoría */}
       <div className="mb-4">
-        <label htmlFor="category" className="block text-gray-700 font-medium mb-2">
+        <label className="block text-gray-700 font-medium mb-2">
           Selecciona la categoría
         </label>
         <select
-          id="category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className={`w-full p-2 border rounded-md focus:outline-none ${categoryError ? "border-red-500" : "border-gray-300"}`}
+          className={`w-full p-2 border rounded-md focus:outline-none ${categoryError ? "border-red-500" : "border-gray-300"
+            }`}
         >
           <option value="">-- Selecciona una categoría --</option>
           {categories.map((cat) => (
@@ -208,16 +236,17 @@ const SolicitudClase: React.FC = () => {
             </option>
           ))}
         </select>
-        {categoryError && <p className="text-red-500 text-sm mt-1">{categoryError}</p>}
+        {categoryError && (
+          <p className="text-red-500 text-sm mt-1">{categoryError}</p>
+        )}
       </div>
 
       {/* Motivo de clase */}
       <div className="mb-4">
-        <label htmlFor="motivo" className="block text-gray-700 font-medium mb-2">
+        <label className="block text-gray-700 font-medium mb-2">
           Motivo de clase
         </label>
         <textarea
-          id="motivo"
           value={motivo}
           onChange={(e) => setMotivo(e.target.value)}
           placeholder="Escribe el motivo de la clase..."
@@ -226,46 +255,44 @@ const SolicitudClase: React.FC = () => {
           minLength={50}
           maxLength={200}
         />
-        {motivoError && <p className="text-red-500 text-sm mt-1">{motivoError}</p>}
-        <p className="mt-1 text-sm text-gray-500">{motivo.length} / 200 caracteres</p>
+        {motivoError && (
+          <p className="text-red-500 text-sm mt-1">{motivoError}</p>
+        )}
+        <p className="mt-1 text-sm text-gray-500">
+          {motivo.length} / 200 caracteres
+        </p>
       </div>
 
-      {/* Botones de acción */}
-      <div className="flex justify-end space-x-4">
-        <button
-          onClick={handleCancel}
-          className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all"
-        >
-          Cancelar
-        </button>
-        <button
-          onClick={handleConfirmReservation}
-          className="px-4 py-2 rounded-lg text-sm font-medium bg-secondary text-white hover:bg-secondary-hover transition-all"
-        >
-          Confirmar Reserva
-        </button>
-      </div>
-
-      {/* Modal de Agenda Semanal para un único profesor */}
-      {isModalOpen && selectedBooking && (
+      {/* Modal de selección de horarios */}
+      {selectedPackage && (
         <WeeklyAgendaModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          bookingOption={selectedBooking}
+          isOpen={isScheduleModalOpen}
+          onClose={() => setIsScheduleModalOpen(false)}
+          requiredClasses={selectedPackage.clases}
           availableSchedule={professorSchedule}
           professor="Profesor X"
-          onSubmit={handleModalSubmit}
+          onSubmit={handleScheduleSubmit}
         />
       )}
 
-      {/* Message Modal para mostrar éxito o error */}
-      {isMessageModalOpen && (
-        <MessageModal
-          isOpen={isMessageModalOpen}
-          onClose={() => setIsMessageModalOpen(false)}
-          type={messageModalType}
-          message={messageModalMessage}
-        />
+
+      {/* Botón para confirmar reserva */}
+      {!isPaymentStep && (selectedSlots.length > 0) && (
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={handleConfirmReserva}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-secondary text-white hover:bg-secondary-hover transition-all"
+          >
+            Continuar al pago
+          </button>
+        </div>
+      )}
+      {/* Componente de Pago embebido que se muestra debajo del formulario */}
+      {isPaymentStep && (
+        <div className="mt-8">
+          {/* Se pasan valores de ejemplo para bookingId y eventTypeId */}
+          <PaymentForm bookingId="123" eventTypeId="456" />
+        </div>
       )}
     </div>
   );
