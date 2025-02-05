@@ -2,11 +2,12 @@
 import { useState } from "react";
 
 interface PaymentFormProps {
-  bookingId: string;
-  eventTypeId: string;
+  clases: number;
+  precioClase: number;
+  total: number;
 }
 
-const PaymentForm = ({ bookingId, eventTypeId }: PaymentFormProps) => {
+const PaymentForm = ({ clases, precioClase, total }: PaymentFormProps) => {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,11 +21,9 @@ const PaymentForm = ({ bookingId, eventTypeId }: PaymentFormProps) => {
         body: JSON.stringify({
           items: [
             {
-              title: "English Class",
-              quantity: 1,
-              unit_price: 29.99,
-              bookingId,
-              eventTypeId,
+              title: "Clase de inglés",
+              quantity: clases,
+              unit_price: precioClase,
             },
           ],
         }),
@@ -37,39 +36,47 @@ const PaymentForm = ({ bookingId, eventTypeId }: PaymentFormProps) => {
       // Redirige al checkout de MercadoPago
       window.location.href = preference.init_point;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to process payment");
+      setError(
+        err instanceof Error ? err.message : "Failed to process payment"
+      );
     } finally {
       setProcessing(false);
     }
   };
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h1 className="text-3xl font-bold text-center mb-6">Asegurate tu Lugar!</h1>
+    <div className="bg-white shadow rounded-lg p-6 transform transition-all duration-300 ease-out translate-y-[20px] animate-fade-in">
+      <h1 className="text-3xl font-bold text-center mb-6">
+        ¡Asegurate tu Lugar!
+      </h1>
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
           <p className="text-red-700">{error}</p>
         </div>
       )}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-2">Booking Details</h2>
-        <p className="text-gray-600">Booking ID: {bookingId}</p>
-        <p className="text-gray-600">Event Type ID: {eventTypeId}</p>
+        <h2 className="text-xl font-semibold mb-2">Detalle del pago</h2>
         <div className="mt-4 p-4 bg-gray-50 rounded-lg">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-gray-700">English Class</span>
-            <span className="text-gray-900 font-medium">$29.99 USD</span>
+            <span className="text-gray-700">
+              Clase de inglés x {clases}
+            </span>
+            <span className="text-gray-900 font-medium">
+              ${precioClase.toLocaleString("es-AR")}
+            </span>
           </div>
           <div className="border-t border-gray-200 pt-2 mt-2">
             <div className="flex justify-between items-center">
               <span className="font-semibold">Total</span>
-              <span className="text-gray-900 font-bold">$29.99 USD</span>
+              <span className="text-gray-900 font-bold">
+                ${total.toLocaleString("es-AR")}
+              </span>
             </div>
           </div>
         </div>
       </div>
-      <button 
-        className="w-full bg-orange hover:bg-orange/90 text-white font-bold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+      <button
+        className="w-full bg-orange hover:bg-orange/90 text-white font-bold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
         onClick={handlePayment}
         disabled={processing}
       >
