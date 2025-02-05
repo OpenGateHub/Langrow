@@ -8,8 +8,8 @@ import PaymentForm from "../components/payment/page"; // Importamos el PaymentFo
 type Package = {
   nombre: string;
   total: number;
-  precioClase: number;
-  ahorro: number;
+  precioClase: string;
+  ahorro: string;
   clases: number;
   bg: string;
   hoverBg: string;
@@ -19,38 +19,38 @@ const packages: Package[] = [
   {
     nombre: "Única Clase",
     total: 67200,
-    precioClase: 14,
-    ahorro: 0,
+    precioClase: "18.000",
+    ahorro: "",
     clases: 1,
     bg: "bg-blue-700",
     hoverBg: "hover:bg-blue-800",
   },
   {
-    nombre: "Combo 1 (4 clases)",
+    nombre: "Combo 4 clases",
     total: 67200,
-    precioClase: 14,
-    ahorro: 4800,
+    precioClase: "16.800",
+    ahorro: "4.800",
     clases: 4,
     bg: "bg-green-700",
     hoverBg: "hover:bg-green-800",
   },
   {
-    nombre: "Combo 2 (8 clases)",
+    nombre: "Combo 8 clases",
     total: 124800,
-    precioClase: 13,
-    ahorro: 19200,
+    precioClase: "15.600",
+    ahorro: "9.600",
     clases: 8,
-    bg: "bg-red-700",
-    hoverBg: "hover:bg-red-800",
+    bg: "bg-yellow-700",
+    hoverBg: "hover:bg-yellow-800",
   },
   {
-    nombre: "Combo 3 (12 clases)",
+    nombre: "Combo 12 clases",
     total: 172800,
-    precioClase: 12,
-    ahorro: 43200,
+    precioClase: "14.400",
+    ahorro: "14.400",
     clases: 12,
-    bg: "bg-purple-700",
-    hoverBg: "hover:bg-purple-800",
+    bg: "bg-red-700",
+    hoverBg: "hover:bg-red-800",
   },
 ];
 
@@ -159,11 +159,11 @@ const SolicitudClase: React.FC = () => {
             >
               {pkg.nombre}
             </button>
-            {pkg.ahorro > 0 && (
+            {Number(pkg.ahorro) > 0 && (
               <div
                 className={`absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block ${pkg.bg} text-white text-xs rounded py-1 px-2 z-10`}
               >
-                ¡Ahorrá ${pkg.ahorro.toLocaleString("es-AR")}!
+                ¡Ahorrá ${pkg.ahorro.toLocaleString()}!
               </div>
             )}
           </div>
@@ -260,7 +260,7 @@ const SolicitudClase: React.FC = () => {
       )}
 
       {/* Botón para confirmar reserva */}
-      {!isPaymentStep && (
+      {!isPaymentStep && (selectedSlots.length > 0 ) && (
         <div className="flex justify-end mt-4">
           <button
             onClick={handleConfirmReserva}
