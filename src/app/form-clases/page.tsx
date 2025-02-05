@@ -288,10 +288,13 @@ const SolicitudClase: React.FC = () => {
         </div>
       )}
       {/* Componente de Pago embebido que se muestra debajo del formulario */}
-      {isPaymentStep && (
+      {isPaymentStep && selectedPackage && (
         <div className="mt-8">
-          {/* Se pasan valores de ejemplo para bookingId y eventTypeId */}
-          <PaymentForm bookingId="123" eventTypeId="456" />
+          <PaymentForm
+            clases={selectedPackage.clases}
+            precioClase={Number(selectedPackage.precioClase.replace(/\./g, ''))}
+            total={selectedPackage.total}
+          />
         </div>
       )}
     </div>
