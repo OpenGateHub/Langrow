@@ -153,8 +153,8 @@ const SolicitudClase: React.FC = () => {
                 setSelectedSlots([]); // Reinicia la selección de horarios al cambiar de paquete
               }}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pkg.bg} ${pkg.hoverBg} ${selectedPackage?.nombre === pkg.nombre
-                  ? "shadow-md text-white border-2 border-white"
-                  : "text-white"
+                ? "shadow-md text-white border-2 border-white"
+                : "text-white"
                 }`}
             >
               {pkg.nombre}
@@ -248,7 +248,7 @@ const SolicitudClase: React.FC = () => {
       </div>
 
       {/* Modal de selección de horarios */}
-      {isScheduleModalOpen && selectedPackage && (
+      {selectedPackage && (
         <WeeklyAgendaModal
           isOpen={isScheduleModalOpen}
           onClose={() => setIsScheduleModalOpen(false)}
@@ -259,8 +259,9 @@ const SolicitudClase: React.FC = () => {
         />
       )}
 
+
       {/* Botón para confirmar reserva */}
-      {!isPaymentStep && (selectedSlots.length > 0 ) && (
+      {!isPaymentStep && (selectedSlots.length > 0) && (
         <div className="flex justify-end mt-4">
           <button
             onClick={handleConfirmReserva}

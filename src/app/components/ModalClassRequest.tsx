@@ -53,7 +53,22 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
 
   const [selectedSlots, setSelectedSlots] = useState<SelectedSlotType[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  
+
+  // Estados y useEffect para animaciones de entrada/salida
+  const [visible, setVisible] = useState(false);
+  const [showContent, setShowContent] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setVisible(true);
+      setTimeout(() => setShowContent(true), 10);
+    } else {
+      setShowContent(false);
+      const timer = setTimeout(() => setVisible(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   const weekDays = Array.from({ length: 7 }).map((_, i) => {
     const date = new Date(currentWeekStart);
     date.setDate(currentWeekStart.getDate() + i);
@@ -63,12 +78,14 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
   const toggleSlotSelection = (date: Date, dayName: string, time: string) => {
     setErrorMessage("");
     const exists = selectedSlots.find(
-      (slot) => slot.date.toDateString() === date.toDateString() && slot.time === time
+      (slot) =>
+        slot.date.toDateString() === date.toDateString() && slot.time === time
     );
     if (exists) {
       setSelectedSlots(
         selectedSlots.filter(
-          (slot) => !(slot.date.toDateString() === date.toDateString() && slot.time === time)
+          (slot) =>
+            !(slot.date.toDateString() === date.toDateString() && slot.time === time)
         )
       );
     } else {
@@ -89,31 +106,43 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-[95%] max-w-4xl shadow-lg">
+    <div
+      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 transition-opacity duration-300 ${
+        showContent ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <div
+        className={`bg-white rounded-xl p-6 w-[95%] max-w-4xl shadow-lg transform transition-transform duration-300 ${
+          showContent ? "scale-100" : "scale-75"
+        }`}
+      >
         <div className="mb-4 text-center">
           <h2 className="text-xl font-bold">Agenda Semanal - {professor}</h2>
         </div>
         <div className="flex justify-between mb-4">
           <button
-            onClick={() => setCurrentWeekStart((prev) => {
-              const newDate = new Date(prev);
-              newDate.setDate(prev.getDate() - 7);
-              return newDate;
-            })}
+            onClick={() =>
+              setCurrentWeekStart((prev) => {
+                const newDate = new Date(prev);
+                newDate.setDate(prev.getDate() - 7);
+                return newDate;
+              })
+            }
             className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
           >
             <FaArrowLeft />
           </button>
           <button
-            onClick={() => setCurrentWeekStart((prev) => {
-              const newDate = new Date(prev);
-              newDate.setDate(prev.getDate() + 7);
-              return newDate;
-            })}
+            onClick={() =>
+              setCurrentWeekStart((prev) => {
+                const newDate = new Date(prev);
+                newDate.setDate(prev.getDate() + 7);
+                return newDate;
+              })
+            }
             className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
           >
             <FaArrowRight />
@@ -124,19 +153,28 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
             const dayAbbr = WEEK_DAYS[date.getDay()];
             const fullDayName = WEEK_DAYS_MAP[dayAbbr];
             return (
-              <div key={idx} className="border p-2 rounded-xl bg-gray-100 hover:bg-gray-300 transition-all duration-200 ease-in-out">
+              <div
+                key={idx}
+                className="border p-2 rounded-xl bg-gray-100 hover:bg-gray-300 transition-all duration-200 ease-in-out"
+              >
                 <div className="text-sm font-semibold">{dayAbbr}</div>
                 <div className="text-xs mb-2">{date.getDate()}</div>
                 <div className="flex flex-col gap-1">
-                  {availableSchedule.find(s => s.day === fullDayName)?.slots.map((time, i) => {
+                  {availableSchedule.find((s) => s.day === fullDayName)?.slots.map((time, i) => {
                     const isSelected = selectedSlots.some(
-                      (slot) => slot.date.toDateString() === date.toDateString() && slot.time === time
+                      (slot) =>
+                        slot.date.toDateString() === date.toDateString() &&
+                        slot.time === time
                     );
                     return (
                       <button
                         key={i}
                         onClick={() => toggleSlotSelection(date, fullDayName, time)}
-                        className={` transition-all duration-200 ease-in-out px-3 py-1 hover:scale-105 rounded ${isSelected ? "bg-secondary text-white" : "bg-white text-gray-800 border"}`}
+                        className={`transition-all duration-200 ease-in-out px-3 py-1 hover:scale-105 rounded ${
+                          isSelected
+                            ? "bg-secondary text-white"
+                            : "bg-white text-gray-800 border"
+                        }`}
                       >
                         {time}
                       </button>
@@ -147,10 +185,22 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
             );
           })}
         </div>
-        {errorMessage && <p className="text-red-500 text-center mt-2">{errorMessage}</p>}
+        {errorMessage && (
+          <p className="text-red-500 text-center mt-2">{errorMessage}</p>
+        )}
         <div className="flex justify-end space-x-4 mt-4">
-          <button onClick={onClose} className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all duration-200 ease-in-out">Cancelar</button>
-          <button onClick={handleSubmit} className="px-4 py-2 rounded bg-secondary text-white hover:bg-secondary-hover transition-all duration-200 ease-in-out">Confirmar Selección</button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all duration-200 ease-in-out"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="px-4 py-2 rounded bg-secondary text-white hover:bg-secondary-hover transition-all duration-200 ease-in-out"
+          >
+            Confirmar Selección
+          </button>
         </div>
       </div>
     </div>
