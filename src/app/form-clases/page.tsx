@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import WeeklyAgendaModal, { SelectedSlotType, DaySchedule } from "../components/ModalClassRequest";
-import PaymentForm from "../components/payment/page"; // Importamos el PaymentForm embebido
+import PaymentForm from "../components/payment/PaymentForm"; // Importamos el PaymentForm embebido
 
 // Tipo de paquete con datos y estilos
 type Package = {
@@ -160,12 +160,28 @@ const SolicitudClase: React.FC = () => {
               {pkg.nombre}
             </button>
             {Number(pkg.ahorro) > 0 && (
-              <div
-                className={`absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block ${pkg.bg} text-white text-xs rounded py-1 px-2 z-10`}
-              >
-                ¡Ahorrá ${pkg.ahorro.toLocaleString()}!
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 z-10 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200">
+                <div className={`${pkg.bg} text-white text-xs rounded py-1 px-2 shadow-lg`}>
+                  ¡Ahorrá ${pkg.ahorro.toLocaleString()}!
+                </div>
+                <div
+                  className="w-0 h-0 border-x-4 border-x-transparent border-t-4 mx-auto"
+                  style={{
+                    borderTopColor:
+                      pkg.bg === "bg-blue-700"
+                        ? "#1D4ED8"
+                        : pkg.bg === "bg-green-700"
+                          ? "#047857"
+                          : pkg.bg === "bg-yellow-700"
+                            ? "#B45309"
+                            : pkg.bg === "bg-red-700"
+                              ? "#B91C1C"
+                              : "#000",
+                  }}
+                ></div>
               </div>
             )}
+
           </div>
         ))}
       </div>
