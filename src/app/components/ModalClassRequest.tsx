@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import useWindowSize from "../../hooks/useWindowSize"; // Asegúrate de ajustar la ruta
 
 export type SelectedSlotType = {
   date: Date;
@@ -54,7 +55,7 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
   const [selectedSlots, setSelectedSlots] = useState<SelectedSlotType[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  // Estados y useEffect para animaciones de entrada/salida
+  // Estados para animación de entrada/salida
   const [visible, setVisible] = useState(false);
   const [showContent, setShowContent] = useState(false);
 
@@ -69,11 +70,30 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
     }
   }, [isOpen]);
 
+  // Genera los 7 días de la semana a partir de currentWeekStart
   const weekDays = Array.from({ length: 7 }).map((_, i) => {
     const date = new Date(currentWeekStart);
     date.setDate(currentWeekStart.getDate() + i);
     return date;
   });
+
+  // Hook que obtiene el tamaño de la ventana
+  const { width } = useWindowSize();
+  // Determina cuántos días mostrar según el ancho de la pantalla
+  let daysToShow = 7;
+  if (width < 640) {
+    daysToShow = 3;
+  } else if (width < 1024) {
+    daysToShow = 5;
+  }
+
+  // Estado para controlar el índice de inicio del slider en mobile
+  const [startIndex, setStartIndex] = useState(0);
+
+  // Reinicia el índice cuando cambie el número de días a mostrar
+  useEffect(() => {
+    setStartIndex(0);
+  }, [daysToShow]);
 
   const toggleSlotSelection = (date: Date, dayName: string, time: string) => {
     setErrorMessage("");
@@ -108,6 +128,9 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
 
   if (!visible) return null;
 
+  // Calcula la porción visible del array de días
+  const visibleDays = weekDays.slice(startIndex, startIndex + daysToShow);
+
   return (
     <div
       className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 transition-opacity duration-300 ${
@@ -123,33 +146,51 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
           <h2 className="text-xl font-bold">Agenda Semanal - {professor}</h2>
         </div>
         <div className="flex justify-between mb-4">
+          {/* Botón izquierdo: si estamos en mobile (menos días), desplaza el slider; si no, cambia de semana */}
           <button
-            onClick={() =>
-              setCurrentWeekStart((prev) => {
-                const newDate = new Date(prev);
-                newDate.setDate(prev.getDate() - 7);
-                return newDate;
-              })
-            }
+            onClick={() => {
+              if (daysToShow < 7) {
+                if (startIndex > 0) {
+                  setStartIndex(startIndex - 1);
+                }
+              } else {
+                setCurrentWeekStart((prev) => {
+                  const newDate = new Date(prev);
+                  newDate.setDate(prev.getDate() - 7);
+                  return newDate;
+                });
+              }
+            }}
             className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
           >
             <FaArrowLeft />
           </button>
+          {/* Botón derecho */}
           <button
-            onClick={() =>
-              setCurrentWeekStart((prev) => {
-                const newDate = new Date(prev);
-                newDate.setDate(prev.getDate() + 7);
-                return newDate;
-              })
-            }
+            onClick={() => {
+              if (daysToShow < 7) {
+                if (startIndex + daysToShow < 7) {
+                  setStartIndex(startIndex + 1);
+                }
+              } else {
+                setCurrentWeekStart((prev) => {
+                  const newDate = new Date(prev);
+                  newDate.setDate(prev.getDate() + 7);
+                  return newDate;
+                });
+              }
+            }}
             className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
           >
             <FaArrowRight />
           </button>
         </div>
-        <div className="grid grid-cols-7 gap-2 text-center">
-          {weekDays.map((date, idx) => {
+        {/* Muestra los días visibles en una grilla cuyo número de columnas depende de daysToShow */}
+        <div
+          className="gap-2 text-center"
+          style={{ display: "grid", gridTemplateColumns: `repeat(${daysToShow}, minmax(0, 1fr))` }}
+        >
+          {visibleDays.map((date, idx) => {
             const dayAbbr = WEEK_DAYS[date.getDay()];
             const fullDayName = WEEK_DAYS_MAP[dayAbbr];
             return (

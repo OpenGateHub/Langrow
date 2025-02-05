@@ -189,10 +189,10 @@ const SolicitudClase: React.FC = () => {
       {/* Recuadro de precios */}
       {selectedPackage && (
         <div className="mb-4 p-4 border rounded-md bg-gray-50 text-center">
-          <h3 className="text-lg font-semibold">
+          <h3 className="text-md ">
             Precio Total: ${selectedPackage.total.toLocaleString("es-AR")}
           </h3>
-          <p className="text-md">
+          <p className="text-lg font-semibold">
             Precio por Clase: ${selectedPackage.precioClase}
           </p>
         </div>
