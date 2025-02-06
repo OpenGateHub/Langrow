@@ -106,7 +106,10 @@ const Header = () => {
 
                   {/* Dropdown Menu */}
                   {isMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                    <div
+                      className={`absolute right-0 w-48 bg-white rounded-lg shadow-lg py-2 z-50 transition-all duration-300 ${isMenuOpen ? "opacity-100 scale-100 visible" : "opacity-0 scale-95 invisible"
+                        }`}
+                    >
                       <Link href="/profile">
                         <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
                           Perfil
@@ -158,60 +161,63 @@ const Header = () => {
       </div>
 
       {/* Subnav: Notificaciones */}
-      <div className="bg-gray-100 py-2">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-2">
-          {role === "profesor" && (
-            <>
-              {isTeacherRequest && (
-                <Link href="/mis-clases">
-                  <span className="text-sm text-gray-800">
-                    El alumno {studentName} {studentLastName} quiere tener una clase.
-                  </span>
-                </Link>
-              )}
-              {isTeacherScheduled && (
-                <Link href="/mis-clases">
-                  <span className="text-sm text-gray-800">
-                    Se agendó la clase con {studentName} {studentLastName}!
-                  </span>
-                </Link>
-              )}
-              {isTeacherConfirm && (
-                <Link href="/mis-clases">
-                  <span className="text-sm text-gray-800">
-                    Confirma tu clase con {studentName} {studentLastName}.
-                  </span>
-                </Link>
-              )}
-            </>
-          )}
-          {role === "alumno" && (
-            <>
-              {isStudentConfirmed && (
-                <Link href="/mis-clases">
-                  <span className="text-sm text-gray-800">
-                    Tu clase con {teacherName} {teacherLastName} fue confirmada!
-                  </span>
-                </Link>
-              )}
-              {isStudentReagend && (
-                <Link href="/mis-clases">
-                  <span className="text-sm text-gray-800">
-                    Tu clase con {teacherName} {teacherLastName} fue reagendada.
-                  </span>
-                </Link>
-              )}
-              {isStudentConfirm && (
-                <Link href="/mis-clases">
-                  <span className="text-sm text-gray-800">
-                    Confirma tu clase con {teacherName} {teacherLastName}.
-                  </span>
-                </Link>
-              )}
-            </>
-          )}
+      {(role === "profesor" && (isTeacherRequest || isTeacherScheduled || isTeacherConfirm)) ||
+        (role === "alumno" && (isStudentConfirmed || isStudentReagend || isStudentConfirm)) ? (
+        <div className="bg-gray-100 transition-all duration-300 ease-in-out overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-2">
+            {role === "profesor" && (
+              <>
+                {isTeacherRequest && (
+                  <Link href="/mis-clases">
+                    <span className="text-sm text-gray-800">
+                      El alumno {studentName} {studentLastName} quiere tener una clase.
+                    </span>
+                  </Link>
+                )}
+                {isTeacherScheduled && (
+                  <Link href="/mis-clases">
+                    <span className="text-sm text-gray-800">
+                      Se agendó la clase con {studentName} {studentLastName}!
+                    </span>
+                  </Link>
+                )}
+                {isTeacherConfirm && (
+                  <Link href="/mis-clases">
+                    <span className="text-sm text-gray-800">
+                      Confirma tu clase con {studentName} {studentLastName}.
+                    </span>
+                  </Link>
+                )}
+              </>
+            )}
+            {role === "alumno" && (
+              <>
+                {isStudentConfirmed && (
+                  <Link href="/mis-clases">
+                    <span className="text-sm text-gray-800">
+                      Tu clase con {teacherName} {teacherLastName} fue confirmada!
+                    </span>
+                  </Link>
+                )}
+                {isStudentReagend && (
+                  <Link href="/mis-clases">
+                    <span className="text-sm text-gray-800">
+                      Tu clase con {teacherName} {teacherLastName} fue reagendada.
+                    </span>
+                  </Link>
+                )}
+                {isStudentConfirm && (
+                  <Link href="/mis-clases">
+                    <span className="text-sm text-gray-800">
+                      Confirma tu clase con {teacherName} {teacherLastName}.
+                    </span>
+                  </Link>
+                )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      ) : null}
     </header>
   );
 };
