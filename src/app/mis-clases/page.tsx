@@ -1,6 +1,8 @@
 "use client"
 import { useState } from "react";
 import ReviewModal from "../components/ModalReview";
+import { useUser } from "@clerk/nextjs";
+
 
 type Review = {
   text: string;
@@ -35,7 +37,7 @@ const mockClasses: Record<string, ClassData[]> = {
       duration: "30 min",
       cost: "3 USD",
       status: "solicitada",
-      requestDescription: "Descripción de la solicitud realizada por el usuario.",
+      requestDescription: "Quiero mejorar mi lectura para poder leer newsletters de mi trabajo sin usar el traductor.",
       // No tiene reseñas ya que aún no pasó la clase
     },
   ],
@@ -50,7 +52,7 @@ const mockClasses: Record<string, ClassData[]> = {
       duration: "30 min",
       cost: "3 USD",
       status: "proxima",
-      requestDescription: "Descripción de la solicitud para el seguimiento.",
+      requestDescription: "Quiero seguir incorporando nuevo vocabulario para mi trabajo como abogado de comercio exterior.",
       // Aún no hay reseña
     },
   ],
@@ -79,7 +81,7 @@ const mockClasses: Record<string, ClassData[]> = {
       duration: "30 min",
       cost: "3 USD",
       status: "revisada",
-      requestDescription: "Descripción de la solicitud realizada para la revisión de tarea.",
+      requestDescription: "Tengo que aprender a redactar mails para mi nuevo trabajo en inglés.",
       userReview: {
         text: "La clase fue muy enriquecedora y me ayudó a mejorar mi escritura.",
         stars: 5,
@@ -104,11 +106,10 @@ const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => {
       {tabs.map((tab) => (
         <button
           key={tab}
-          className={`py-2 px-6 rounded-md transition-all duration-200 ${
-            activeTab === tab
-              ? "bg-secondary text-white shadow-md"
-              : "bg-gray-100 hover:bg-gray-200"
-          }`}
+          className={`py-2 px-6 rounded-md transition-all duration-200 ${activeTab === tab
+            ? "bg-secondary text-white shadow-md"
+            : "bg-gray-100 hover:bg-gray-200"
+            }`}
           onClick={() => setActiveTab(tab)}
         >
           {tab} ({mockClasses[tab].length})
@@ -125,6 +126,9 @@ type ClassCardProps = {
 
 const ClassCard: React.FC<ClassCardProps> = ({ classData, onConfirm }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+
+  const { user } = useUser();
+  const isTeacher = user?.publicMetadata?.role === "teacher";
 
   // Si el status es "no-confirmada" el botón mostrará "Confirmar"; para los demás mostrará "Ver"
   const buttonLabel =
@@ -147,7 +151,7 @@ const ClassCard: React.FC<ClassCardProps> = ({ classData, onConfirm }) => {
   };
 
   return (
-    <div className="border border-gray-200 rounded-xl p-6 mb-4 shadow-md bg-white">
+    <div className="border border-gray-200 rounded-xl p-6 shadow-md bg-white">
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-xl font-semibold text-gray-900">
@@ -174,50 +178,55 @@ const ClassCard: React.FC<ClassCardProps> = ({ classData, onConfirm }) => {
         </button>
       </div>
 
-      {/* Contenido expandido */}
-      <div className="mt-4 border-t pt-4">
-          {/* Si la clase tiene reseñas, mostramos ambas */}
-          {classData.userReview || classData.instructorReview ? (
-            <div className="space-y-4">
-              {classData.userReview && (
-                <div>
-                  <h4 className="font-semibold text-gray-800">
-                    Reseña del Usuario
-                  </h4>
-                  <p className="text-gray-700">{classData.userReview.text}</p>
-                  <p className="text-yellow-500">
-                    {renderStars(classData.userReview.stars)}
-                  </p>
-                </div>
-              )}
-              {classData.instructorReview && (
-                <div>
-                  <h4 className="font-semibold text-gray-800">
-                    Reseña del Profesor
-                  </h4>
-                  <p className="text-gray-700">{classData.instructorReview.text}</p>
-                  <p className="text-yellow-500">
-                    {renderStars(classData.instructorReview.stars)}
-                  </p>
-                </div>
-              )}
+      {/* Contenido expandido con transición PERFECTA TRANSICIÓN PARA COPIAR */}
+      <div
+        className={`border-t overflow-hidden transition-all duration-500 ease-in-out 
+    ${isExpanded ? "scale-y-100 max-h-[500px] opacity-100 py-4" : "scale-y-0 max-h-0 opacity-0 py-0"}
+  `}
+        style={{ transformOrigin: "top" }} // Se expande desde arriba
+      >
+        {/* Si la clase tiene reseñas, mostramos ambas */}
+        {classData.userReview || classData.instructorReview ? (
+          <div className="space-y-4">
+            {classData.userReview && (
               <div>
                 <h4 className="font-semibold text-gray-800">
-                  Descripción de la Solicitud
+                  Mi Reseña
                 </h4>
-                <p className="text-gray-700">{classData.requestDescription}</p>
+                <p className="text-gray-700">{classData.userReview.text}</p>
+                <p className="text-yellow-500">
+                  {renderStars(classData.userReview.stars)}
+                </p>
               </div>
-            </div>
-          ) : (
-            // Si no hay reseñas, solo mostramos la descripción de la solicitud
+            )}
+            {classData.instructorReview && (
+              <div>
+                <h4 className="font-semibold text-gray-800">
+                  {isTeacher ? "Reseña del alumno" : "Reseña del tutor"}
+                </h4>
+                <p className="text-gray-700">{classData.instructorReview.text}</p>
+                <p className="text-yellow-500">
+                  {renderStars(classData.instructorReview.stars)}
+                </p>
+              </div>
+            )}
             <div>
               <h4 className="font-semibold text-gray-800">
                 Descripción de la Solicitud
               </h4>
               <p className="text-gray-700">{classData.requestDescription}</p>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          // Si no hay reseñas, solo mostramos la descripción de la solicitud
+          <div>
+            <h4 className="font-semibold text-gray-800">
+              Descripción de la Solicitud
+            </h4>
+            <p className="text-gray-700">{classData.requestDescription}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
