@@ -69,7 +69,7 @@ const PaymentForm = ({ clases, precioClase, total }: PaymentFormProps) => {
             <div className="flex justify-between items-center">
               <span className="font-semibold">Total</span>
               <span className="text-gray-900 font-bold">
-                ${total.toLocaleString("es-AR")}
+              ${total ? total.toLocaleString("es-AR") : "0"}
               </span>
             </div>
           </div>

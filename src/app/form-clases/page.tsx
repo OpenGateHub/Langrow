@@ -18,7 +18,7 @@ type Package = {
 const packages: Package[] = [
   {
     nombre: "Única Clase",
-    total: 67200,
+    total: 18000,
     precioClase: "18.000",
     ahorro: "",
     clases: 1,
@@ -288,15 +288,18 @@ const SolicitudClase: React.FC = () => {
         </div>
       )}
       {/* Componente de Pago embebido que se muestra debajo del formulario */}
-      {isPaymentStep && selectedPackage && (
-        <div className="mt-8">
-          <PaymentForm
-            clases={selectedPackage.clases}
-            precioClase={Number(selectedPackage.precioClase.replace(/\./g, ''))}
-            total={selectedPackage.total}
-          />
-        </div>
-      )}
+
+      <div
+        className={`mt-8 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${isPaymentStep ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+      >
+        <PaymentForm
+          clases={selectedPackage?.clases!}
+          precioClase={Number(selectedPackage?.precioClase.replace(/\./g, ""))}
+          total={selectedPackage?.total!}
+        />
+      </div>
+
     </div>
   );
 };

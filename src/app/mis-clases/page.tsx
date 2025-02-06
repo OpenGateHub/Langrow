@@ -2,6 +2,11 @@
 import { useState } from "react";
 import ReviewModal from "../components/ModalReview";
 
+type Review = {
+  text: string;
+  stars: number;
+};
+
 type ClassData = {
   id: number;
   title: string;
@@ -12,6 +17,10 @@ type ClassData = {
   duration: string;
   cost: string;
   status: string;
+  userReview?: Review;
+  instructorReview?: Review;
+  requestDescription: string;
+
 };
 
 const mockClasses: Record<string, ClassData[]> = {
@@ -26,6 +35,8 @@ const mockClasses: Record<string, ClassData[]> = {
       duration: "30 min",
       cost: "3 USD",
       status: "solicitada",
+      requestDescription: "Descripción de la solicitud realizada por el usuario.",
+      // No tiene reseñas ya que aún no pasó la clase
     },
   ],
   "Próximas": [
@@ -39,6 +50,8 @@ const mockClasses: Record<string, ClassData[]> = {
       duration: "30 min",
       cost: "3 USD",
       status: "proxima",
+      requestDescription: "Descripción de la solicitud para el seguimiento.",
+      // Aún no hay reseña
     },
   ],
   "Necesita Atención": [
@@ -52,6 +65,7 @@ const mockClasses: Record<string, ClassData[]> = {
       duration: "30 min",
       cost: "3 USD",
       status: "no-confirmada",
+      requestDescription: "Revisión pendiente de confirmación.",
     },
   ],
   "Revisadas": [
@@ -65,6 +79,15 @@ const mockClasses: Record<string, ClassData[]> = {
       duration: "30 min",
       cost: "3 USD",
       status: "revisada",
+      requestDescription: "Descripción de la solicitud realizada para la revisión de tarea.",
+      userReview: {
+        text: "La clase fue muy enriquecedora y me ayudó a mejorar mi escritura.",
+        stars: 5,
+      },
+      instructorReview: {
+        text: "El alumno participó de manera activa y mostró mejoras notables.",
+        stars: 4,
+      },
     },
   ],
 };
@@ -101,48 +124,104 @@ type ClassCardProps = {
 };
 
 const ClassCard: React.FC<ClassCardProps> = ({ classData, onConfirm }) => {
-  // Si el status es "no-confirmada" el botón mostrará "Confirmar"; para los demás (incluyendo "solicitada", "proxima" o "revisada") mostrará "Ver"
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+
+  // Si el status es "no-confirmada" el botón mostrará "Confirmar"; para los demás mostrará "Ver"
   const buttonLabel =
-    classData.status === "no-confirmada" ? "Confirmar" : "Ver";
+    classData.status === "no-confirmada" ? "Confirmar" : isExpanded ? "Ocultar" : "Ver";
 
   const handleButtonClick = () => {
     if (classData.status === "no-confirmada") {
-      // Ejecuta la función para abrir el modal si la clase está sin confirmar
       onConfirm?.();
     } else {
-      // Para "solicitada", "proxima" o "revisada" se puede redirigir a ver detalles o realizar otra acción
-      console.log("Ver detalles de la clase:", classData.id);
+      // Alterna el estado expandido
+      setIsExpanded((prev) => !prev);
+      console.log("Ver/Ocultar detalles de la clase:", classData.id);
     }
   };
 
+  // Función auxiliar para renderizar las estrellas
+  const renderStars = (stars: number) => {
+    // Puedes personalizar la forma de mostrar las estrellas. Aquí se muestra un string repetido.
+    return "★".repeat(stars) + "☆".repeat(5 - stars);
+  };
+
   return (
-    <div className="border border-gray-200 rounded-xl p-6 mb-4 shadow-md bg-white flex justify-between items-center">
-      <div>
-        <h3 className="text-xl font-semibold text-gray-900">
-          {classData.title}
-        </h3>
-        <p className="text-gray-500">
-          {classData.instructor}{" "}
-          <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-sm ml-2">
-            {classData.category}
-          </span>
-        </p>
-        <p className="text-gray-600 mt-2 text-sm">
-          {classData.date} | {classData.time}
-        </p>
-        <p className="text-gray-600 text-sm">
-          Duración: {classData.duration} | Costo: {classData.cost}
-        </p>
+    <div className="border border-gray-200 rounded-xl p-6 mb-4 shadow-md bg-white">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-xl font-semibold text-gray-900">
+            {classData.title}
+          </h3>
+          <p className="text-gray-500">
+            {classData.instructor}{" "}
+            <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-sm ml-2">
+              {classData.category}
+            </span>
+          </p>
+          <p className="text-gray-600 mt-2 text-sm">
+            {classData.date} | {classData.time}
+          </p>
+          <p className="text-gray-600 text-sm">
+            Duración: {classData.duration} | Costo: {classData.cost}
+          </p>
+        </div>
+        <button
+          onClick={handleButtonClick}
+          className="bg-secondary text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:bg-secondary-hover transition-all"
+        >
+          {buttonLabel}
+        </button>
       </div>
-      <button
-        onClick={handleButtonClick}
-        className="bg-secondary text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:bg-secondary-hover transition-all"
-      >
-        {buttonLabel}
-      </button>
+
+      {/* Contenido expandido */}
+      <div className="mt-4 border-t pt-4">
+          {/* Si la clase tiene reseñas, mostramos ambas */}
+          {classData.userReview || classData.instructorReview ? (
+            <div className="space-y-4">
+              {classData.userReview && (
+                <div>
+                  <h4 className="font-semibold text-gray-800">
+                    Reseña del Usuario
+                  </h4>
+                  <p className="text-gray-700">{classData.userReview.text}</p>
+                  <p className="text-yellow-500">
+                    {renderStars(classData.userReview.stars)}
+                  </p>
+                </div>
+              )}
+              {classData.instructorReview && (
+                <div>
+                  <h4 className="font-semibold text-gray-800">
+                    Reseña del Profesor
+                  </h4>
+                  <p className="text-gray-700">{classData.instructorReview.text}</p>
+                  <p className="text-yellow-500">
+                    {renderStars(classData.instructorReview.stars)}
+                  </p>
+                </div>
+              )}
+              <div>
+                <h4 className="font-semibold text-gray-800">
+                  Descripción de la Solicitud
+                </h4>
+                <p className="text-gray-700">{classData.requestDescription}</p>
+              </div>
+            </div>
+          ) : (
+            // Si no hay reseñas, solo mostramos la descripción de la solicitud
+            <div>
+              <h4 className="font-semibold text-gray-800">
+                Descripción de la Solicitud
+              </h4>
+              <p className="text-gray-700">{classData.requestDescription}</p>
+            </div>
+          )}
+        </div>
     </div>
   );
 };
+
 
 type ClassListProps = {
   activeTab: string;
