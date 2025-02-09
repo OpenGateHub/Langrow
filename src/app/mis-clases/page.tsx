@@ -128,7 +128,7 @@ const ClassCard: React.FC<ClassCardProps> = ({ classData, onConfirm }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const { user } = useUser();
-  const isTeacher = user?.publicMetadata?.role === "teacher";
+  const isTeacher = user?.unsafeMetadata?.role === "org:profesor";
 
   // Si el status es "no-confirmada" el botón mostrará "Confirmar"; para los demás mostrará "Ver"
   const buttonLabel =

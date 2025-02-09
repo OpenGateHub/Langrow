@@ -5,7 +5,7 @@ import { useUser } from "@clerk/nextjs";
 
 export default function HomePage() {
   const { user } = useUser();
-  const role = user?.publicMetadata?.role || "guest";
+  const role = user?.unsafeMetadata?.role || "guest";
 
   const tutorProps: HomeTemplateProps = {
     hero: {
@@ -161,5 +161,5 @@ export default function HomePage() {
     },
   };
 
-  return <HomeTemplate {...(role === "profesor" ? tutorProps : studentProps)} />;
+  return <HomeTemplate {...(role === "org:profesor" ? tutorProps : studentProps)} />;
 }
