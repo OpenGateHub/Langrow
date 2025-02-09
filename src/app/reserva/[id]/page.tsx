@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import WeeklyAgendaModal, { SelectedSlotType, DaySchedule } from "../components/ModalClassRequest";
-import PaymentForm from "../components/payment/PaymentForm"; // Importamos el PaymentForm embebido
+import WeeklyAgendaModal, { SelectedSlotType, DaySchedule } from "../../components/ModalClassRequest";
+import PaymentForm from "../../components/payment/PaymentForm"; // Importamos el PaymentForm embebido
 
 // Tipo de paquete con datos y estilos
 type Package = {

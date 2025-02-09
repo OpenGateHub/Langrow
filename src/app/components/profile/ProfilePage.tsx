@@ -6,6 +6,8 @@ import Image from "next/image";
 import { CiLocationOn } from "react-icons/ci";
 import { useUser } from "@clerk/nextjs";
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
+import { link } from "fs";
+import Link from "next/link";
 
 interface Achievement {
   icon: string;
@@ -116,9 +118,12 @@ const ProfilePage = ({
                     // Si el usuario logueado es alumno y el perfil corresponde a un tutor, se muestra "Reservar"
                     loggedUserRole === "org:alumno" &&
                     isTutor && (
-                      <button className="bg-white text-secondary px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-600">
-                        Reservar
-                      </button>
+                      <Link href={`/reserva/${profileId}`} passHref>
+                        <button className=" absolute mt-[40px] bg-white text-secondary focus:bg-secondary focus:text-white hover:bg-gray-200 group font-semibold px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-60 border-2 border-gray-300 transition-all duration-200 ease-in-out">
+                          Reservar
+                        </button>
+                      </Link>
+
                     )
                   )}
                 </div>
