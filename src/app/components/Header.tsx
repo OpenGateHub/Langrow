@@ -144,7 +144,7 @@ const Header = () => {
           <div className="hidden md:flex space-x-8">
             {role === "org:alumno" ? (
               <Link href="/browse-tutor">
-                <button className="text-gray-600 hover:text-primary px-3 py-2 text-sm font-medium font-archivo ">
+                <button className="text-gray-600 px-3 py-2 text-sm font-medium font-archivo rounded-full hover:scale-105 hover:bg-primary hover:text-white transition-all duration-300 ease-in-out ">
                   Encontrá un Profesor
                 </button>
               </Link>

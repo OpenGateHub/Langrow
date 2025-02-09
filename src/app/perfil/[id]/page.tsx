@@ -35,7 +35,8 @@ export default function TutorProfile() {
       location={tutor.location}
       description={tutor.longDescription}
       achievements={tutor.achievements}
-      reviews={tutor.reviews.map((r) => ({
+      profileId={tutor.id}
+            reviews={tutor.reviews.map((r) => ({
         reviewerName: r.name,
         reviewText: r.review,
         stars: r.rating,

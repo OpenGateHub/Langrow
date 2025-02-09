@@ -88,7 +88,9 @@ export default function TeachersList() {
     <main className="bg-white min-h-screen p-8">
       <AnimateOnScroll>
         <h1 className="text-4xl md:text-5xl text-secondary font-bold text-center mb-8 tracking-tight">
-          <span className="mb-3">Elige Tu Experto <br /> en</span>
+          <span className="mb-3">
+            Elige Tu Experto <br /> en
+          </span>
           <span className="text-orange"> Inglés</span>
         </h1>
       </AnimateOnScroll>
@@ -114,38 +116,38 @@ export default function TeachersList() {
             </button>
           </AnimateOnScroll>
 
-          {filtersVisible && (           <div className="bg-gray-100 p-4 rounded-2xl shadow-sm space-y-4 transition-all duration-500 ease-in-out">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Rango de precio: {priceRange[0]} - {priceRange[1]}
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="50"
-                step="1"
-                value={priceRange[1]}
-                onChange={(e) => setPriceRange([0, Number(e.target.value)])}
-                className="w-full"
-              />
-            </div>
+          {filtersVisible && (
+            <div className="bg-gray-100 p-4 rounded-2xl shadow-sm space-y-4 transition-all duration-500 ease-in-out">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Rango de precio: {priceRange[0]} - {priceRange[1]}
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="50"
+                  step="1"
+                  value={priceRange[1]}
+                  onChange={(e) => setPriceRange([0, Number(e.target.value)])}
+                  className="w-full"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ordenar por:
-              </label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="p-2 border border-gray-300 rounded-2xl w-full"
-              >
-                <option value="availability">Disponibilidad</option>
-                <option value="reviews">Cantidad de reviews</option>
-                <option value="rating">Mejor calificación</option>
-              </select>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ordenar por:
+                </label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="p-2 border border-gray-300 rounded-2xl w-full"
+                >
+                  <option value="availability">Disponibilidad</option>
+                  <option value="reviews">Cantidad de reviews</option>
+                  <option value="rating">Mejor calificación</option>
+                </select>
+              </div>
             </div>
-          </div>
-        
           )}
         </div>
 
@@ -155,7 +157,7 @@ export default function TeachersList() {
             <AnimateOnScroll key={teacher.id} delay={index * 100}>
               <div className="flex items-center bg-white border border-gray-200 rounded-2xl py-4 pr-4 shadow-md hover:shadow-lg transition-shadow">
                 <Link
-                  href="/"
+                  href={`/perfil/${teacher.id}`}
                   className="flex items-center space-x-4 flex-1 group transition-transform duration-200 rounded-lg p-2 relative"
                 >
                   {/* Tooltip */}
