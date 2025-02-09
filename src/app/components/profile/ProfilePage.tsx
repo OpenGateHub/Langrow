@@ -63,74 +63,73 @@ const ProfilePage = ({
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 space-y-6">
         {/* Header con banner */}
         <AnimateOnScroll>
-          <div
-            className="relative bg-cover rounded-xl opacity-0 animate-fade-in"
-            style={{ backgroundImage: `url('/profile-banner.png')` }}
-          >
-            <div className="flex items-center p-6 relative space-x-6 text-white rounded-lg">
-              {/* Foto de perfil con botón de edición */}
-              <AnimateOnScroll delay={100}>
-                <div className="flex items-center p-6 relative space-x-6 text-white rounded-lg">
-                  <Image
-                    width={150}
-                    height={150}
-                    src={profileImage}
-                    alt={name}
-                    className="rounded-full absolute mt-[80px] z-500 w-[150px] max-w-[150px] h-[150px] border-4 border-white"
-                  />
-                  {computedCanEdit && (
-                    <button className="absolute bottom-0 right-0 bg-white text-secondary px-2 py-1 rounded-full text-xs shadow">
-                      Editar Foto
-                    </button>
-                  )}
-                </div>
-              </AnimateOnScroll>
-              {/* Datos del perfil */}
-              <AnimateOnScroll delay={200}>
-                <div className="pl-[140px]">
-                  <div className="flex items-center">
-                    <h1 className="text-2xl font-bold opacity-0 animate-fade-in">
-                      {name}
-                    </h1>
-                    {computedCanEdit && (
-                      <button className="ml-2 bg-white text-secondary px-2 py-1 rounded-full text-xs shadow opacity-0 animate-fade-in delay-200">
-                        Editar Nombre
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-sm opacity-0 animate-fade-in delay-300">
-                    {title}
-                  </p>
-                  <p className="flex items-center opacity-0 animate-fade-in delay-400">
-                    <CiLocationOn className="mr-1" />{" "}
-                    <span className="text-sm">{location}</span>
-                  </p>
-                </div>
-              </AnimateOnScroll>
-              {/* Botón de Editar Perfil o Reservar */}
-              <AnimateOnScroll delay={500}>
-                <div className="ml-auto">
-                  {computedCanEdit ? (
-                    <button className="bg-white text-secondary px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-600">
-                      Editar Perfil
-                    </button>
-                  ) : (
-                    // Si el usuario logueado es alumno y el perfil corresponde a un tutor, se muestra "Reservar"
-                    loggedUserRole === "org:alumno" &&
-                    isTutor && (
-                      <Link href={`/reserva/${profileId}`} passHref>
-                        <button className=" absolute mt-[40px] bg-white text-secondary focus:bg-secondary focus:text-white hover:bg-gray-200 group font-semibold px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-60 border-2 border-gray-300 transition-all duration-200 ease-in-out">
-                          Reservar
-                        </button>
-                      </Link>
-
-                    )
-                  )}
-                </div>
-              </AnimateOnScroll>
-            </div>
+  <div
+    className="relative bg-cover rounded-xl opacity-0 animate-fade-in"
+    style={{ backgroundImage: `url('/profile-banner.png')` }}
+  >
+    <div className="flex flex-col md:flex-row items-center p-6 relative space-y-6 md:space-y-0 md:space-x-6 text-white rounded-lg">
+      {/* Foto de perfil con botón de edición */}
+      <AnimateOnScroll delay={100}>
+        <div className="relative flex justify-center md:justify-start">
+          <Image
+            width={150}
+            height={150}
+            src={profileImage}
+            alt={name}
+            className="rounded-full relative mt-3 md:absolute md:mt-[-20px] md:z-500 w-[150px] max-w-[150px] h-[150px] border-4 border-white"
+          />
+          {computedCanEdit && (
+            <button className="absolute bottom-0 right-0 bg-white text-secondary px-2 py-1 rounded-full text-xs shadow">
+              Editar Foto
+            </button>
+          )}
+        </div>
+      </AnimateOnScroll>
+      {/* Datos del perfil */}
+      <AnimateOnScroll delay={200}>
+        <div className="pl-0 md:pl-[140px] text-center md:text-left">
+          <div className="flex items-center justify-center md:justify-start">
+            <h1 className="text-2xl font-bold opacity-0 animate-fade-in">
+              {name}
+            </h1>
+            {computedCanEdit && (
+              <button className="ml-2 bg-white text-secondary px-2 py-1 rounded-full text-xs shadow opacity-0 animate-fade-in delay-200">
+                Editar Nombre
+              </button>
+            )}
           </div>
-        </AnimateOnScroll>
+          <p className="text-sm opacity-0 animate-fade-in delay-300">
+            {title}
+          </p>
+          <p className="flex items-center justify-center md:justify-start opacity-0 animate-fade-in delay-400">
+            <CiLocationOn className="mr-1" />{" "}
+            <span className="text-sm">{location}</span>
+          </p>
+        </div>
+      </AnimateOnScroll>
+      {/* Botón de Editar Perfil o Reservar */}
+      <AnimateOnScroll delay={500}>
+        <div className="mt-4 md:mt-0 md:ml-auto">
+          {computedCanEdit ? (
+            <button className="bg-white text-secondary px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-600">
+              Editar Perfil
+            </button>
+          ) : (
+            loggedUserRole === "org:alumno" &&
+            isTutor && (
+              <Link href={`/reserva/${profileId}`} passHref>
+                <button className="md:absolute md:mt-[40px] bg-white text-secondary focus:bg-secondary focus:text-white hover:bg-gray-200 group font-semibold px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-60 border-2 border-gray-300 transition-all duration-200 ease-in-out">
+                  Reservar
+                </button>
+              </Link>
+            )
+          )}
+        </div>
+      </AnimateOnScroll>
+    </div>
+  </div>
+</AnimateOnScroll>
+
 
         <div className="pl-6">
           {/* Sección Descripción con opción de editar */}
