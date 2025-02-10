@@ -84,7 +84,7 @@ export default function RegisterPage() {
     }
   };
 
-  const handleEmailValidation = async  (e: React.FormEvent) => {
+  const handleEmailValidation = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const form = e.target as HTMLFormElement;
@@ -100,25 +100,25 @@ export default function RegisterPage() {
           break;
         case "org:student":
           router.push('/browse-tutor');
-          break
+          break;
         default:
-          console.error("No hay pagina por defecto.")
+          console.error("No hay pagina por defecto.");
           break;
       }
     } catch (e: any) {
       console.error(e);
-      displayMessage("error", "Ha ocurrido un error al validar el token, intente nuevamente más tarde.")
+      displayMessage("error", "Ha ocurrido un error al validar el token, intente nuevamente más tarde.");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <main className="min-h-screen flex items-center justify-center relative">
       <BlockUi isActive={loading} />
       <MessageModal isOpen={display}
           message={message}
-          onClose={() => { setDisplay(false)}}
+          onClose={() => { setDisplay(false) }}
           type={messageType} />
       <div className="absolute inset-0 -z-10">
         <Image
@@ -129,7 +129,7 @@ export default function RegisterPage() {
           className="opacity-80"
         />
       </div>
-      <div className="bg-white bg-opacity-70 shadow-lg rounded-3xl flex w-4/5 max-w-5xl overflow-hidden">
+      <div className="bg-white bg-opacity-70 shadow-lg rounded-3xl flex flex-col sm:flex-row w-full sm:w-4/5 max-w-5xl overflow-hidden mx-4 my-3">
         {/* Left Section */}
         <div className="flex-1 bg-cover bg-center relative hidden lg:block pl-5">
           <div className="absolute inset-0"></div>
@@ -140,7 +140,7 @@ export default function RegisterPage() {
               height={40}
               alt="logo"
               className="mb-2"
-            ></Image>
+            />
             <h1 className="text-3xl font-bold mb-4">
               Bienvenido <br /> a Langrow
             </h1>
@@ -155,12 +155,10 @@ export default function RegisterPage() {
           <h2 className="text-2xl font-bold mb-6 text-left">Regístrate</h2>
           {!isVerificating && (
             <form name={"register-user"} onSubmit={handleSubmit} className="space-y-4">
-              <div className="flex space-x-4">
+              {/* Inputs de Nombre y Apellido en columna en mobile y en fila en sm+ */}
+              <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                 <div className="flex-1">
-                  <label
-                    htmlFor="firstName"
-                    className="block text-sm font-medium text-gray-700"
-                  >
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
                     Nombre/s
                   </label>
                   <input
@@ -173,10 +171,7 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div className="flex-1">
-                  <label
-                    htmlFor="lastName"
-                    className="block text-sm font-medium text-gray-700"
-                  >
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
                     Apellido
                   </label>
                   <input
@@ -191,10 +186,7 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Correo electrónico
                 </label>
                 <input
@@ -208,10 +200,7 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Contraseña
                 </label>
                 <input
@@ -226,10 +215,7 @@ export default function RegisterPage() {
 
               {/* Selección de rol */}
               <div>
-                <label
-                  htmlFor="role"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="role" className="block text-sm font-medium text-gray-700">
                   ¿Qué quieres hacer?
                 </label>
                 <select
@@ -262,26 +248,23 @@ export default function RegisterPage() {
           )}
           {isVerificating && (
             <form name={"validate-user"} onSubmit={handleEmailValidation} className="space-y-4">
-              <div className="flex space-x-4">
+              <div className="flex flex-col">
                 <div className="flex-1">
-                  <label
-                      htmlFor="verificationToken"
-                      className="block text-sm font-medium text-gray-700"
-                  >
-                    Codigo de verificación
+                  <label htmlFor="verificationToken" className="block text-sm font-medium text-gray-700">
+                    Código de verificación
                   </label>
                   <input
-                      type="text"
-                      id="verificationToken"
-                      name="verificationToken"
-                      required
-                      placeholder="XXXXXX"
-                      className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
+                    type="text"
+                    id="verificationToken"
+                    name="verificationToken"
+                    required
+                    placeholder="XXXXXX"
+                    className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
                   />
                   <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full bg-secondary hover:bg-primary-hover text-white font-bold py-2 mt-2 rounded-md shadow-sm transition"
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-secondary hover:bg-primary-hover text-white font-bold py-2 mt-2 rounded-md shadow-sm transition"
                   >
                     {loading ? "Verificando..." : "Verificar"}
                   </button>
@@ -290,28 +273,20 @@ export default function RegisterPage() {
             </form>
           )}
           {/* Google Login */}
-          <div className="flex flex-row items-center ">
-            <div className="flex items-center justify-between mt-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center justify-center">
               <SignInButton mode="modal">
-                <button className="flex items-center bg-white border border-gray-300 rounded-md px-4 py-2 shadow-sm hover:bg-gray-200 transition duration-200">
-                  <img
-                    src="/google.png"
-                    alt="Google"
-                    className="w-5 h-5 mr-2"
-                  /> <span className="text-sm">
-                  Regístrate con Google
-                  </span>
+                <button className="flex items-center bg-white border border-gray-300 rounded-md mt-3 px-4 py-2 shadow-sm hover:bg-gray-200 transition duration-200">
+                  <img src="/google.png" alt="Google" className="w-5 h-5 mr-2" />
+                  <span className="text-sm">Regístrate con Google</span>
                 </button>
               </SignInButton>
             </div>
 
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600 ml-2 mt-1">
+            <div className="text-center sm:mt-3">
+              <p className="text-sm text-gray-600">
                 ¿Ya tienes una cuenta?{" "}
-                <Link
-                  href="/auth/login"
-                  className="text-secondary font-bold hover:underline"
-                >
+                <Link href="/auth/login" className="text-secondary font-bold hover:underline">
                   Ingresa
                 </Link>
               </p>
