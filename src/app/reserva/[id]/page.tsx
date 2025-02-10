@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import WeeklyAgendaModal, { SelectedSlotType, DaySchedule } from "../../components/ModalClassRequest";
 import PaymentForm from "../../components/payment/PaymentForm"; // Importamos el PaymentForm embebido
+import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 
 // Tipo de paquete con datos y estilos
 type Package = {
@@ -139,129 +140,139 @@ const SolicitudClase: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-6 bg-gray-100 py-6 my-6 rounded-xl min-h-screen">
-      <h1 className="text-3xl font-bold text-center text-gray-900 mb-6">
-        Solicitar Clase
-      </h1>
+      <AnimateOnScroll>
+        <h1 className="text-3xl font-bold text-center text-gray-900 mb-6">
+          Solicitar Clase
+        </h1>
+      </AnimateOnScroll>
 
       {/* Selección de paquete */}
-      <div className="flex flex-wrap justify-center gap-4 mb-6">
-        {packages.map((pkg, index) => (
-          <div key={index} className="relative group">
-            <button
-              onClick={() => {
-                setSelectedPackage(pkg);
-                setSelectedSlots([]); // Reinicia la selección de horarios al cambiar de paquete
-              }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pkg.bg} ${pkg.hoverBg} ${selectedPackage?.nombre === pkg.nombre
-                ? "shadow-md text-white border-2 border-white"
-                : "text-white"
-                }`}
-            >
-              {pkg.nombre}
-            </button>
-            {Number(pkg.ahorro) > 0 && (
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 z-10 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200">
-                <div className={`${pkg.bg} text-white text-xs rounded py-1 px-2 shadow-lg`}>
-                  ¡Ahorrá ${pkg.ahorro.toLocaleString()}!
+      <AnimateOnScroll delay={100}>
+        <div className="flex flex-wrap justify-center gap-4 mb-6">
+          {packages.map((pkg, index) => (
+            <div key={index} className="relative group">
+              <button
+                onClick={() => {
+                  setSelectedPackage(pkg);
+                  setSelectedSlots([]); // Reinicia la selección de horarios al cambiar de paquete
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pkg.bg} ${pkg.hoverBg} ${selectedPackage?.nombre === pkg.nombre
+                  ? "shadow-md text-white border-2 border-white"
+                  : "text-white"
+                  }`}
+              >
+                {pkg.nombre}
+              </button>
+              {Number(pkg.ahorro) > 0 && (
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 z-10 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200">
+                  <div className={`${pkg.bg} text-white text-xs rounded py-1 px-2 shadow-lg`}>
+                    ¡Ahorrá ${pkg.ahorro.toLocaleString()}!
+                  </div>
+                  <div
+                    className="w-0 h-0 border-x-4 border-x-transparent border-t-4 mx-auto"
+                    style={{
+                      borderTopColor:
+                        pkg.bg === "bg-blue-700"
+                          ? "#1D4ED8"
+                          : pkg.bg === "bg-green-700"
+                            ? "#047857"
+                            : pkg.bg === "bg-yellow-700"
+                              ? "#B45309"
+                              : pkg.bg === "bg-red-700"
+                                ? "#B91C1C"
+                                : "#000",
+                    }}
+                  ></div>
                 </div>
-                <div
-                  className="w-0 h-0 border-x-4 border-x-transparent border-t-4 mx-auto"
-                  style={{
-                    borderTopColor:
-                      pkg.bg === "bg-blue-700"
-                        ? "#1D4ED8"
-                        : pkg.bg === "bg-green-700"
-                          ? "#047857"
-                          : pkg.bg === "bg-yellow-700"
-                            ? "#B45309"
-                            : pkg.bg === "bg-red-700"
-                              ? "#B91C1C"
-                              : "#000",
-                  }}
-                ></div>
-              </div>
-            )}
-
-          </div>
-        ))}
-      </div>
-
-      {/* Recuadro de precios */}
-      {selectedPackage && (
-        <div className="mb-4 p-4 border rounded-md bg-gray-50 text-center">
-          <h3 className="text-md ">
-            Precio Total: ${selectedPackage.total.toLocaleString("es-AR")}
-          </h3>
-          <p className="text-lg font-semibold">
-            Precio por Clase: ${selectedPackage.precioClase}
-          </p>
+              )}
+            </div>
+          ))}
         </div>
-      )}
+      </AnimateOnScroll>
 
+      {/* Recuadro de precios con efecto collapse y scale suave */}
       {/* Botón para abrir el modal de selección de horarios */}
       {selectedPackage && selectedSlots.length === 0 && (
-        <div className="mb-4 flex justify-center">
+        <div className={` text-center overflow-hidden transform transition-all duration-700 ease-in-out origin-top ${selectedPackage ? "max-h-[1000px] opacity-100 scale-y-100" : "max-h-0 opacity-0 scale-y-0"}`}>
+          <div className={`mb-4 p-4 border rounded-md bg-gray-50 text-center`}>
+            <div className="mb-4 flex flex-col justify-center">
+              <h3 className="text-md">
+                Precio Total: ${selectedPackage.total.toLocaleString("es-AR")}
+              </h3>
+              <p className="text-lg font-semibold">
+                Precio por Clase: ${selectedPackage.precioClase}
+              </p>
+            </div>
+          </div>
           <button
             onClick={handleOpenScheduleModal}
             className="px-4 py-2 rounded-lg text-sm font-medium bg-secondary text-white hover:bg-secondary-hover transition-all"
           >
             Elegir Horarios
           </button>
+
         </div>
+
       )}
 
       {/* Resumen opcional de horarios seleccionados */}
       {selectedSlots.length > 0 && (
-        <div className="mb-4 text-center">
-          <p className="text-green-600 font-medium">Horarios seleccionados</p>
-          {/* Aquí podrías mapear y mostrar los horarios elegidos */}
-        </div>
+        <AnimateOnScroll delay={400}>
+          <div className="mb-4 text-center">
+            <p className="text-green-600 font-medium">Horarios seleccionados</p>
+            {/* Aquí podrías mapear y mostrar los horarios elegidos */}
+          </div>
+        </AnimateOnScroll>
       )}
 
       {/* Selección de categoría */}
-      <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-2">
-          Selecciona la categoría
-        </label>
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className={`w-full p-2 border rounded-md focus:outline-none ${categoryError ? "border-red-500" : "border-gray-300"
-            }`}
-        >
-          <option value="">-- Selecciona una categoría --</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
-        {categoryError && (
-          <p className="text-red-500 text-sm mt-1">{categoryError}</p>
-        )}
-      </div>
+      <AnimateOnScroll delay={500}>
+        <div className="mb-4">
+          <label className="block text-gray-700 font-medium mb-2">
+            Selecciona la categoría
+          </label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className={`w-full p-2 border rounded-md focus:outline-none ${categoryError ? "border-red-500" : "border-gray-300"
+              }`}
+          >
+            <option value="">-- Selecciona una categoría --</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+          {categoryError && (
+            <p className="text-red-500 text-sm mt-1">{categoryError}</p>
+          )}
+        </div>
+      </AnimateOnScroll>
 
       {/* Motivo de clase */}
-      <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-2">
-          Motivo de clase
-        </label>
-        <textarea
-          value={motivo}
-          onChange={(e) => setMotivo(e.target.value)}
-          placeholder="Escribe el motivo de la clase..."
-          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
-          rows={4}
-          minLength={50}
-          maxLength={200}
-        />
-        {motivoError && (
-          <p className="text-red-500 text-sm mt-1">{motivoError}</p>
-        )}
-        <p className="mt-1 text-sm text-gray-500">
-          {motivo.length} / 200 caracteres
-        </p>
-      </div>
+      <AnimateOnScroll delay={600}>
+        <div className="mb-4">
+          <label className="block text-gray-700 font-medium mb-2">
+            Motivo de clase
+          </label>
+          <textarea
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value)}
+            placeholder="Escribe el motivo de la clase..."
+            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+            rows={4}
+            minLength={50}
+            maxLength={200}
+          />
+          {motivoError && (
+            <p className="text-red-500 text-sm mt-1">{motivoError}</p>
+          )}
+          <p className="mt-1 text-sm text-gray-500">
+            {motivo.length} / 200 caracteres
+          </p>
+        </div>
+      </AnimateOnScroll>
 
       {/* Modal de selección de horarios */}
       {selectedPackage && (
@@ -275,9 +286,9 @@ const SolicitudClase: React.FC = () => {
         />
       )}
 
-
       {/* Botón para confirmar reserva */}
-      {!isPaymentStep && (selectedSlots.length > 0) && (
+      {!isPaymentStep && selectedSlots.length > 0 && (
+
         <div className="flex justify-end mt-4">
           <button
             onClick={handleConfirmReserva}
@@ -286,23 +297,26 @@ const SolicitudClase: React.FC = () => {
             Continuar al pago
           </button>
         </div>
+
       )}
+
       {/* Componente de Pago embebido que se muestra debajo del formulario */}
       {selectedPackage !== null && (
-        <div
-          className={`mt-8 overflow-hidden transition-all duration-300 ease-in-out ${isPaymentStep ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
-            }`}
-        >
-          <PaymentForm
-            clases={selectedPackage.clases}
-            precioClase={Number(selectedPackage.precioClase.replace(/\./g, ""))}
-            total={selectedPackage.total}
-          />
-        </div>
+        <AnimateOnScroll delay={800}>
+          <div
+            className={`mt-8 overflow-hidden origin-top transition-all duration-300 ease-in-out ${isPaymentStep ? "max-h-[1000px] opacity-100 scale-100" : "max-h-0 opacity-0 scale-95"
+              }`}
+          >
+            <PaymentForm
+              clases={selectedPackage.clases}
+              precioClase={Number(selectedPackage.precioClase.replace(/\./g, ""))}
+              total={selectedPackage.total}
+            />
+          </div>
+        </AnimateOnScroll>
       )}
     </div>
   );
 };
 
 export default SolicitudClase;
-

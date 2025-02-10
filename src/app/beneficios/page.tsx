@@ -6,37 +6,45 @@ import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 
 interface Reward {
   id: number;
+  type: "claseDiaria" | "comision" | "plus";
   title: string;
   description: string;
-  progress: number; // Valor de 0 a 100
   medalImage: string;
+  current?: number;
+  target?: number;
 }
 
 // Mock de beneficios (estos datos se podrán obtener del back o pasar como props en el futuro)
 const mockRewards: Reward[] = [
   {
     id: 1,
+    type: "claseDiaria",
     title: "Clase diaria durante todo el año",
     description:
-      "Si realizas una clase diaria durante todo el año, recibirás un viaje al finalizar el año.",
-    progress: 80, // Ejemplo: 80% completado
+      "Si realizas una clase diaria durante todo el año, recibirás un viaje al finalizar el año. ¡Ya estás más cerca del viaje!",
     medalImage: "/medal-placeholder.png",
+    current: 150, // Por ejemplo, 150 clases completadas
+    target: 250,  // Supongamos que 250 es la cantidad de días hábiles del año
   },
   {
     id: 2,
+    type: "comision",
     title: "Comisiones por traer un nuevo alumno",
     description:
       "Si traes un nuevo alumno, ganas las primeras cuotas de ese alumno.",
-    progress: 50,
     medalImage: "/medal-placeholder.png",
+    current: 7, // 7 alumnos nuevos
+    // En este caso, no se muestra barra de progreso; se calcula la comisión (por ejemplo, 3 puntos por alumno)
   },
   {
     id: 3,
+    type: "plus",
     title: "Bonificación adicional por cantidad de clases",
     description:
-      "Al cumplir 10 clases a la semana, se otorga un plus adicional.",
-    progress: 60,
+      "Al cumplir 10 clases a la semana, se otorga un plus adicional. ¡Vas 6 clases esta semana!",
     medalImage: "/medal-placeholder.png",
+    current: 6,  // 6 clases esta semana
+    target: 10,  // Meta semanal de 10 clases
   },
 ];
 
@@ -76,16 +84,34 @@ const RewardsPage = () => {
                       {reward.title}
                     </h2>
                     <p className="text-gray-700 mb-4">{reward.description}</p>
-                    {/* Barra de progreso */}
-                    <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                      <div
-                        className="bg-primary h-4 rounded-full transition-all duration-500"
-                        style={{ width: `${reward.progress}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-2">
-                      {reward.progress}% completado
-                    </p>
+                    {reward.type === "comision" ? (
+                      <p className="text-sm text-gray-600 mt-2">
+                        Trajiste {reward.current} alumnos nuevos, ganaste{" "}
+                        {reward.current && reward.current * 3} puntos.
+                      </p>
+                    ) : (
+                      <>
+                        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                          <div
+                            className="bg-primary h-4 rounded-full transition-all duration-500"
+                            style={{
+                              width: `${
+                                reward.current && reward.target
+                                  ? (reward.current / reward.target) * 100
+                                  : 0
+                              }%`,
+                            }}
+                          ></div>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2">
+                          {reward.current} de {reward.target} completado (
+                          {reward.current && reward.target
+                            ? ((reward.current / reward.target) * 100).toFixed(0)
+                            : 0}
+                          %)
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               </AnimateOnScroll>
