@@ -187,9 +187,11 @@ export default function TeachersList() {
                 </Link>
 
                 <div className="relative group">
+                  <Link href={`/reserva/${teacher.id}`}>
                   <button className="bg-secondary text-white p-3 rounded-full hover:bg-secondary-hover">
                     <FaCalendarAlt size={20} />
                   </button>
+                  </Link>
                   {/* Tooltip */}
                   <div className="absolute top-[-40px] left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs rounded-lg px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-[140px]">
                     <div className="flex items-center space-x-3 whitespace-nowrap justify-center">
