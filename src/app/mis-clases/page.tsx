@@ -102,15 +102,16 @@ type TabsProps = {
 const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => {
   const tabs = Object.keys(mockClasses);
   return (
-    <div className="flex border-b mb-4 space-x-4 text-gray-700 text-lg font-medium">
-      {tabs.map((tab) => (
+    <div className="flex flex-col sm:flex-row border-b mb-4 text-gray-700 font-medium">
+      {tabs.map((tab, index) => (
         <button
           key={tab}
-          className={`py-2 px-6 rounded-md transition-all duration-200 ${activeTab === tab
-            ? "bg-secondary text-white shadow-md"
-            : "bg-gray-100 hover:bg-gray-200"
-            }`}
           onClick={() => setActiveTab(tab)}
+          className={`py-2 px-4 w-full sm:w-auto text-left transition-all duration-200 ${
+            activeTab === tab
+              ? "bg-secondary text-white shadow-md"
+              : "bg-gray-100 hover:bg-gray-200"
+          } ${index !== tabs.length - 1 ? "mb-2 sm:mb-0 sm:mr-2" : ""}`}
         >
           {tab} ({mockClasses[tab].length})
         </button>
@@ -118,6 +119,8 @@ const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => {
     </div>
   );
 };
+
+
 
 type ClassCardProps = {
   classData: ClassData;
