@@ -2,21 +2,33 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { FaArrowRight } from "react-icons/fa";
+import { FaArrowRight, FaArrowLeft } from "react-icons/fa";
 import { TbBell } from "react-icons/tb";
 
 import { useUser, useAuth } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const Header = () => {
   const { isSignedIn, isLoaded, user } = useUser();
   const { signOut } = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
+
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
-  const pathname = usePathname();
+  const [showBack, setShowBack] = useState(false);
 
-  // Cierra los menús desplegables al cambiar de ruta para evitar inconsistencias
+  // Muestra la flecha de retroceso si hay historial y no es la home
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.history.length > 1 && pathname !== "/") {
+      setShowBack(true);
+    } else {
+      setShowBack(false);
+    }
+  }, [pathname]);
+
+  // Cierra los menús desplegables al cambiar de ruta
   useEffect(() => {
     setMenuOpen(false);
     setNotificationsOpen(false);
@@ -27,26 +39,25 @@ const Header = () => {
   const role = user?.unsafeMetadata?.role || "guest";
   const profileImage = user?.imageUrl || "/placeholder-profile.png";
 
-  // Ocultar el botón de perfil/login en ciertas páginas
-  const hideProfileOrLogin =
-    pathname === "/auth/login" || pathname === "/auth/register";
+  // Oculta el botón de perfil/login en páginas de autenticación
+  const hideProfileOrLogin = pathname === "/auth/login" || pathname === "/auth/register";
 
-  /* Variables de notificaciones (a completar con datos reales) */
+  /* Variables de notificaciones (ejemplo) */
   // Para profesor
-  const isTeacherRequest = false; // Cuando un alumno solicita clase
-  const isTeacherScheduled = false; // Cuando se agenda la clase
-  const isTeacherConfirm = false;   // Cuando se requiere confirmar la clase
+  const isTeacherRequest = false;
+  const isTeacherScheduled = false;
+  const isTeacherConfirm = false;
 
   // Para alumno
-  const isStudentConfirmed = false; // Cuando la clase con el profe fue confirmada
-  const isStudentReagend = false;   // Cuando la clase fue reagendada
-  const isStudentConfirm = false;   // Cuando se requiere confirmar la clase con el tutor
+  const isStudentConfirmed = false;
+  const isStudentReagend = false;
+  const isStudentConfirm = false;
 
-  // Nombres de ejemplo (a reemplazar con datos reales)
-  const studentName = "";     // Ejemplo: "Juan"
-  const studentLastName = ""; // Ejemplo: "Pérez"
-  const teacherName = "";     // Ejemplo: "María"
-  const teacherLastName = ""; // Ejemplo: "González"
+  // Nombres de ejemplo
+  const studentName = "";
+  const studentLastName = "";
+  const teacherName = "";
+  const teacherLastName = "";
 
   // Determina si hay notificaciones
   const hasNotifications =
@@ -55,7 +66,6 @@ const Header = () => {
     (role === "org:alumno" &&
       (isStudentConfirmed || isStudentReagend || isStudentConfirm));
 
-  // Contenido de las notificaciones
   let notificationsList = null;
   if (role === "org:profesor") {
     notificationsList = (
@@ -115,36 +125,47 @@ const Header = () => {
     <header className="bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            <Link href="/" className="flex items-center gap-1">
-              <div className="w-5 h-5 relative flex items-start translate-y-[1px]">
-                <Image
-                  src="/logo-primary.png"
-                  alt="Logo"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </div>
-              <div className="translate-y-[3px]">
-                <Image
-                  src="/logo-text-primary.png"
-                  alt="Logo Text"
-                  width={140}
-                  height={28}
-                  className="h-7 w-auto"
-                  priority
-                />
-              </div>
-            </Link>
+          <div className="flex items-center">
+            {showBack && (
+              <button
+                onClick={() => router.back()}
+                className="mr-2 p-2 rounded-full group hover:bg-gray-200 focus:outline-none focus:ring-2 focus:bg-secondary transition-all duration-200"
+                aria-label="Volver"
+              >
+                <FaArrowLeft className="h-6 w-6 text-secondary group-focus:text-white " />
+              </button>
+            )}
+            {/* Logo */}
+            <div className="flex-shrink-0">
+              <Link href="/" className="flex items-center gap-1">
+                <div className="w-5 h-5 relative flex items-start translate-y-[1px]">
+                  <Image
+                    src="/logo-primary.png"
+                    alt="Logo"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+                <div className="translate-y-[3px]">
+                  <Image
+                    src="/logo-text-primary.png"
+                    alt="Logo Text"
+                    width={140}
+                    height={28}
+                    className="h-7 w-auto"
+                    priority
+                  />
+                </div>
+              </Link>
+            </div>
           </div>
 
           {/* Botones de navegación */}
           <div className="hidden md:flex space-x-8">
             {role === "org:alumno" ? (
               <Link href="/browse-tutor">
-                <button className="text-gray-600 px-3 py-2 text-sm font-medium font-archivo rounded-full hover:scale-105 hover:bg-primary hover:text-white transition-all duration-300 ease-in-out ">
+                <button className="text-gray-600 px-3 py-2 text-sm font-medium font-archivo rounded-full hover:scale-105 hover:bg-primary hover:text-white transition-all duration-300 ease-in-out">
                   Encontrá un Profesor
                 </button>
               </Link>
@@ -177,6 +198,7 @@ const Header = () => {
                     <button
                       onClick={() => setNotificationsOpen(!isNotificationsOpen)}
                       className="group relative focus:outline-none hover:bg-primary-hover hover:scale-105 rounded-full p-2 transition-all duration-200 ease-in-out"
+                      aria-label="Notificaciones"
                     >
                       <TbBell className="w-6 h-6 text-gray-600 group-hover:text-white group-hover:scale-105 transition-all duration-200 ease-in-out" />
                       {hasNotifications && (
@@ -184,9 +206,7 @@ const Header = () => {
                       )}
                     </button>
                     {/* Dropdown de notificaciones */}
-
-                    <div className={`absolute right-0 mt-2  w-48 bg-white rounded-lg shadow-lg py-2 z-50 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${isNotificationsOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0"
-                      }`}>
+                    <div className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${isNotificationsOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0"}`}>
                       {hasNotifications ? (
                         notificationsList
                       ) : (
@@ -195,14 +215,14 @@ const Header = () => {
                         </div>
                       )}
                     </div>
-
                   </div>
 
                   {/* Perfil */}
                   <div className="relative">
                     <button
                       onClick={() => setMenuOpen(!isMenuOpen)}
-                      className="relative w-10 h-10 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="relative w-10 h-10 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary transition"
+                      aria-label="Perfil"
                     >
                       <Image
                         src={profileImage}
@@ -213,10 +233,8 @@ const Header = () => {
                       />
                     </button>
                     {/* Dropdown de perfil */}
-
-                    <div className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${isMenuOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0"
-                      }`}>
-                        <Link href={`/perfil/${user.id}`}>
+                    <div className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${isMenuOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0"}`}>
+                      <Link href={`/perfil/${user.id}`}>
                         <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
                           Perfil
                         </span>
@@ -226,7 +244,6 @@ const Header = () => {
                           Ver mis Clases
                         </button>
                       </Link>
-
                       {role === "admin" && (
                         <Link href="/admin/impersonate">
                           <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
