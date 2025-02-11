@@ -22,7 +22,7 @@ interface Reward {
 const getMotivationalMessage = (current: number, target: number) => {
   const progress = (current / target) * 100;
   if (progress >= 100) {
-    return "Meta alcanzada. Buen trabajo!";
+    return "Meta alcanzada. Buen trabajo.";
   } else if (progress >= 80) {
     return "Estás casi en la meta. ¡Sigue así!";
   } else if (progress >= 50) {
@@ -41,9 +41,9 @@ const images = {
   adicionalAnual: "Adicional Anual",
 };
 
-const getMedalImage = (type: keyof typeof images, completed: boolean) => {
+const getMedalImage = (type: keyof typeof images, completed: boolean, small: boolean = false) => {
   const basePath = "/benefits/";
-  const suffix = completed ? ".png" : " ByN.png";
+  const suffix = completed || small ? ".png" : " ByN.png";
   return `${basePath}${images[type]}${suffix}`;
 };
 
@@ -127,8 +127,8 @@ const RewardsPage = () => {
 
               return (
                 <AnimateOnScroll key={reward.id} delay={index * 100}>
-                  <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col md:flex-row items-center">
-                    <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6">
+                  <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col md:flex-row items-center relative">
+                    <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6 relative">
                       <Image
                         src={getMedalImage(reward.type, completed)}
                         alt={`Medalla para ${reward.title}`}
@@ -136,6 +136,15 @@ const RewardsPage = () => {
                         height={80}
                         className="rounded-full"
                       />
+                      {!completed && (
+                        <Image
+                          src={getMedalImage(reward.type, true, true)}
+                          alt="Medalla desbloqueada"
+                          width={30}
+                          height={30}
+                          className="absolute top-0 right-0"
+                        />
+                      )}
                     </div>
                     <div className="flex-1">
                       <h2 className="text-2xl font-bold text-secondary mb-2">{reward.title}</h2>
