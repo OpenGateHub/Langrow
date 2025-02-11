@@ -8,15 +8,18 @@ export async function GET(req: NextRequest) {
         const { data, error } = await supabaseClient
             .from('UserProfile')
             .select(`
+                    id,
                     userId,
-                    fullName,
-                    title,
+                    name,
                     description,
+                    reviews,
+                    price,
+                    rating,
                     location,
-                    isStaff,
                     isActive,
                     createdAt,
-                    updatedAt
+                    updatedAt,
+                    profileImg
                 `)
             .eq('isActive', true);
 

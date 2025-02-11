@@ -15,15 +15,19 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
         const { data, error } = await supabaseClient
             .from('UserProfile')
             .select(`
+                    id,
                     userId,
-                    fullName,
+                    name,
                     title,
                     description,
+                    reviews,
+                    price,
+                    rating,
                     location,
-                    isStaff,
                     isActive,
                     createdAt,
                     updatedAt,
+                    profileImg
                     UserAchievements (
                         id,
                         Achievements (
