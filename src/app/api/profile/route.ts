@@ -1,45 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-);
+import { supabaseClient } from "@/app/api/supabaseClient";
 
 export async function GET(req: NextRequest) {
     try {
-        const code = req.nextUrl.searchParams.get('code');
-
-        if (!code) {
-            return NextResponse.json(
-                { message: 'Código de usuario requerido' },
-                { status: 400 }
-            );
-        }
-
-        const { data, error } = await supabase
-            .from('user_profile')
+        const { data, error } = await supabaseClient
+            .from('UserProfile')
             .select(`
-                userId,
-                fullName,
-                title,
-                description,
-                location,
-                isStaff,
-                isActive,
-                createdAt,
-                updatedAt,
-                user_achievements!inner (
+                    userId,
+                    fullName,
                     title,
                     description,
-                    iconImg,
+                    location,
+                    isStaff,
                     isActive,
-                    createdAt
-                )
-            `)
-            .eq('userId', code)
-            .eq('isActive', true) // Filtra `isActive` en `user_profile`
-            .eq('user_achievements.isActive', true) // Filtra `isActive` en `user_achievements`
+                    createdAt,
+                    updatedAt
+                `)
+            .eq('isActive', true);
 
         if (error) {
             console.error(error.message);
@@ -65,10 +42,41 @@ export async function GET(req: NextRequest) {
 
 
 export async function POST(req: Request) {
-    return NextResponse.json(
-        { message: "This is a post request" },
-        { status: 200 }
-    );
+    try {
+        const body = await req.json();
+        console.log(body);
+        const { data, error } = await supabaseClient
+            .from('UserProfile')
+            .insert([
+                {
+                    userId: body.code,
+                    fullName: body.fullName,
+                    title: body.title,
+                    description: body.description,
+                    location: body.location,
+                    isStaff: body.isStaff
+                }
+            ])
+            .select();
+
+        if (error) {
+            console.error(error.message);
+            return NextResponse.json(
+                { message: 'Error al consultar la base de datos', error: error.message },
+                { status: 500 }
+            );
+        }
+        return NextResponse.json(
+            { message: "Perfil creado correctamente", data },
+            { status: 201 }
+        );
+    } catch (err) {
+        console.error(err);
+        return NextResponse.json(
+            { message: 'Ha ocurrido un error al crear el perfil', error: err },
+            { status: 500 }
+        )
+    }
 }
 
 export async function PUT(req: Request) {
@@ -77,4 +85,32 @@ export async function PUT(req: Request) {
         { status: 200 }
     );
 }
-// you can also handle PATCH, DELETE, PUT
+
+export async function DELETE(req: Request) {
+    try {
+        const body = await req.json();
+        const { data, error } = await supabaseClient.from('UserProfile')
+            .update({'isActive': false})
+            .eq('userId', body.code)
+            .select();
+
+        if (error) {
+            console.error(error.message);
+            return NextResponse.json(
+                { message: 'Error al borrar un registro en la base de datos', error: error.message },
+                { status: 500 }
+            );
+        }
+        return NextResponse.json(
+            { message: 'Registro eliminado correctamente', count: data?.length, data  },
+            { status: 200 }
+        );
+
+    } catch (err) {
+        console.error('Error en el servidor:', err);
+        return NextResponse.json(
+            { message: 'Error interno del servidor' },
+            { status: 500 }
+        );
+    }
+}

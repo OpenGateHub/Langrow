@@ -1,0 +1,61 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseClient } from "@/app/api/supabaseClient";
+
+
+export async function GET(req: NextRequest, context: { params: { id: string } }) {
+    const { id } = context.params;
+
+    if (!id) {
+        return NextResponse.json(
+            { message: 'Código de usuario requerido' },
+            { status: 400 }
+        );
+    }
+    try {
+        const { data, error } = await supabaseClient
+            .from('UserProfile')
+            .select(`
+                    userId,
+                    fullName,
+                    title,
+                    description,
+                    location,
+                    isStaff,
+                    isActive,
+                    createdAt,
+                    updatedAt,
+                    UserAchievements (
+                        id,
+                        Achievements (
+                            title,
+                            description,
+                            iconImg,
+                            isActive
+                        )
+                    )
+                `)
+            .eq('userId', id)
+            .eq('isActive', true) // Filtra `isActive` en `UserProfile`
+            .eq('UserAchievements.isActive', true) // Filtra `isActive` en `UserAchievements`
+
+        if (error) {
+            console.error(error.message);
+            return NextResponse.json(
+                { message: 'Error al consultar la base de datos', error: error.message },
+                { status: 500 }
+            );
+        }
+
+        return NextResponse.json(
+            { message: 'Consulta exitosa', count: data?.length, data  },
+            { status: 200 }
+        );
+
+    } catch (err) {
+        console.error('Error en el servidor:', err);
+        return NextResponse.json(
+            { message: 'Error interno del servidor' },
+            { status: 500 }
+        );
+    }
+}
