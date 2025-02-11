@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z as zod } from "zod";
 import { supabaseClient } from "@/app/api/supabaseClient";
 
 export async function GET(req: NextRequest) {
@@ -43,7 +44,23 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
+        const profileSchema = zod.object({
+           code: zod.string(),
+           fullName: zod.string(),
+           title: zod.string(),
+           description: zod.string(),
+           location: zod.string(),
+           isStaff: zod.boolean(),
+        });
+        const reqBody = await req.json();
+        const body = profileSchema.safeParse(reqBody);
+        if (!body.success) {
+            return NextResponse.json(
+                { message: "Error en la validación", error: body.error.errors },
+                { status: 400 }
+            );
+        }
+
         const { data, error } = await supabaseClient
             .from('UserProfile')
             .insert([
