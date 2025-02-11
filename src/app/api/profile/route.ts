@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z as zod } from "zod";
 import { supabaseClient } from "@/app/api/supabaseClient";
 
+// TODO: include authentication
 export async function GET(req: NextRequest) {
     try {
         const { data, error } = await supabaseClient
