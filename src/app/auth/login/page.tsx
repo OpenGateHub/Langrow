@@ -68,7 +68,7 @@ export default function LoginPage() {
         />
       </div>
 
-      <div className="bg-white bg-opacity-70 shadow-lg rounded-3xl flex flex-col w-4/5 max-w-md overflow-hidden p-8 sm:p-12">
+      <div className="bg-white bg-opacity-70 shadow-lg rounded-3xl flex flex-col w-4/5 max-w-md overflow-hidden p-8 sm:p-12 my-4">
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <Image src="/logo-primary.png" width={40} height={40} alt="logo" />

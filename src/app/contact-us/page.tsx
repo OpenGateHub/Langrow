@@ -4,6 +4,7 @@ import Head from "next/head";
 import useRecaptcha from "@/hooks/useRecaptcha";
 import { useState } from "react";
 import MessageModal from "../components/Modal"; // Importa tu modal aquí
+import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 
 export default function ContactPage() {
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
@@ -99,108 +100,124 @@ export default function ContactPage() {
           />
         </div>
 
-        <div className="bg-white/65 backdrop-blur-lg p-8 md:p-10 rounded-3xl shadow-lg w-full max-w-lg my-3">
-          <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">
-            Contáctanos
-          </h1>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Nombre/s
-              </label>
-              <input
-                type="text"
-                id="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                placeholder="Pedro"
-                className="mt-1 block w-full rounded-md shadow-sm focus:border-primary sm:text-sm bg-[rgba(209,213,219,0.5)] p-2 transition-colors duration-200 ease-in-out"
-              />
-            </div>
+        <AnimateOnScroll>
+          <div className="bg-white/65 backdrop-blur-lg p-8 md:p-10 rounded-3xl shadow-lg w-full max-w-lg my-3">
+            <AnimateOnScroll>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">
+                Contáctanos
+              </h1>
+            </AnimateOnScroll>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <AnimateOnScroll delay={100}>
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Nombre/s
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    placeholder="Pedro"
+                    className="mt-1 block w-full rounded-md shadow-sm focus:border-primary sm:text-sm bg-[rgba(209,213,219,0.5)] p-2 transition-colors duration-200 ease-in-out"
+                  />
+                </div>
+              </AnimateOnScroll>
 
-            <div>
-              <label
-                htmlFor="phone"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Teléfono
-              </label>
-              <input
-                type="text"
-                id="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="+54"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm bg-[rgba(209,213,219,0.5)] p-2"
-              />
-            </div>
+              <AnimateOnScroll delay={200}>
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Teléfono
+                  </label>
+                  <input
+                    type="text"
+                    id="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="+54"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm bg-[rgba(209,213,219,0.5)] p-2"
+                  />
+                </div>
+              </AnimateOnScroll>
 
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Correo electrónico
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                placeholder="ejemplo@gmail.com"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm bg-[rgba(209,213,219,0.5)] p-2"
-              />
-            </div>
+              <AnimateOnScroll delay={300}>
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Correo electrónico
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    placeholder="ejemplo@gmail.com"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm bg-[rgba(209,213,219,0.5)] p-2"
+                  />
+                </div>
+              </AnimateOnScroll>
 
-            <div>
-              <label
-                htmlFor="message"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Mensaje
-              </label>
-              <textarea
-                id="message"
-                value={formData.message}
-                onChange={handleChange}
-                required
-                rows={4}
-                placeholder="Escribe tu mensaje"
-                className="mt-1 block w-full bg-[rgba(209,213,219,0.5)] p-2 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-              />
-            </div>
-            {/* CAPTCHA */}
-            <div>
-              {RecaptchaComponent()}
-              {captchaError && (
-                <p className="text-sm text-red-600 mt-2">{captchaError}</p>
-              )}
-            </div>
+              <AnimateOnScroll delay={400}>
+                <div>
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Mensaje
+                  </label>
+                  <textarea
+                    id="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    required
+                    rows={4}
+                    placeholder="Escribe tu mensaje"
+                    className="mt-1 block w-full bg-[rgba(209,213,219,0.5)] p-2 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                  />
+                </div>
+              </AnimateOnScroll>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-[40%] flex justify-center bg-secondary hover:bg-primary-hover text-white font-semibold py-2 rounded-md transition duration-200"
-              >
-                {loading ? "Enviando..." : "Enviar"}
-              </button>
-              <div className="absolute bottom-4 right-4">
-                <Image
-                  src="/logo-primary.png"
-                  alt="Logo Langrow"
-                  width={50}
-                  height={30}
-                />
-              </div>
-            </div>
-          </form>
-        </div>
+              <AnimateOnScroll delay={500}>
+                <div>
+                  {RecaptchaComponent()}
+                  {captchaError && (
+                    <p className="text-sm text-red-600 mt-2">{captchaError}</p>
+                  )}
+                </div>
+              </AnimateOnScroll>
+
+              <AnimateOnScroll delay={600}>
+                <div className="relative">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-[40%] flex justify-center bg-secondary hover:bg-primary-hover text-white font-semibold py-2 rounded-md transition duration-200"
+                  >
+                    {loading ? "Enviando..." : "Enviar"}
+                  </button>
+                  <div className="absolute bottom-4 right-4">
+                    <Image
+                      src="/logo-primary.png"
+                      alt="Logo Langrow"
+                      width={50}
+                      height={30}
+                    />
+                  </div>
+                </div>
+              </AnimateOnScroll>
+            </form>
+          </div>
+        </AnimateOnScroll>
       </main>
     </>
   );

@@ -67,12 +67,12 @@ const mockTutors = [
     availability: "2025-01-28",
     achievements: [
       {
-        icon: "/icons/satisfied-students.svg",
+        icon: "/price/finger.png",
         title: "Estudiantes Satisfechos",
         description: "Promedio de 4.7 estrellas",
       },
       {
-        icon: "/icons/consecutive-days.svg",
+        icon: "/price/arrow.png",
         title: "Consecutivas",
         description: "30 días de clases diarias",
       },
