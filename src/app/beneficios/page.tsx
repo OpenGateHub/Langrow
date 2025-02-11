@@ -116,7 +116,7 @@ const RewardsPage = () => {
         <div className="max-w-4xl mx-auto px-4">
           <AnimateOnScroll>
             <h1 className="text-3xl md:text-4xl font-bold text-primary text-center mb-8">
-              ¡Profe, sigue avanzando!
+            🎯 ¡Tus premios te esperan!
             </h1>
           </AnimateOnScroll>
           <div className="space-y-8">
