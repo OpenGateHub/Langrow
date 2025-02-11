@@ -44,7 +44,6 @@ export async function GET(req: NextRequest) {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        console.log(body);
         const { data, error } = await supabaseClient
             .from('UserProfile')
             .insert([
