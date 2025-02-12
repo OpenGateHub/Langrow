@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseClient } from "@/app/api/supabaseClient";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-    const { id } = params;
+interface Context {
+    params: { id: string };
+}
+
+export async function GET(req: NextRequest, context: Context) {
+    const { id } = context.params;
 
     if (!id) {
         return NextResponse.json(
