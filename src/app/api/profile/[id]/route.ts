@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseClient } from "@/app/api/supabaseClient";
 
-
-export async function GET(req: NextRequest, context: { params: { id: string } }) {
-    const { id } = context.params;
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+    const { id } = params;
 
     if (!id) {
         return NextResponse.json(
@@ -11,36 +10,37 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
             { status: 400 }
         );
     }
+
     try {
         const { data, error } = await supabaseClient
             .from('UserProfile')
             .select(`
+                id,
+                userId,
+                name,
+                title,
+                description,
+                reviews,
+                price,
+                rating,
+                location,
+                isActive,
+                createdAt,
+                updatedAt,
+                profileImg,
+                UserAchievements (
                     id,
-                    userId,
-                    name,
-                    title,
-                    description,
-                    reviews,
-                    price,
-                    rating,
-                    location,
-                    isActive,
-                    createdAt,
-                    updatedAt,
-                    profileImg
-                    UserAchievements (
-                        id,
-                        Achievements (
-                            title,
-                            description,
-                            iconImg,
-                            isActive
-                        )
+                    Achievements (
+                        title,
+                        description,
+                        iconImg,
+                        isActive
                     )
-                `)
+                )
+            `)
             .eq('userId', id)
             .eq('isActive', true) // Filtra `isActive` en `UserProfile`
-            .eq('UserAchievements.isActive', true) // Filtra `isActive` en `UserAchievements`
+            .eq('UserAchievements.isActive', true); // Filtra `isActive` en `UserAchievements`
 
         if (error) {
             console.error(error.message);
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
         }
 
         return NextResponse.json(
-            { message: 'Consulta exitosa', count: data?.length, data  },
+            { message: 'Consulta exitosa', count: data?.length, data },
             { status: 200 }
         );
 
