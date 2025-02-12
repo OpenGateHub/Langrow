@@ -27,7 +27,7 @@ const packages: Package[] = [
     hoverBg: "hover:bg-blue-800",
   },
   {
-    nombre: "Combo 4 clases",
+    nombre: "Combo UNO: 4 clases",
     total: 67200,
     precioClase: "16.800",
     ahorro: "4.800",
@@ -36,7 +36,7 @@ const packages: Package[] = [
     hoverBg: "hover:bg-green-800",
   },
   {
-    nombre: "Combo 8 clases",
+    nombre: "Combo DOS: 8 clases",
     total: 124800,
     precioClase: "15.600",
     ahorro: "9.600",
@@ -45,7 +45,7 @@ const packages: Package[] = [
     hoverBg: "hover:bg-yellow-800",
   },
   {
-    nombre: "Combo 12 clases",
+    nombre: "Combo TRES: 12 clases",
     total: 172800,
     precioClase: "14.400",
     ahorro: "14.400",
