@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseClient } from "@/app/api/supabaseClient";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+    req: NextRequest,
+    { params }: { params: { id: string } } // Correct signature for Next.js 13+
+) {
     const { id } = await params;
 
     if (!id) {
