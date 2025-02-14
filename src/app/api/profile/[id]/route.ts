@@ -5,8 +5,8 @@ interface Context {
     params: { id: string };
 }
 
-export async function GET(req: NextRequest, context: Context) {
-    const { id } = context.params;
+export async function GET(req: NextRequest, context) {
+    const { id } = await context.params;
 
     if (!id) {
         return NextResponse.json(
