@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z as zod } from "zod";
 import { supabaseClient } from "@/app/api/supabaseClient";
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
     try {
         const reviewSchema = zod.object({
             rating: zod.number().min(0).max(5),
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
     }
 }
 
-export async function DELETE(req: Request, res: NextResponse) {
+export async function DELETE(req: Request) {
     try {
         const deletePayload = zod.object({ id: zod.number() });
         const unvalidateBody = await req.json();
