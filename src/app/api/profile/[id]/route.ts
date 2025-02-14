@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseClient } from "@/app/api/supabaseClient";
 
-interface Context {
-    params: { id: string };
-}
-
-export async function GET(req: NextRequest, context) {
-    const { id } = await context.params;
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+    const { id } = await params;
 
     if (!id) {
         return NextResponse.json(
@@ -47,15 +43,22 @@ export async function GET(req: NextRequest, context) {
             .eq('UserAchievements.isActive', true); // Filtra `isActive` en `UserAchievements`
 
         if (error) {
-            console.error(error.message);
+            console.error('Supabase error:', error.message);
             return NextResponse.json(
                 { message: 'Error al consultar la base de datos', error: error.message },
                 { status: 500 }
             );
         }
 
+        if (!data || data.length === 0) {
+            return NextResponse.json(
+                { message: 'No se encontró el perfil de usuario' },
+                { status: 404 }
+            );
+        }
+
         return NextResponse.json(
-            { message: 'Consulta exitosa', count: data?.length, data },
+            { message: 'Consulta exitosa', count: data.length, data },
             { status: 200 }
         );
 
