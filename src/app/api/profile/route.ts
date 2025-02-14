@@ -69,12 +69,12 @@ export async function POST(req: Request) {
             .from('UserProfile')
             .insert([
                 {
-                    userId: body.code,
-                    fullName: body.fullName,
-                    title: body.title,
-                    description: body.description,
-                    location: body.location,
-                    isStaff: body.isStaff
+                    userId: body.data.code,
+                    fullName: body.data.fullName,
+                    title: body.data.title,
+                    description: body.data.description,
+                    location: body.data.location,
+                    isStaff: body.data.isStaff
                 }
             ])
             .select();

@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         await updateProfileReview(userId, res);
 
         return NextResponse.json(
-            { message: "Calificacion agregada correctamente!", result },
+            { message: "Calificacion agregada correctamente!", data },
             { status: 201 }
         );
 
