@@ -52,16 +52,50 @@ const calculateDaysToNextClass = (nextClass: string) => {
   return `en ${diffDays} día${diffDays > 1 ? "s" : ""}`;
 };
 
+const getProfiles = async () => {
+  try {
+    const response = await fetch('/api/profile'); // Hacemos la solicitud GET
+
+    // Verificamos si la respuesta es exitosa
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+
+    // Parseamos la respuesta como JSON
+    const data = await response.json();
+
+    // Retornamos la lista de perfiles
+    return data;
+  } catch (error) {
+    // Manejamos errores en la solicitud
+    console.error('Error al obtener los perfiles:', error);
+    return { message: 'Hubo un error al obtener los perfiles', error: error.message };
+  }
+}
+
 export default function TeachersList() {
-  const [teachers, setTeachers] = useState(mockTeachers);
+  const [teachers, setTeachers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 50]);
   const [sortBy, setSortBy] = useState("availability");
 
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      const profiles = await getProfiles();
+      if (profiles.count > 0) {
+        setTeachers(profiles.data);
+      } else {
+        console.log(profiles.message);
+      }
+    };
+
+    fetchProfiles();
+  }, []);
+
   // Lógica de filtros y ordenamiento
   useEffect(() => {
-    let filteredTeachers = [...mockTeachers];
+    let filteredTeachers = [...teachers];
 
     if (searchTerm) {
       filteredTeachers = filteredTeachers.filter((teacher) =>
