@@ -28,10 +28,14 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
   const [isEditingPhoto, setIsEditingPhoto] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
 
   const [newProfileImage, setNewProfileImage] = useState("");
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
+  const [newTitle, setNewTitle] = useState("");
+  const [newLocation, setNewLocation] = useState("");
 
   // Cuando se carga el perfil, inicializamos los estados con los valores actuales
   useEffect(() => {
@@ -39,6 +43,8 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
       setNewProfileImage(profile.profileImg);
       setNewName(profile.name);
       setNewDescription(profile.description);
+      setNewTitle(profile.title);
+      setNewLocation(profile.location);
     }
   }, [profile]);
 
@@ -65,6 +71,28 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
       refetch();
     } catch (err) {
       console.error("Error actualizando el nombre", err);
+    }
+  };
+
+  const handleTitleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      await updateProfile({ title: newTitle });
+      setIsEditingTitle(false);
+      refetch();
+    } catch (err) {
+      console.error("Error actualizando el título", err);
+    }
+  };
+
+  const handleLocationSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      await updateProfile({ location: newLocation });
+      setIsEditingLocation(false);
+      refetch();
+    } catch (err) {
+      console.error("Error actualizando la ubicación", err);
     }
   };
 
@@ -139,6 +167,7 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
               {/* Datos del perfil */}
               <AnimateOnScroll delay={200}>
                 <div className="pl-0 md:pl-[140px] text-center md:text-left">
+                  {/* Nombre */}
                   <div className="flex items-center justify-center md:justify-start">
                     {isEditingName ? (
                       <form onSubmit={handleNameSubmit} className="flex items-center space-x-2">
@@ -173,11 +202,79 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                       </>
                     )}
                   </div>
-                  <p className="text-sm opacity-0 animate-fade-in delay-300">{profile.title}</p>
-                  <p className="flex items-center justify-center md:justify-start opacity-0 animate-fade-in delay-400">
-                    <CiLocationOn className="mr-1" />
-                    <span className="text-sm">{profile.location}</span>
-                  </p>
+                  {/* Título */}
+                  <div className="flex items-center justify-center md:justify-start mt-2">
+                    {isEditingTitle ? (
+                      <form onSubmit={handleTitleSubmit} className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          value={newTitle}
+                          onChange={(e) => setNewTitle(e.target.value)}
+                          className="text-sm bg-white border p-1 rounded"
+                        />
+                        <button type="submit" className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow">
+                          Guardar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingTitle(false)}
+                          className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow"
+                        >
+                          Cancelar
+                        </button>
+                      </form>
+                    ) : (
+                      <>
+                        <p className="text-sm opacity-0 animate-fade-in delay-300">{newTitle}</p>
+                        {computedCanEdit && (
+                          <button
+                            onClick={() => setIsEditingTitle(true)}
+                            className="ml-2 bg-white text-secondary px-2 py-1 rounded-full text-xs shadow opacity-0 animate-fade-in delay-200"
+                          >
+                            Editar Título
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  {/* Ubicación */}
+                  <div className="flex items-center justify-center md:justify-start mt-2">
+                    {isEditingLocation ? (
+                      <form onSubmit={handleLocationSubmit} className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          value={newLocation}
+                          onChange={(e) => setNewLocation(e.target.value)}
+                          className="text-sm bg-white border p-1 rounded"
+                        />
+                        <button type="submit" className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow">
+                          Guardar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingLocation(false)}
+                          className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow"
+                        >
+                          Cancelar
+                        </button>
+                      </form>
+                    ) : (
+                      <>
+                        <p className="flex items-center justify-center md:justify-start opacity-0 animate-fade-in delay-400">
+                          <CiLocationOn className="mr-1" />
+                          <span className="text-sm">{newLocation}</span>
+                        </p>
+                        {computedCanEdit && (
+                          <button
+                            onClick={() => setIsEditingLocation(true)}
+                            className="ml-2 bg-white text-secondary px-2 py-1 rounded-full text-xs shadow opacity-0 animate-fade-in delay-200"
+                          >
+                            Editar Ubicación
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </AnimateOnScroll>
               {/* Botón de Editar Perfil o Reservar */}
