@@ -4,6 +4,7 @@ import AchievementCard from "./AchievementCard";
 import ReviewCard from "./ReviewCard";
 import Image from "next/image";
 import { CiLocationOn } from "react-icons/ci";
+import { RiPencilLine } from "react-icons/ri";
 import { useUser } from "@clerk/nextjs";
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 import Link from "next/link";
@@ -13,24 +14,26 @@ import { useReviews } from "@/hooks/useReview";
 interface ProfilePageProps {
   profileId: number | string;
   isTutor?: boolean;
-  editEnabled?: boolean;
 }
 
 const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
   const { isLoaded, user } = useUser();
   const { profile, loading, error, updateProfile, refetch } = useProfile(profileId);
   const reviewType = isTutor ? "professor" : "student";
-  const { reviews, loading: reviewsLoading, error: reviewsError } = useReviews(profile?.id as number, reviewType);
+  const { reviews, loading: reviewsLoading, error: reviewsError } = useReviews(
+    profile?.id as number,
+    reviewType
+  );
 
-  // Calculamos canEdit comparando el id del usuario logueado con el profileId
+  // Validar que el usuario pueda editar (compara el id del usuario logueado con el profileId)
   const computedCanEdit = user?.id === String(profileId);
 
-  // Estados locales para manejar la edición de los campos
+  // Estados locales para manejar la edición de cada campo
   const [isEditingPhoto, setIsEditingPhoto] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
-  const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isEditingLocation, setIsEditingLocation] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
 
   const [newProfileImage, setNewProfileImage] = useState("");
   const [newName, setNewName] = useState("");
@@ -38,7 +41,7 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
   const [newTitle, setNewTitle] = useState("");
   const [newLocation, setNewLocation] = useState("");
 
-  // Cuando se carga el perfil, inicializamos los estados con los valores actuales
+  // Inicializamos los estados con los valores actuales del perfil
   useEffect(() => {
     if (profile) {
       setNewProfileImage(profile.profileImg);
@@ -52,7 +55,7 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
   if (!isLoaded || loading) return <p>Cargando...</p>;
   if (error || !profile) return <p>Error: {error || "Perfil no encontrado"}</p>;
 
-  // Funciones de envío de formularios usando el hook updateProfile
+  // Funciones de envío para cada sección
   const handlePhotoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
@@ -108,20 +111,19 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
     }
   };
 
-  // Rol del usuario logueado, para condicionar el botón "Reservar"
   const loggedUserRole = user?.unsafeMetadata?.role;
 
   return (
-    <main className="p-8 bg-gray-100 min-h-screen">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 space-y-6">
+    <main className="p-8 bg-gray-100">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 ">
         {/* Banner y sección de encabezado */}
         <AnimateOnScroll>
           <div
             className="relative bg-cover rounded-xl opacity-0 animate-fade-in"
             style={{ backgroundImage: `url('/profile-banner.png')` }}
           >
-            <div className="flex flex-col md:flex-row items-center p-6 relative space-y-6 md:space-y-0 md:space-x-6 text-white rounded-lg">
-              {/* Foto de perfil y edición */}
+            <div className="flex flex-col md:flex-row items-center px-6 pt-5 mb-[-50px] md:mb-0 sm:pt-10 sm:pb-3 relative space-y-6 md:space-y-0 md:space-x-6 text-white rounded-lg">
+              {/* Foto de perfil */}
               <AnimateOnScroll delay={100}>
                 <div className="relative flex justify-center md:justify-start">
                   <Image
@@ -129,10 +131,10 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                     height={150}
                     src={newProfileImage}
                     alt={newName}
-                    className="rounded-full relative mt-3 md:absolute md:mt-[-20px] md:z-500 w-[150px] max-w-[150px] h-[150px] border-4 border-white"
+                    className="rounded-full relative mt-3 md:absolute md:mt-[-30px] md:z-50 w-[150px] max-w-[150px] h-[150px] border-4 border-white"
                   />
                   {computedCanEdit && (
-                    <div className="absolute bottom-0 right-0">
+                    <div className="absolute top-0 left-0" style={{ zIndex: 500 }}>
                       {isEditingPhoto ? (
                         <form onSubmit={handlePhotoSubmit} className="flex space-x-2">
                           <input
@@ -142,13 +144,16 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                             placeholder="URL de la nueva foto"
                             className="text-secondary px-2 py-1 rounded-full text-xs shadow border"
                           />
-                          <button type="submit" className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow">
+                          <button
+                            type="submit"
+                            className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow transition-all duration-300 ease-in-out animate-slideInLeft delay-100"
+                          >
                             Guardar
                           </button>
                           <button
                             type="button"
                             onClick={() => setIsEditingPhoto(false)}
-                            className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow"
+                            className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow transition-all duration-300 ease-in-out animate-slideInLeft delay-150"
                           >
                             Cancelar
                           </button>
@@ -156,9 +161,9 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                       ) : (
                         <button
                           onClick={() => setIsEditingPhoto(true)}
-                          className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow"
+                          className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow hover:bg-secondary hover:text-white transition-all duration-200 ease-in-out"
                         >
-                          Editar Foto
+                          <RiPencilLine />
                         </button>
                       )}
                     </div>
@@ -169,22 +174,25 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
               <AnimateOnScroll delay={200}>
                 <div className="pl-0 md:pl-[140px] text-center md:text-left">
                   {/* Nombre */}
-                  <div className="flex items-center justify-center md:justify-start">
+                  <div className="flex items-center justify-center md:justify-start ">
                     {isEditingName ? (
                       <form onSubmit={handleNameSubmit} className="flex items-center space-x-2">
                         <input
                           type="text"
                           value={newName}
                           onChange={(e) => setNewName(e.target.value)}
-                          className="text-2xl font-bold bg-white border p-1 rounded"
+                          className="text-2xl font-bold bg-transparent border-b border-transparent focus:border-secondary outline-none"
                         />
-                        <button type="submit" className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow">
+                        <button
+                          type="submit"
+                          className="bg-white text-secondary hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out px-2 py-1 rounded-full text-xs shadow animate-slideInLeft delay-100"
+                        >
                           Guardar
                         </button>
                         <button
                           type="button"
                           onClick={() => setIsEditingName(false)}
-                          className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow"
+                          className="bg-white text-secondary px-2 py-1 hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out rounded-full text-xs shadow animate-slideInLeft delay-150"
                         >
                           Cancelar
                         </button>
@@ -195,66 +203,35 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                         {computedCanEdit && (
                           <button
                             onClick={() => setIsEditingName(true)}
-                            className="ml-2 bg-white text-secondary px-2 py-1 rounded-full text-xs shadow opacity-0 animate-fade-in delay-200"
+                            className="ml-2 text-white p-1 rounded-full text-l shadow opacity-0 animate-fade-in delay-200 hover:bg-white hover:text-secondary transition-all duration-200 ease-in-out"
                           >
-                            Editar Nombre
+                            <RiPencilLine />
                           </button>
                         )}
                       </>
                     )}
                   </div>
-                  {/* Título */}
-                  <div className="flex items-center justify-center md:justify-start mt-2">
-                    {isEditingTitle ? (
-                      <form onSubmit={handleTitleSubmit} className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          value={newTitle}
-                          onChange={(e) => setNewTitle(e.target.value)}
-                          className="text-sm bg-white border p-1 rounded"
-                        />
-                        <button type="submit" className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow">
-                          Guardar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setIsEditingTitle(false)}
-                          className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow"
-                        >
-                          Cancelar
-                        </button>
-                      </form>
-                    ) : (
-                      <>
-                        <p className="text-sm opacity-0 animate-fade-in delay-300">{newTitle}</p>
-                        {computedCanEdit && (
-                          <button
-                            onClick={() => setIsEditingTitle(true)}
-                            className="ml-2 bg-white text-secondary px-2 py-1 rounded-full text-xs shadow opacity-0 animate-fade-in delay-200"
-                          >
-                            Editar Título
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
+
                   {/* Ubicación */}
-                  <div className="flex items-center justify-center md:justify-start mt-2">
+                  <div className="flex items-center justify-center md:justify-start">
                     {isEditingLocation ? (
                       <form onSubmit={handleLocationSubmit} className="flex items-center space-x-2">
                         <input
                           type="text"
                           value={newLocation}
                           onChange={(e) => setNewLocation(e.target.value)}
-                          className="text-sm bg-white border p-1 rounded"
+                          className="text-sm bg-transparent border-b border-transparent focus:border-secondary outline-none"
                         />
-                        <button type="submit" className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow">
+                        <button
+                          type="submit"
+                          className="bg-white text-secondary px-2 py-1 hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out rounded-full text-xs shadow animate-slideInLeft delay-100"
+                        >
                           Guardar
                         </button>
                         <button
                           type="button"
                           onClick={() => setIsEditingLocation(false)}
-                          className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow"
+                          className="bg-white text-secondary px-2 hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out py-1 rounded-full text-xs shadow animate-slideInLeft delay-150"
                         >
                           Cancelar
                         </button>
@@ -268,9 +245,9 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                         {computedCanEdit && (
                           <button
                             onClick={() => setIsEditingLocation(true)}
-                            className="ml-2 bg-white text-secondary px-2 py-1 rounded-full text-xs shadow opacity-0 animate-fade-in delay-200"
+                            className="ml-2 text-white p-1 rounded-full text-l shadow opacity-0 animate-fade-in delay-200 hover:bg-white hover:text-secondary transition-all duration-200 ease-in-out"
                           >
-                            Editar Ubicación
+                            <RiPencilLine />
                           </button>
                         )}
                       </>
@@ -282,9 +259,7 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
               <AnimateOnScroll delay={500}>
                 <div className="mt-4 md:mt-0 md:ml-auto">
                   {computedCanEdit ? (
-                    <button className="bg-white text-secondary px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-600">
-                      Editar Perfil
-                    </button>
+                    <></>
                   ) : (
                     loggedUserRole === "org:alumno" &&
                     isTutor && (
@@ -300,54 +275,100 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
             </div>
           </div>
         </AnimateOnScroll>
-
-        <div className="pl-6">
-          {/* Sección de Descripción con opción de editar */}
+        {/* Sección de Descripción */}
+        <div className="px-3">
           <AnimateOnScroll delay={700}>
-            <div className="relative opacity-0 animate-fade-in">
-              <h2 className="text-xl font-bold text-secondary mb-2 mt-[80px]">Descripción</h2>
-              {computedCanEdit && (
-                <div className="absolute right-0 top-0">
-                  {isEditingDescription ? (
-                    <form onSubmit={handleDescriptionSubmit} className="flex flex-col space-y-2">
-                      <textarea
-                        value={newDescription}
-                        onChange={(e) => setNewDescription(e.target.value)}
-                        className="w-full border border-gray-300 p-2 rounded"
-                      />
-                      <div className="flex space-x-2">
-                        <button type="submit" className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow">
-                          Guardar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setIsEditingDescription(false)}
-                          className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </form>
-                  ) : (
+            <div className="relative opacity-0 animate-fade-in mt-[80px]">
+              <div className="flex items-center justify-center md:justify-start mt-2">
+                {isEditingTitle ? (
+                  <form onSubmit={handleTitleSubmit} className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      className="text-sm bg-transparent border-b border-transparent focus:border-secondary outline-none"
+                    />
                     <button
-                      onClick={() => setIsEditingDescription(true)}
-                      className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow"
+                      type="submit"
+                      className="bg-white hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out text-secondary px-2 py-1 rounded-full text-xs shadow animate-slideInLeft delay-100"
                     >
-                      Editar
+                      Guardar
                     </button>
-                  )}
-                </div>
-              )}
-              <p className="text-gray-700">{newDescription}</p>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingTitle(false)}
+                      className="bg-white text-secondary hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out px-2 py-1 rounded-full text-xs shadow animate-slideInLeft delay-150"
+                    >
+                      Cancelar
+                    </button>
+                  </form>
+                ) : (
+                  <>
+                    <p className="text-xl font-bold text-secondary ml-[28px] md:ml-0 opacity-0 animate-fade-in delay-300">
+                      {newTitle}
+                    </p>
+                    {computedCanEdit && (
+                      <button
+                        onClick={() => setIsEditingTitle(true)}
+                        className="ml-2 bg-white text-secondary p-1 rounded-full text-l hover:bg-secondary hover:text-white transition-all duration-200 ease-in-out shadow opacity-0 animate-fade-in delay-200"
+                      >
+                        <RiPencilLine />
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+              <div className="flex items-center justify-center md:justify-start mt-2">
+                {isEditingDescription ? (
+                  <form onSubmit={handleDescriptionSubmit} className="flex w-full">
+                    <input
+                      type="text"
+                      value={newDescription}
+                      onChange={(e) => setNewDescription(e.target.value)}
+                      className="text-sm bg-transparent min-w-30 w-full border-b border-transparent focus:border-secondary outline-none flex-1"
+                    />
+                    <div className="self-end mr-4">
+                      <button
+                        type="submit"
+                        className="bg-white text-secondary hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out px-2 py-1 rounded-full text-xs shadow animate-slideInLeft delay-100"
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingDescription(false)}
+                        className="bg-white text-secondary px-2 py-1 hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out rounded-full text-xs shadow animate-slideInLeft delay-150"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <>
+                    <p className="text-l ml-[28px] md:ml-0 text-center md:text-left text-black opacity-0 animate-fade-in delay-300">
+                      {newDescription}
+                    </p>
+                    {computedCanEdit && (
+                      <button
+                        onClick={() => setIsEditingDescription(true)}
+                        className="ml-2 bg-white text-secondary p-1 rounded-full text-l hover:bg-secondary hover:text-white transition-all duration-200 ease-in-out shadow opacity-0 animate-fade-in delay-200"
+                      >
+                        <RiPencilLine />
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </AnimateOnScroll>
-
           {/* Sección de Logros (solo para tutores) */}
           {isTutor && profile.achievements && profile.achievements.length > 0 && (
             <AnimateOnScroll delay={800}>
-              <div className="opacity-0 animate-fade-in">
-                <h2 className="text-xl font-bold text-secondary mb-2 mt-6">Logros</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="opacity-0 animate-fade-in mt-6">
+                <h2 className="text-xl font-bold text-secondary md:text-left text-center mb-2">
+                  Logros
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   {profile.achievements.map((achievement, index) => (
                     <AnimateOnScroll key={index} delay={900 + index * 100}>
                       <AchievementCard
@@ -361,11 +382,12 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
               </div>
             </AnimateOnScroll>
           )}
-
-          {/* Sección de Reseñas (solo lectura) */}
+          {/* Sección de Reseñas */}
           <AnimateOnScroll delay={1000}>
-            <div className="opacity-0 animate-fade-in">
-              <h2 className="text-xl font-bold text-secondary mb-2 mt-6">Testimonios</h2>
+            <div className="opacity-0 animate-fade-in mt-6">
+              <h2 className="text-xl font-bold text-secondary text-center md:text-left mb-2">
+                Testimonios
+              </h2>
               {reviewsLoading && <p>Cargando reseñas...</p>}
               {reviewsError && <p>Error al cargar reseñas: {reviewsError}</p>}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -384,7 +406,7 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
           </AnimateOnScroll>
         </div>
       </div>
-    </main>
+          </main>
   );
 };
 
