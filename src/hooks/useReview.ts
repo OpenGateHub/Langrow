@@ -1,13 +1,16 @@
 // /hooks/useReviews.ts
 import { useState, useEffect } from "react";
+import {StudentProfile} from "@/types/studentProfile";
 
 export interface Review {
   id: number;
-  reviewerName: string;
-  reviewText: string;
-  stars: number;
-  profilePicture: string;
+  userId: number;
+  studentId: number;
+  notes: string;
+  qualification: number;
   createdAt: string;
+  isActive: boolean;
+  StudentProfile: StudentProfile | null;
 }
 
 interface UseReviewsReturn {
@@ -15,11 +18,7 @@ interface UseReviewsReturn {
   loading: boolean;
   error: string | null;
   refetch: () => void;
-  submitReview: (
-    reviewText: string,
-    rating: number,
-    reviewerId: number
-  ) => Promise<any>;
+  submitReview: (reviewText: string, rating: number, reviewerId: number) => Promise<any>;
 }
 
 export function useReviews(
@@ -34,24 +33,13 @@ export function useReviews(
     if (!targetId) return;
     setLoading(true);
     try {
-      // La URL se construye usando targetId y reviewType 
-      const res = await fetch(
-        `/api/profile/reviews/${targetId}?reviewType=${reviewType}`
-      );
+      // Se construye la URL con el query string basado en reviewType
+      const res = await fetch(`/api/profile/reviews/${targetId}?${reviewType}`);
       const json = await res.json();
       if (!res.ok) {
         throw new Error(json.message || "Error al obtener las reseñas");
       }
-      // Mapeamos la respuesta para obtener la forma que espera el frontend:
-      const mappedReviews = json.data.map((rev: any) => ({
-        id: rev.id,
-        reviewerName: rev.StudentProfile?.fullName || "Desconocido",
-        reviewText: rev.notes,
-        stars: rev.qualification,
-        profilePicture: rev.StudentProfile?.profileImg || "",
-        createdAt: rev.createdAt,
-      }));
-      setReviews(mappedReviews);
+      setReviews(json.data);
       setError(null);
     } catch (e: any) {
       setError(e.message);
@@ -65,11 +53,7 @@ export function useReviews(
     fetchReviews();
   }, [targetId, reviewType]);
 
-  const submitReview = async (
-    reviewText: string,
-    rating: number,
-    reviewerId: number
-  ) => {
+  const submitReview = async (reviewText: string, rating: number, reviewerId: number) => {
     const payload = {
       rating,
       note: reviewText,
