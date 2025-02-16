@@ -1,13 +1,16 @@
 // /hooks/useReviews.ts
 import { useState, useEffect } from "react";
+import {StudentProfile} from "@/types/studentProfile";
 
 export interface Review {
   id: number;
-  reviewerName: string;
-  reviewText: string;
-  stars: number;
-  profilePicture: string;
+  userId: number;
+  studentId: number;
+  notes: string;
+  qualification: number;
   createdAt: string;
+  isActive: boolean;
+  StudentProfile: StudentProfile | null;
 }
 
 interface UseReviewsReturn {
@@ -31,7 +34,7 @@ export function useReviews(
     setLoading(true);
     try {
       // Se construye la URL con el query string basado en reviewType
-      const res = await fetch(`/api/profile/review?${reviewType}=${targetId}`);
+      const res = await fetch(`/api/profile/reviews/${targetId}?${reviewType}`);
       const json = await res.json();
       if (!res.ok) {
         throw new Error(json.message || "Error al obtener las reseñas");

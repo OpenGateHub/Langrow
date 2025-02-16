@@ -13,13 +13,14 @@ import { useReviews } from "@/hooks/useReview";
 interface ProfilePageProps {
   profileId: number | string;
   isTutor?: boolean;
+  editEnabled?: boolean;
 }
 
 const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
   const { isLoaded, user } = useUser();
   const { profile, loading, error, updateProfile, refetch } = useProfile(profileId);
   const reviewType = isTutor ? "professor" : "student";
-  const { reviews, loading: reviewsLoading, error: reviewsError } = useReviews(profileId, reviewType);
+  const { reviews, loading: reviewsLoading, error: reviewsError } = useReviews(profile?.id as number, reviewType);
 
   // Calculamos canEdit comparando el id del usuario logueado con el profileId
   const computedCanEdit = user?.id === String(profileId);
@@ -371,10 +372,10 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                 {reviews.map((review, index) => (
                   <AnimateOnScroll key={index} delay={1100 + index * 150}>
                     <ReviewCard
-                      reviewerName={review.reviewerName}
-                      reviewText={review.reviewText}
-                      stars={review.stars}
-                      profilePicture={review.profilePicture}
+                      reviewerName={review.StudentProfile?.fullName as string}
+                      reviewText={review.notes}
+                      stars={review.qualification}
+                      profilePicture={review.StudentProfile?.profileImg as string}
                     />
                   </AnimateOnScroll>
                 ))}

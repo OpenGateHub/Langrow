@@ -100,10 +100,54 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-    return NextResponse.json(
-        { message: "This is a put request." },
-        { status: 200 }
-    );
+    try {
+        const updateSchema = zod.object({
+            title: zod.string(),
+            description: zod.string(),
+            location: zod.string(),
+            code: zod.string(),
+            name: zod.string(),
+            price: zod.any(),
+        });
+        const reqBody = await req.json();
+        const validation = updateSchema.safeParse(reqBody);
+        if (!validation.success) {
+            return NextResponse.json(
+                { message: "Error en la validación", error: validation.error.errors },
+                { status: 400 }
+            );
+        }
+
+        const { data: profile } = validation;
+        const updateData =  {
+            title: profile.title,
+            description: profile.description,
+            location: profile.location,
+            name: profile.name,
+            ...(profile.price != null && { price: profile.price })
+        };
+        const { data, error } = await supabaseClient.from('UserProfile')
+            .update(updateData)
+            .eq('userId', profile.code)
+            .select();
+        if (error) {
+            console.error(error.message);
+            return NextResponse.json(
+                { message: 'Error al consultar la base de datos', error: error.message },
+                { status: 500 }
+            );
+        }
+        return NextResponse.json(
+            { message: "Perfil actualizado correctamente", data },
+            { status: 200 }
+        );
+    } catch (err) {
+        console.error(err);
+        return NextResponse.json(
+            { message: 'Ha ocurrido un error al actualizar el perfil', error: err },
+            { status: 500 }
+        );
+    }
 }
 
 export async function DELETE(req: Request) {
