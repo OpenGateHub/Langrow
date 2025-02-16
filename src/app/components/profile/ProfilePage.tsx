@@ -20,7 +20,10 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
   const { isLoaded, user } = useUser();
   const { profile, loading, error, updateProfile, refetch } = useProfile(profileId);
   const reviewType = isTutor ? "professor" : "student";
-  const { reviews, loading: reviewsLoading, error: reviewsError } = useReviews(profile?.id as number, reviewType);
+  const { reviews, loading: reviewsLoading, error: reviewsError } = useReviews(
+    profile?.id as number,
+    reviewType
+  );
 
   // Validar que el usuario pueda editar (compara el id del usuario logueado con el profileId)
   const computedCanEdit = user?.id === String(profileId);
@@ -141,13 +144,16 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                             placeholder="URL de la nueva foto"
                             className="text-secondary px-2 py-1 rounded-full text-xs shadow border"
                           />
-                          <button type="submit" className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow">
+                          <button
+                            type="submit"
+                            className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow transition-all duration-300 ease-in-out animate-slideInLeft delay-100"
+                          >
                             Guardar
                           </button>
                           <button
                             type="button"
                             onClick={() => setIsEditingPhoto(false)}
-                            className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow"
+                            className="bg-white text-secondary px-2 py-1 rounded-full text-xs shadow transition-all duration-300 ease-in-out animate-slideInLeft delay-150"
                           >
                             Cancelar
                           </button>
@@ -177,13 +183,16 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                           onChange={(e) => setNewName(e.target.value)}
                           className="text-2xl font-bold bg-transparent border-b border-transparent focus:border-secondary outline-none"
                         />
-                        <button type="submit" className="bg-white text-secondary hover:bg-secondary hover:text-white transition-all duration-200 ease-in-out px-2 py-1 rounded-full text-xs shadow">
+                        <button
+                          type="submit"
+                          className="bg-white text-secondary hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out px-2 py-1 rounded-full text-xs shadow animate-slideInLeft delay-100"
+                        >
                           Guardar
                         </button>
                         <button
                           type="button"
                           onClick={() => setIsEditingName(false)}
-                          className="bg-white text-secondary px-2 py-1  hover:bg-secondary hover:text-white transition-all duration-200 ease-in-out rounded-full text-xs shadow"
+                          className="bg-white text-secondary px-2 py-1 hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out rounded-full text-xs shadow animate-slideInLeft delay-150"
                         >
                           Cancelar
                         </button>
@@ -213,13 +222,16 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                           onChange={(e) => setNewLocation(e.target.value)}
                           className="text-sm bg-transparent border-b border-transparent focus:border-secondary outline-none"
                         />
-                        <button type="submit" className="bg-white text-secondary px-2 py-1  hover:bg-secondary hover:text-white transition-all duration-200 ease-in-out rounded-full text-xs shadow">
+                        <button
+                          type="submit"
+                          className="bg-white text-secondary px-2 py-1 hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out rounded-full text-xs shadow animate-slideInLeft delay-100"
+                        >
                           Guardar
                         </button>
                         <button
                           type="button"
                           onClick={() => setIsEditingLocation(false)}
-                          className="bg-white text-secondary px-2  hover:bg-secondary hover:text-white transition-all duration-200 ease-in-out py-1 rounded-full text-xs shadow"
+                          className="bg-white text-secondary px-2 hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out py-1 rounded-full text-xs shadow animate-slideInLeft delay-150"
                         >
                           Cancelar
                         </button>
@@ -276,20 +288,25 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                       onChange={(e) => setNewTitle(e.target.value)}
                       className="text-sm bg-transparent border-b border-transparent focus:border-secondary outline-none"
                     />
-                    <button type="submit" className="bg-white hover:bg-secondary hover:text-white transition-all duration-200 ease-in-out  text-secondary px-2 py-1 rounded-full text-xs shadow">
+                    <button
+                      type="submit"
+                      className="bg-white hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out text-secondary px-2 py-1 rounded-full text-xs shadow animate-slideInLeft delay-100"
+                    >
                       Guardar
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsEditingTitle(false)}
-                      className="bg-white text-secondary  hover:bg-secondary hover:text-white transition-all duration-200 ease-in-out px-2 py-1 rounded-full text-xs shadow"
+                      className="bg-white text-secondary hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out px-2 py-1 rounded-full text-xs shadow animate-slideInLeft delay-150"
                     >
                       Cancelar
                     </button>
                   </form>
                 ) : (
                   <>
-                    <p className="text-xl font-bold text-secondary ml-[28px] md:ml-0 opacity-0 animate-fade-in delay-300">{newTitle}</p>
+                    <p className="text-xl font-bold text-secondary ml-[28px] md:ml-0 opacity-0 animate-fade-in delay-300">
+                      {newTitle}
+                    </p>
                     {computedCanEdit && (
                       <button
                         onClick={() => setIsEditingTitle(true)}
@@ -311,13 +328,16 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                       className="text-sm bg-transparent min-w-30 w-full border-b border-transparent focus:border-secondary outline-none flex-1"
                     />
                     <div className="self-end mr-4">
-                      <button type="submit" className="bg-white text-secondary  hover:bg-secondary hover:text-white transition-all duration-200 ease-in-out px-2 py-1 rounded-full text-xs shadow">
+                      <button
+                        type="submit"
+                        className="bg-white text-secondary hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out px-2 py-1 rounded-full text-xs shadow animate-slideInLeft delay-100"
+                      >
                         Guardar
                       </button>
                       <button
                         type="button"
                         onClick={() => setIsEditingDescription(false)}
-                        className="bg-white text-secondary px-2 py-1  hover:bg-secondary hover:text-white transition-all duration-200 ease-in-out rounded-full text-xs shadow"
+                        className="bg-white text-secondary px-2 py-1 hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out rounded-full text-xs shadow animate-slideInLeft delay-150"
                       >
                         Cancelar
                       </button>
@@ -325,7 +345,9 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                   </form>
                 ) : (
                   <>
-                    <p className="text-l ml-[28px] md:ml-0  text-center md:text-left  text-black opacity-0 animate-fade-in delay-300">{newDescription}</p>
+                    <p className="text-l ml-[28px] md:ml-0 text-center md:text-left text-black opacity-0 animate-fade-in delay-300">
+                      {newDescription}
+                    </p>
                     {computedCanEdit && (
                       <button
                         onClick={() => setIsEditingDescription(true)}
@@ -337,14 +359,15 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                   </>
                 )}
               </div>
-
             </div>
           </AnimateOnScroll>
           {/* Sección de Logros (solo para tutores) */}
           {isTutor && profile.achievements && profile.achievements.length > 0 && (
             <AnimateOnScroll delay={800}>
               <div className="opacity-0 animate-fade-in mt-6">
-                <h2 className="text-xl font-bold text-secondary md:text-left text-center mb-2">Logros</h2>
+                <h2 className="text-xl font-bold text-secondary md:text-left text-center mb-2">
+                  Logros
+                </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   {profile.achievements.map((achievement, index) => (
                     <AnimateOnScroll key={index} delay={900 + index * 100}>
@@ -362,7 +385,9 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
           {/* Sección de Reseñas */}
           <AnimateOnScroll delay={1000}>
             <div className="opacity-0 animate-fade-in mt-6">
-              <h2 className="text-xl font-bold text-secondary text-center md:text-left mb-2">Testimonios</h2>
+              <h2 className="text-xl font-bold text-secondary text-center md:text-left mb-2">
+                Testimonios
+              </h2>
               {reviewsLoading && <p>Cargando reseñas...</p>}
               {reviewsError && <p>Error al cargar reseñas: {reviewsError}</p>}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -381,7 +406,7 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
           </AnimateOnScroll>
         </div>
       </div>
-    </main>
+          </main>
   );
 };
 
