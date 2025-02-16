@@ -99,32 +99,59 @@ export async function POST(req: Request) {
     }
 }
 
+// Define the schema with required fields
+const updateSchema = zod.object({
+    title: zod.string(),
+    description: zod.string(),
+    location: zod.string(),
+    code: zod.string(), // Assuming `code` is required
+    fullName: zod.string(),
+    price: zod.number(),
+    isStaff: zod.boolean(),
+    profileImg: zod.string(),
+});
+
+// Make certain fields optional
+const optionalFields = updateSchema.partial({
+    title: true,
+    description: true,
+    location: true,
+    fullName: true,
+    price: true,
+    profileImg: true,
+});
+
+// Infer the TypeScript type from the schema
+type UpdateFields = zod.infer<typeof optionalFields>;
+
 export async function PUT(req: Request) {
     try {
-        const updateSchema = zod.object({
-            title: zod.string(),
-            description: zod.string(),
-            location: zod.string(),
-            code: zod.string(),
-            name: zod.string(),
-            price: zod.any(),
-        });
-        const reqBody = await req.json();
-        const validation = updateSchema.safeParse(reqBody);
+        const reqBody: UpdateFields = await req.json();
+        const validation = optionalFields.safeParse(reqBody);
+        // Handle validation errors
         if (!validation.success) {
             return NextResponse.json(
-                { message: "Error en la validación", error: validation.error.errors },
+                {
+                    message: "Error en la validación",
+                    error: validation.error.errors.map((err) => ({
+                        field: err.path.join("."),
+                        message: err.message,
+                    })),
+                },
                 { status: 400 }
             );
         }
 
         const { data: profile } = validation;
         const updateData =  {
-            title: profile.title,
-            description: profile.description,
-            location: profile.location,
-            name: profile.name,
-            ...(profile.price != null && { price: profile.price })
+            isStaff: profile.isStaff,
+            updatedAt: new Date(),
+            ...(profile.title != null && { title: profile.title }),
+            ...(profile.description != null && { description: profile.description }),
+            ...(profile.location != null && { location: profile.location }),
+            ...(profile.fullName != null && { name: profile.fullName }),
+            ...(profile.price != null && { price: profile.price }),
+            ...(profile.profileImg != null && { profileImg: profile.profileImg })
         };
         const { data, error } = await supabaseClient.from('UserProfile')
             .update(updateData)
