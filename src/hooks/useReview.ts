@@ -34,7 +34,7 @@ export function useReviews(
     if (!targetId) return;
     setLoading(true);
     try {
-      // La URL se construye usando targetId y reviewType (ajusta la ruta según tu backend)
+      // La URL se construye usando targetId y reviewType 
       const res = await fetch(
         `/api/profile/reviews/${targetId}?reviewType=${reviewType}`
       );
