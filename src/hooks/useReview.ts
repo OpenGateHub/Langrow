@@ -1,13 +1,16 @@
 // /hooks/useReviews.ts
 import { useState, useEffect } from "react";
+import {StudentProfile} from "@/types/studentProfile";
 
 export interface Review {
   id: number;
-  reviewerName: string;
-  reviewText: string;
-  stars: number;
-  profilePicture: string;
+  userId: number;
+  studentId: number;
+  notes: string;
+  qualification: number;
   createdAt: string;
+  isActive: boolean;
+  StudentProfile: StudentProfile | null;
 }
 
 interface UseReviewsReturn {

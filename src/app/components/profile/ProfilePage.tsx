@@ -372,10 +372,10 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                 {reviews.map((review, index) => (
                   <AnimateOnScroll key={index} delay={1100 + index * 150}>
                     <ReviewCard
-                      reviewerName={review.reviewerName}
-                      reviewText={review.reviewText}
-                      stars={review.stars}
-                      profilePicture={review.profilePicture}
+                      reviewerName={review.StudentProfile?.fullName}
+                      reviewText={review.notes}
+                      stars={review.qualification}
+                      profilePicture={review.StudentProfile?.profileImg}
                     />
                   </AnimateOnScroll>
                 ))}
