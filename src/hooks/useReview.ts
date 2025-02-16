@@ -31,7 +31,7 @@ export function useReviews(
     setLoading(true);
     try {
       // Se construye la URL con el query string basado en reviewType
-      const res = await fetch(`/api/profile/review?${reviewType}=${targetId}`);
+      const res = await fetch(`/api/profile/reviews/${targetId}?${reviewType}`);
       const json = await res.json();
       if (!res.ok) {
         throw new Error(json.message || "Error al obtener las reseñas");

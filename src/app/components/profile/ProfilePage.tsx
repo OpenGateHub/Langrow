@@ -20,7 +20,7 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
   const { isLoaded, user } = useUser();
   const { profile, loading, error, updateProfile, refetch } = useProfile(profileId);
   const reviewType = isTutor ? "professor" : "student";
-  const { reviews, loading: reviewsLoading, error: reviewsError } = useReviews(profileId, reviewType);
+  const { reviews, loading: reviewsLoading, error: reviewsError } = useReviews(profile?.id as number, reviewType);
 
   // Calculamos canEdit comparando el id del usuario logueado con el profileId
   const computedCanEdit = user?.id === String(profileId);
