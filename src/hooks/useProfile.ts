@@ -1,4 +1,3 @@
-// /hooks/useProfile.ts
 import { useState, useEffect } from "react";
 
 export interface Achievement {
