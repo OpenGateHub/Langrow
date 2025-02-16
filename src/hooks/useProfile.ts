@@ -45,7 +45,11 @@ export function useProfile(profileId: number | string): UseProfileReturn {
     try {
       const res = await fetch(`/api/profile/${profileId}`);
       const json = await res.json();
-      if (!res.ok || json.message !== "Consulta exitosa" || !json.data?.length) {
+      if (
+        !res.ok ||
+        json.message !== "Consulta exitosa" ||
+        !json.data?.length
+      ) {
         throw new Error(json.message || "Error al obtener el perfil");
       }
       const data = json.data[0];
@@ -89,12 +93,19 @@ export function useProfile(profileId: number | string): UseProfileReturn {
 
   const updateProfile = async (updatedData: Partial<Profile>) => {
     try {
-      const res = await fetch(`/api/profile/${profileId}`, {
+      const { name, ...rest } = updatedData;
+      const payload = {
+        code: "user_2s8uZVFvlf8iNXTxKDs0ioZPxLe", 
+        isStaff: false,
+        ...(name ? { fullName: name } : {}),
+        ...rest,
+      };
+      const res = await fetch(`/api/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatedData),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!res.ok) {
