@@ -13,6 +13,7 @@ import { useReviews } from "@/hooks/useReview";
 interface ProfilePageProps {
   profileId: number | string;
   isTutor?: boolean;
+  editEnabled?: boolean;
 }
 
 const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
