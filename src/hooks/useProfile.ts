@@ -91,10 +91,13 @@ export function useProfile(profileId: number | string): UseProfileReturn {
   }, [profileId]);
 
   const updateProfile = async (updatedData: Partial<Profile>) => {
+    if (!profile) {
+      throw new Error("Perfil no cargado");
+    }
     try {
       const { name, ...rest } = updatedData;
       const payload = {
-        code: "user_2s8uZVFvlf8iNXTxKDs0ioZPxLe", 
+        code: profile.userId, 
         isStaff: false,
         ...(name ? { fullName: name } : {}),
         ...rest,
@@ -120,3 +123,4 @@ export function useProfile(profileId: number | string): UseProfileReturn {
 
   return { profile, loading, error, updateProfile, refetch: fetchProfile };
 }
+
