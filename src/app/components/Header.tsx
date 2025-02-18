@@ -40,24 +40,20 @@ const Header = () => {
     setNotificationsOpen(false);
   }, [pathname]);
 
-  // Si no hay usuario o perfil, no mostramos nada
+  // Aseguramos llamar al hook useNotifications de forma incondicional
+  const { 
+    notifications, 
+    loading: notificationsLoading, 
+    error: notificationsError 
+  } = useNotifications(profile?.id || "", false);
+
   if (!clerkUser || !profile) return null;
 
   const profileImage = clerkUser.imageUrl || "/placeholder-profile.png";
-  // Oculta el botón de perfil/login en páginas de autenticación
   const hideProfileOrLogin =
     pathname === "/auth/login" || pathname === "/auth/register";
 
-  // NOTIFICACIONES: se obtienen para el perfil actual
-  const {
-    notifications,
-    loading: notificationsLoading,
-    error: notificationsError,
-  } = useNotifications(profile.id, false);
-
-  const hasNotifications = notifications && notifications.length > 0;
-
-  // Función que determina la URL de redirección según el mensaje de la notificación
+  // Función que determina la URL de redirección según el mensaje
   const getRedirectUrl = (message: string) => {
     const lower = message.toLowerCase();
     if (lower.includes("perfil") || lower.includes("completa")) {
@@ -65,6 +61,8 @@ const Header = () => {
     }
     return "/mis-clases";
   };
+
+  const hasNotifications = notifications && notifications.length > 0;
 
   const notificationsList = notificationsLoading ? (
     <div className="px-4 py-2 text-gray-700 text-sm">
