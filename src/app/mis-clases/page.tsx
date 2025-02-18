@@ -1,7 +1,8 @@
 "use client";
+
 import { useState } from "react";
 import ReviewModal from "../components/ModalReview";
-import { useUser } from "@clerk/nextjs";
+import { useProfileContext } from "@/context/ProfileContext";
 import { useReviews } from "@/hooks/useReview";
 
 // --- Tipos ---
@@ -24,7 +25,6 @@ type ClassData = {
   duration: string;
   cost: string;
   status: string;
-  // Los campos de reseña se eliminan ya que se obtendrán desde el hook
   requestDescription: string;
 };
 
@@ -127,7 +127,6 @@ const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => {
 };
 
 // --- Componente ClassCard ---
-// Aquí se usa useReviews para obtener las reseñas del target adecuado según el rol
 type ClassCardProps = {
   classData: ClassData;
   onConfirm: (classData: ClassData) => void;
@@ -135,13 +134,13 @@ type ClassCardProps = {
 
 const ClassCard: React.FC<ClassCardProps> = ({ classData, onConfirm }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  const { user } = useUser();
-  const userRole = user?.unsafeMetadata?.role;
+  const { clerkUser, role } = useProfileContext();
+
   // Si el usuario es alumno, se muestran reseñas del profesor;
   // si es profesor, se muestran reseñas del alumno (utilizando studentId)
-  const reviewType = userRole === "org:alumno" ? "student" : "professor";
+  const reviewType = role === "org:alumno" ? "professor" : "student";
   const targetUserId =
-    userRole === "org:alumno" ? classData.professorId : classData.studentId || "";
+    role === "org:alumno" ? classData.professorId : classData.studentId || "";
   const { reviews, loading, error } = useReviews(String(targetUserId), reviewType);
 
   const buttonLabel =
@@ -185,7 +184,9 @@ const ClassCard: React.FC<ClassCardProps> = ({ classData, onConfirm }) => {
       </div>
       <div
         className={`border-t overflow-hidden transition-all duration-500 ease-in-out ${
-          isExpanded ? "scale-y-100 max-h-[500px] opacity-100 py-4" : "scale-y-0 max-h-0 opacity-0 py-0"
+          isExpanded
+            ? "scale-y-100 max-h-[500px] opacity-100 py-4"
+            : "scale-y-0 max-h-0 opacity-0 py-0"
         }`}
         style={{ transformOrigin: "top" }}
       >
@@ -194,9 +195,9 @@ const ClassCard: React.FC<ClassCardProps> = ({ classData, onConfirm }) => {
         {!loading && reviews.length > 0 ? (
           reviews.map((review) => (
             <div key={review.id} className="mb-4">
-              <p className="font-semibold text-gray-800">{review.reviewerName}</p>
-              <p className="text-gray-700">{review.reviewText}</p>
-              <p className="text-yellow-500">{renderStars(review.stars)}</p>
+              <p className="font-semibold text-gray-800">{review.userId}</p>
+              <p className="text-gray-700">{review.notes}</p>
+              <p className="text-yellow-500">{renderStars(review.qualification)}</p>
             </div>
           ))
         ) : (
@@ -233,22 +234,19 @@ const MisClases: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("Necesita Atención");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
-  const { user } = useUser();
-  const userRole = user?.unsafeMetadata?.role;
+  const { clerkUser, role } = useProfileContext();
 
   // Para el modal, el target depende del rol:
   // - Si el usuario es alumno, target es el profesor (selectedClass.professorId)
   // - Si es profesor, target es el alumno (selectedClass.studentId)
   const targetForModal =
-    userRole === "org:alumno"
+    role === "org:alumno"
       ? selectedClass?.professorId
       : selectedClass?.studentId;
 
-  // Instanciamos useReviews para obtener la función submitReview.
-  // La URL se construye con el target obtenido y reviewType según el rol.
   const { submitReview } = useReviews(
     String(targetForModal || ""),
-    userRole === "org:alumno" ? "professor" : "student"
+    role === "org:alumno" ? "professor" : "student"
   );
 
   const openModal = (classData: ClassData) => {
@@ -261,12 +259,12 @@ const MisClases: React.FC = () => {
   };
 
   const handleReviewSubmit = async (reviewText: string, rating: number) => {
-    if (!selectedClass || !user) return;
-    const reviewerId = Number(user.id);
+    if (!selectedClass || !clerkUser) return;
+    // Convertimos el id a número si es necesario
+    const reviewerId = Number(clerkUser.id);
     try {
       await submitReview(reviewText, rating, reviewerId);
       console.log("Reseña enviada para el target:", targetForModal);
-      // Aquí podrías refrescar la UI o notificar al usuario
     } catch (err) {
       console.error("Error al enviar reseña:", err);
     }
@@ -277,7 +275,11 @@ const MisClases: React.FC = () => {
       <h1 className="text-3xl font-bold text-center text-gray-900 mb-6">Mis Clases</h1>
       <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
       <ClassList activeTab={activeTab} onConfirm={openModal} />
-      <ReviewModal isOpen={isModalOpen} onClose={closeModal} onSubmit={handleReviewSubmit} />
+      <ReviewModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSubmit={handleReviewSubmit}
+      />
     </div>
   );
 };

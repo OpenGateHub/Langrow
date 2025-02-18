@@ -5,13 +5,14 @@ import Image from "next/image";
 import { FaArrowRight, FaArrowLeft } from "react-icons/fa";
 import { TbBell } from "react-icons/tb";
 
-import { useUser, useAuth } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useProfileContext } from "@/context/ProfileContext";
 
 const Header = () => {
-  const { isSignedIn, isLoaded, user } = useUser();
   const { signOut } = useAuth();
+  const { clerkUser, role } = useProfileContext();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -34,11 +35,10 @@ const Header = () => {
     setNotificationsOpen(false);
   }, [pathname]);
 
-  if (!isLoaded) return null; // Espera a que se cargue el estado del usuario
+  // Si no hay usuario (aún), no mostramos nada
+  if (!clerkUser) return null;
 
-  const role = user?.unsafeMetadata?.role || "guest";
-  const profileImage = user?.imageUrl || "/placeholder-profile.png";
-
+  const profileImage = clerkUser.imageUrl || "/placeholder-profile.png";
   // Oculta el botón de perfil/login en páginas de autenticación
   const hideProfileOrLogin = pathname === "/auth/login" || pathname === "/auth/register";
 
@@ -132,7 +132,7 @@ const Header = () => {
                 className="mr-2 p-2 rounded-full group hover:bg-gray-200 focus:outline-none focus:ring-2 focus:bg-secondary transition-all duration-200"
                 aria-label="Volver"
               >
-                <FaArrowLeft className="h-6 w-6 text-secondary group-focus:text-white " />
+                <FaArrowLeft className="h-6 w-6 text-secondary group-focus:text-white" />
               </button>
             )}
             {/* Logo */}
@@ -191,7 +191,7 @@ const Header = () => {
           {/* Perfil y notificaciones */}
           {!hideProfileOrLogin && (
             <div className="flex items-center space-x-4 relative">
-              {isSignedIn ? (
+              {clerkUser ? (
                 <>
                   {/* Campanita de notificaciones */}
                   <div className="relative">
@@ -206,7 +206,12 @@ const Header = () => {
                       )}
                     </button>
                     {/* Dropdown de notificaciones */}
-                    <div style={{ zIndex: 1000 }}  className={`absolute right-0 mt-2 z-1000 w-48 bg-white rounded-lg shadow-lg py-2 z-50 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${isNotificationsOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0"}`}>
+                    <div
+                      style={{ zIndex: 1000 }}
+                      className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${
+                        isNotificationsOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0"
+                      }`}
+                    >
                       {hasNotifications ? (
                         notificationsList
                       ) : (
@@ -233,8 +238,13 @@ const Header = () => {
                       />
                     </button>
                     {/* Dropdown de perfil */}
-                    <div style={{ zIndex: 1000 }}  className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${isMenuOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0"}`}>
-                      <Link href={`/perfil/${user.id}`}>
+                    <div
+                      style={{ zIndex: 1000 }}
+                      className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${
+                        isMenuOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0"
+                      }`}
+                    >
+                      <Link href={`/perfil/${clerkUser.id}`}>
                         <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
                           Perfil
                         </span>
@@ -244,13 +254,7 @@ const Header = () => {
                           Ver mis Clases
                         </button>
                       </Link>
-                      {role === "admin" && (
-                        <Link href="/admin/impersonate">
-                          <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
-                            Impersonar
-                          </button>
-                        </Link>
-                      )}
+                     
                       <button
                         type="button"
                         onClick={() => signOut()}

@@ -5,30 +5,28 @@ import ReviewCard from "./ReviewCard";
 import Image from "next/image";
 import { CiLocationOn } from "react-icons/ci";
 import { RiPencilLine } from "react-icons/ri";
-import { useUser } from "@clerk/nextjs";
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 import Link from "next/link";
-import { useProfile } from "@/hooks/useProfile";
 import { useReviews } from "@/hooks/useReview";
+import { useProfileContext } from "@/context/ProfileContext";
 
 interface ProfilePageProps {
-  profileId: number | string;
   isTutor?: boolean;
 }
 
-const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
-  const { isLoaded, user } = useUser();
-  const { profile, loading, error, updateProfile, refetch } = useProfile(profileId);
+const ProfilePage = ({ isTutor = false }: ProfilePageProps) => {
+  const { clerkUser, role, profile, loading, error, updateProfile, refetch } =
+    useProfileContext();
   const reviewType = isTutor ? "professor" : "student";
   const { reviews, loading: reviewsLoading, error: reviewsError } = useReviews(
     profile?.id as number,
     reviewType
   );
 
-  // Validar que el usuario pueda editar (compara el id del usuario logueado con el profileId)
-  const computedCanEdit = user?.id === String(profileId);
+  // Compara el id del usuario de Clerk con el userId del perfil de la base de datos
+  const computedCanEdit = clerkUser?.id === profile?.userId;
 
-  // Estados locales para manejar la edición de cada campo
+  // Estados locales para la edición de cada campo
   const [isEditingPhoto, setIsEditingPhoto] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -41,7 +39,6 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
   const [newTitle, setNewTitle] = useState("");
   const [newLocation, setNewLocation] = useState("");
 
-  // Inicializamos los estados con los valores actuales del perfil
   useEffect(() => {
     if (profile) {
       setNewProfileImage(profile.profileImg);
@@ -52,10 +49,9 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
     }
   }, [profile]);
 
-  if (!isLoaded || loading) return <p>Cargando...</p>;
+  if (loading) return <p>Cargando...</p>;
   if (error || !profile) return <p>Error: {error || "Perfil no encontrado"}</p>;
 
-  // Funciones de envío para cada sección
   const handlePhotoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
@@ -111,7 +107,7 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
     }
   };
 
-  const loggedUserRole = user?.unsafeMetadata?.role;
+  const loggedUserRole = role; // role obtenido del contexto
 
   return (
     <main className="p-8 bg-gray-100">
@@ -134,13 +130,21 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                     className="rounded-full relative mt-3 md:absolute md:mt-[-30px] md:z-50 w-[150px] max-w-[150px] h-[150px] border-4 border-white"
                   />
                   {computedCanEdit && (
-                    <div className="absolute top-0 left-0" style={{ zIndex: 500 }}>
+                    <div
+                      className="absolute top-0 left-0"
+                      style={{ zIndex: 500 }}
+                    >
                       {isEditingPhoto ? (
-                        <form onSubmit={handlePhotoSubmit} className="flex space-x-2">
+                        <form
+                          onSubmit={handlePhotoSubmit}
+                          className="flex space-x-2"
+                        >
                           <input
                             type="text"
                             value={newProfileImage}
-                            onChange={(e) => setNewProfileImage(e.target.value)}
+                            onChange={(e) =>
+                              setNewProfileImage(e.target.value)
+                            }
                             placeholder="URL de la nueva foto"
                             className="text-secondary px-2 py-1 rounded-full text-xs shadow border"
                           />
@@ -176,7 +180,10 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                   {/* Nombre */}
                   <div className="flex items-center justify-center md:justify-start ">
                     {isEditingName ? (
-                      <form onSubmit={handleNameSubmit} className="flex items-center space-x-2">
+                      <form
+                        onSubmit={handleNameSubmit}
+                        className="flex items-center space-x-2"
+                      >
                         <input
                           type="text"
                           value={newName}
@@ -199,7 +206,9 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                       </form>
                     ) : (
                       <>
-                        <h1 className="text-2xl font-bold opacity-0 animate-fade-in">{newName}</h1>
+                        <h1 className="text-2xl font-bold opacity-0 animate-fade-in">
+                          {newName}
+                        </h1>
                         {computedCanEdit && (
                           <button
                             onClick={() => setIsEditingName(true)}
@@ -215,7 +224,10 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                   {/* Ubicación */}
                   <div className="flex items-center justify-center md:justify-start">
                     {isEditingLocation ? (
-                      <form onSubmit={handleLocationSubmit} className="flex items-center space-x-2">
+                      <form
+                        onSubmit={handleLocationSubmit}
+                        className="flex items-center space-x-2"
+                      >
                         <input
                           type="text"
                           value={newLocation}
@@ -258,12 +270,10 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
               {/* Botón de Editar Perfil o Reservar */}
               <AnimateOnScroll delay={500}>
                 <div className="mt-4 md:mt-0 md:ml-auto">
-                  {computedCanEdit ? (
-                    <></>
-                  ) : (
+                  {computedCanEdit ? null : (
                     loggedUserRole === "org:alumno" &&
                     isTutor && (
-                      <Link href={`/reserva/${profileId}`} passHref>
+                      <Link href={`/reserva/${profile.userId}`} passHref>
                         <button className="md:absolute md:mt-[40px] bg-white text-secondary focus:bg-secondary focus:text-white hover:bg-gray-200 group font-semibold px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-60 border-2 border-gray-300 transition-all duration-200 ease-in-out">
                           Reservar
                         </button>
@@ -281,7 +291,10 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
             <div className="relative opacity-0 animate-fade-in mt-[80px]">
               <div className="flex items-center justify-center md:justify-start mt-2">
                 {isEditingTitle ? (
-                  <form onSubmit={handleTitleSubmit} className="flex items-center space-x-2">
+                  <form
+                    onSubmit={handleTitleSubmit}
+                    className="flex items-center space-x-2"
+                  >
                     <input
                       type="text"
                       value={newTitle}
@@ -320,7 +333,10 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
               </div>
               <div className="flex items-center justify-center md:justify-start mt-2">
                 {isEditingDescription ? (
-                  <form onSubmit={handleDescriptionSubmit} className="flex w-full">
+                  <form
+                    onSubmit={handleDescriptionSubmit}
+                    className="flex w-full"
+                  >
                     <input
                       type="text"
                       value={newDescription}
@@ -397,7 +413,9 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
                       reviewerName={review.StudentProfile?.fullName as string}
                       reviewText={review.notes}
                       stars={review.qualification}
-                      profilePicture={review.StudentProfile?.profileImg as string}
+                      profilePicture={
+                        review.StudentProfile?.profileImg as string
+                      }
                     />
                   </AnimateOnScroll>
                 ))}
@@ -406,7 +424,7 @@ const ProfilePage = ({ profileId, isTutor = false }: ProfilePageProps) => {
           </AnimateOnScroll>
         </div>
       </div>
-          </main>
+    </main>
   );
 };
 
