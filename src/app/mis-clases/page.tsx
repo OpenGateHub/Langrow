@@ -6,7 +6,9 @@ import { useReviews } from "@/hooks/useReview";
 
 // --- Tipos ---
 type Review = {
-  text: string;
+  id: number;
+  reviewerName: string;
+  reviewText: string;
   stars: number;
 };
 

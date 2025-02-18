@@ -205,7 +205,7 @@ export default function ContactPage() {
                   >
                     {loading ? "Enviando..." : "Enviar"}
                   </button>
-                  <div className="absolute bottom-4 right-4">
+                  <div className="absolute bottom-[-30px] right-4">
                     <Image
                       src="/logo-primary.png"
                       alt="Logo Langrow"
