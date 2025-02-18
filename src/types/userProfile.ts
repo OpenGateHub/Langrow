@@ -3,12 +3,12 @@ import { Achievement } from "./achievement";
 
 // Interface for Professors
 export interface UserProfile extends Profile {
-    title: string;
-    description: string;
-    reviews: number;
+    title?: string;
+    description?: string;
+    reviews?: number;
     price?: number;
-    rating: number;
-    location: string;
-    profileImg: string;
+    rating?: number;
+    location?: string;
+    profileImg?: string;
     achievements?: Achievement[];
 }
