@@ -9,10 +9,11 @@ import { useAuth } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useProfileContext } from "@/context/ProfileContext";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const Header = () => {
   const { signOut } = useAuth();
-  const { clerkUser, role } = useProfileContext();
+  const { clerkUser, role, profile } = useProfileContext();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -22,7 +23,11 @@ const Header = () => {
 
   // Muestra la flecha de retroceso si hay historial y no es la home
   useEffect(() => {
-    if (typeof window !== "undefined" && window.history.length > 1 && pathname !== "/") {
+    if (
+      typeof window !== "undefined" &&
+      window.history.length > 1 &&
+      pathname !== "/"
+    ) {
       setShowBack(true);
     } else {
       setShowBack(false);
@@ -35,91 +40,54 @@ const Header = () => {
     setNotificationsOpen(false);
   }, [pathname]);
 
-  // Si no hay usuario (aún), no mostramos nada
-  if (!clerkUser) return null;
+  // Aseguramos llamar al hook useNotifications de forma incondicional
+  const { 
+    notifications, 
+    loading: notificationsLoading, 
+    error: notificationsError 
+  } = useNotifications(profile?.id || "", false);
+
+  if (!clerkUser || !profile) return null;
 
   const profileImage = clerkUser.imageUrl || "/placeholder-profile.png";
-  // Oculta el botón de perfil/login en páginas de autenticación
-  const hideProfileOrLogin = pathname === "/auth/login" || pathname === "/auth/register";
+  const hideProfileOrLogin =
+    pathname === "/auth/login" || pathname === "/auth/register";
 
-  /* Variables de notificaciones (ejemplo) */
-  // Para profesor
-  const isTeacherRequest = false;
-  const isTeacherScheduled = false;
-  const isTeacherConfirm = false;
+  // Función que determina la URL de redirección según el mensaje
+  const getRedirectUrl = (message: string) => {
+    const lower = message.toLowerCase();
+    if (lower.includes("perfil") || lower.includes("completa")) {
+      return `/perfil/${clerkUser.id}`;
+    }
+    return "/mis-clases";
+  };
 
-  // Para alumno
-  const isStudentConfirmed = false;
-  const isStudentReagend = false;
-  const isStudentConfirm = false;
+  const hasNotifications = notifications && notifications.length > 0;
 
-  // Nombres de ejemplo
-  const studentName = "";
-  const studentLastName = "";
-  const teacherName = "";
-  const teacherLastName = "";
-
-  // Determina si hay notificaciones
-  const hasNotifications =
-    (role === "org:profesor" &&
-      (isTeacherRequest || isTeacherScheduled || isTeacherConfirm)) ||
-    (role === "org:alumno" &&
-      (isStudentConfirmed || isStudentReagend || isStudentConfirm));
-
-  let notificationsList = null;
-  if (role === "org:profesor") {
-    notificationsList = (
-      <>
-        {isTeacherRequest && (
-          <Link href="/mis-clases">
-            <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer text-sm">
-              El alumno {studentName} {studentLastName} quiere tener una clase.
-            </span>
-          </Link>
-        )}
-        {isTeacherScheduled && (
-          <Link href="/mis-clases">
-            <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer text-sm">
-              Se agendó la clase con {studentName} {studentLastName}!
-            </span>
-          </Link>
-        )}
-        {isTeacherConfirm && (
-          <Link href="/mis-clases">
-            <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer text-sm">
-              Confirma tu clase con {studentName} {studentLastName}.
-            </span>
-          </Link>
-        )}
-      </>
-    );
-  } else if (role === "org:alumno") {
-    notificationsList = (
-      <>
-        {isStudentConfirmed && (
-          <Link href="/mis-clases">
-            <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer text-sm">
-              Tu clase con {teacherName} {teacherLastName} fue confirmada!
-            </span>
-          </Link>
-        )}
-        {isStudentReagend && (
-          <Link href="/mis-clases">
-            <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer text-sm">
-              Tu clase con {teacherName} {teacherLastName} fue reagendada.
-            </span>
-          </Link>
-        )}
-        {isStudentConfirm && (
-          <Link href="/mis-clases">
-            <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer text-sm">
-              Confirma tu clase con {teacherName} {teacherLastName}.
-            </span>
-          </Link>
-        )}
-      </>
-    );
-  }
+  const notificationsList = notificationsLoading ? (
+    <div className="px-4 py-2 text-gray-700 text-sm">
+      Cargando notificaciones...
+    </div>
+  ) : notificationsError ? (
+    <div className="px-4 py-2 text-gray-700 text-sm">
+      Error: {notificationsError}
+    </div>
+  ) : hasNotifications ? (
+    notifications.map((notification) => {
+      const href = getRedirectUrl(notification.message);
+      return (
+        <Link key={notification.id} href={href}>
+          <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer text-sm">
+            {notification.message}
+          </span>
+        </Link>
+      );
+    })
+  ) : (
+    <div className="px-4 py-2 text-gray-700 text-sm">
+      No hay notificaciones
+    </div>
+  );
 
   return (
     <header className="bg-white shadow-sm z-1000">
@@ -196,7 +164,9 @@ const Header = () => {
                   {/* Campanita de notificaciones */}
                   <div className="relative">
                     <button
-                      onClick={() => setNotificationsOpen(!isNotificationsOpen)}
+                      onClick={() =>
+                        setNotificationsOpen(!isNotificationsOpen)
+                      }
                       className="group relative focus:outline-none hover:bg-primary-hover hover:scale-105 rounded-full p-2 transition-all duration-200 ease-in-out"
                       aria-label="Notificaciones"
                     >
@@ -209,16 +179,12 @@ const Header = () => {
                     <div
                       style={{ zIndex: 1000 }}
                       className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${
-                        isNotificationsOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0"
+                        isNotificationsOpen
+                          ? "opacity-100 scale-y-100"
+                          : "opacity-0 scale-y-0"
                       }`}
                     >
-                      {hasNotifications ? (
-                        notificationsList
-                      ) : (
-                        <div className="px-4 py-2 text-gray-700 text-sm">
-                          No hay notificaciones
-                        </div>
-                      )}
+                      {notificationsList}
                     </div>
                   </div>
 
@@ -241,7 +207,9 @@ const Header = () => {
                     <div
                       style={{ zIndex: 1000 }}
                       className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${
-                        isMenuOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0"
+                        isMenuOpen
+                          ? "opacity-100 scale-y-100"
+                          : "opacity-0 scale-y-0"
                       }`}
                     >
                       <Link href={`/perfil/${clerkUser.id}`}>
@@ -254,7 +222,6 @@ const Header = () => {
                           Ver mis Clases
                         </button>
                       </Link>
-                     
                       <button
                         type="button"
                         onClick={() => signOut()}
