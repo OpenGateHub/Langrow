@@ -5,10 +5,15 @@ import { supabaseClient } from "@/app/api/supabaseClient";
 const createNotification = zod.object({
     profileId: zod.number().positive(),
     message: zod.string(),
-    isStaff: zod.boolean()
+    isStaff: zod.boolean(),
+    url: zod.string()
 });
 
-type CreateNotification = zod.infer<typeof createNotification>;
+const optionalValues = createNotification.partial({
+    url: true
+})
+
+type CreateNotification = zod.infer<typeof optionalValues>;
 export async function POST (req: NextRequest) {
     try {
         const reqBody: CreateNotification = await req.json();
@@ -27,6 +32,7 @@ export async function POST (req: NextRequest) {
                     profileId: notification.profileId,
                     message: notification.message,
                     isStaff: notification.isStaff,
+                    ...(notification.url && { url: notification.url })
                 }
             ]).select();
         if (error) {

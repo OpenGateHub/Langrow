@@ -6,4 +6,5 @@ interface Notification {
     createAt: Date;
     updateAt: Date;
     message: string;
+    url: string;
 }
