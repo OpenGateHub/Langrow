@@ -9,15 +9,15 @@ const createNotification = zod.object({
     url: zod.string()
 });
 
-const optionalValues = createNotification.partial({
+const createNotificationOptionalValues = createNotification.partial({
     url: true
 })
 
-type CreateNotification = zod.infer<typeof optionalValues>;
+type CreateNotification = zod.infer<typeof createNotificationOptionalValues>;
 export async function POST (req: NextRequest) {
     try {
         const reqBody: CreateNotification = await req.json();
-        const validation =  createNotification.safeParse(reqBody);
+        const validation =  createNotificationOptionalValues.safeParse(reqBody);
         if (!validation.success) {
             return NextResponse.json(
                 { message: "Error en la validación", error: validation.error.errors },
