@@ -5,15 +5,17 @@ import { useRouter } from 'next/navigation';
 import Image from "next/image";
 import { SignInButton } from "@clerk/nextjs";
 import { useSignUp } from "@clerk/clerk-react";
+import { useProfile } from "@/hooks/useProfile";
 import Link from "next/link";
 import useRecaptcha from "@/hooks/useRecaptcha";
 import BlockUi from "@/app/components/BlockUi";
 import MessageModal from "@/app/components/Modal";
+import { Profile } from "@/types/profile";
 
 export default function RegisterPage() {
   const { isLoaded, signUp } = useSignUp();
   const router = useRouter();
-
+  const { createProfile } = useProfile();
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
   const {
     captchaValue,
@@ -24,7 +26,9 @@ export default function RegisterPage() {
 
   const [loading, setLoading] = useState(false);
   const [isVerificating, setIsVerificating] = useState(false);
-  const [role, setRole] = useState<string| null>(null);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<string| null>('org:alumno');
 
   const [display, setDisplay] = useState(false);
   const [messageType, setMessageType] = useState<"error" | "success">("error");
@@ -58,6 +62,8 @@ export default function RegisterPage() {
     const firstName = formData.get("firstName") as string;
     const lastName = formData.get("lastName") as string;
     const formRole = formData.get("role") as string;
+    setEmail(email);
+    setName(`${firstName} ${lastName}`);
     setRole(formRole);
 
     if (!isLoaded) {
@@ -90,20 +96,24 @@ export default function RegisterPage() {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     try {
-      await signUp?.attemptEmailAddressVerification({
+      const result = await signUp?.attemptEmailAddressVerification({
         code: formData.get("verificationToken") as string
       });
-      setIsVerificating(false);
-      switch (role) {
-        case "org:profesor":
+      if (result && result.status === "complete") {
+        // Obtén el ID del usuario
+        const userId = result.createdUserId;
+
+        const newUserProfile = {
+          code: userId as string,
+          fullName: name,
+          email: email,
+          role: role as string,
+        };
+        const response = await createProfile(newUserProfile);
+        if (response && response.result) {
+          setIsVerificating(false);
           router.push('/browse-tutor');
-          break;
-        case "org:student":
-          router.push('/browse-tutor');
-          break;
-        default:
-          console.error("No hay pagina por defecto.");
-          break;
+        }
       }
     } catch (e: any) {
       console.error(e);
