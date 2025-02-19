@@ -1,39 +1,28 @@
 import { useState, useEffect } from "react";
+import { Profile as BaseProfile } from "@/types/profile";
+import { UserProfile as Profile } from "@/types/userProfile";
 
-export interface Achievement {
-  id: number;
-  title: string;
-  description: string;
-  iconImg: string;
-  isActive: boolean;
-}
+interface CreateProfilePayload extends BaseProfile {
+  role: string | null;
+  code: string | null;
+};
 
-export interface Profile {
-  id: number;
-  userId: string;
-  name: string;
-  title: string;
-  description: string;
-  reviews: number;
-  price?: number;
-  rating: number;
-  location: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  profileImg: string;
-  achievements?: Achievement[];
+interface CreateProfileResponse {
+  result: boolean;
+  message: string;
+  data: Profile;
 }
 
 interface UseProfileReturn {
   profile: Profile | null;
   loading: boolean;
   error: string | null;
-  updateProfile: (updatedData: Partial<Profile>) => Promise<any>;
+  createProfile: (createData: CreateProfilePayload) => Promise<any>;
+  updateProfile: (updatedData: Partial<Profile>) => Promise<CreateProfileResponse>;
   refetch: () => void;
 }
 
-export function useProfile(profileId: number | string): UseProfileReturn {
+export function useProfile(profileId?: number | string): UseProfileReturn {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +76,9 @@ export function useProfile(profileId: number | string): UseProfileReturn {
   };
 
   useEffect(() => {
-    fetchProfile();
+    if (profileId) {
+      fetchProfile();
+    }
   }, [profileId]);
 
   const updateProfile = async (updatedData: Partial<Profile>) => {
@@ -121,6 +112,27 @@ export function useProfile(profileId: number | string): UseProfileReturn {
     }
   };
 
-  return { profile, loading, error, updateProfile, refetch: fetchProfile };
+  const createProfile = async (newProfileData: Partial<Profile>) => {
+    try {
+      const res = await fetch(`/api/profile`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newProfileData),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.message || "Error al crear el perfil");
+      }
+      setProfile((prev) => (prev ? { ...prev, ...newProfileData } : prev));
+      return json;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  return { profile, loading, error, createProfile, updateProfile, refetch: fetchProfile };
 }
 
