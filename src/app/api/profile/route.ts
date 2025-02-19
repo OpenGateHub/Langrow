@@ -81,10 +81,10 @@ export async function POST(req: Request) {
         console.log(body.data.role);
         let result;
         switch (body.data.role) {
-            case 'org:professor':
+            case 'org:profesor':
                 result = await createProfessorProfile(minCreateData, body.data);
                 break;
-            case 'org:student':
+            case 'org:alumno':
                 result = await createStudentProfile(minCreateData, body.data);
                 break;
             default:
