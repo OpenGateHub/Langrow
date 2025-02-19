@@ -13,7 +13,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 
 const Header = () => {
   const { signOut } = useAuth();
-  const { clerkUser, role, profile } = useProfileContext();
+  const { clerkUser, role, profile, loading } = useProfileContext();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -40,16 +40,14 @@ const Header = () => {
     setNotificationsOpen(false);
   }, [pathname]);
 
-  // Aseguramos llamar al hook useNotifications de forma incondicional
-  const { 
-    notifications, 
-    loading: notificationsLoading, 
-    error: notificationsError 
+  // Llamada al hook useNotifications
+  const {
+    notifications,
+    loading: notificationsLoading,
+    error: notificationsError,
   } = useNotifications(profile?.id || "", false);
 
-  if (!clerkUser || !profile) return null;
-
-  const profileImage = clerkUser.imageUrl || "/placeholder-profile.png";
+  const profileImage = clerkUser?.imageUrl || "/placeholder-profile.png";
   const hideProfileOrLogin =
     pathname === "/auth/login" || pathname === "/auth/register";
 
@@ -57,7 +55,7 @@ const Header = () => {
   const getRedirectUrl = (message: string) => {
     const lower = message.toLowerCase();
     if (lower.includes("perfil") || lower.includes("completa")) {
-      return `/perfil/${clerkUser.id}`;
+      return `/perfil/${clerkUser?.id}`;
     }
     return "/mis-clases";
   };
@@ -84,9 +82,7 @@ const Header = () => {
       );
     })
   ) : (
-    <div className="px-4 py-2 text-gray-700 text-sm">
-      No hay notificaciones
-    </div>
+    <div className="px-4 py-2 text-gray-700 text-sm">No hay notificaciones</div>
   );
 
   return (
@@ -156,10 +152,10 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Perfil y notificaciones */}
+          {/* Perfil, notificaciones o botón de Iniciar Sesión */}
           {!hideProfileOrLogin && (
             <div className="flex items-center space-x-4 relative">
-              {clerkUser ? (
+              {clerkUser && profile ? (
                 <>
                   {/* Campanita de notificaciones */}
                   <div className="relative">
