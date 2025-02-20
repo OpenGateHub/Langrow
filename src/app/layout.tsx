@@ -1,4 +1,3 @@
-// app/layout.tsx (o RootLayout.tsx)
 import type { Metadata } from "next";
 import { Archivo, Poppins } from "next/font/google";
 import "./globals.css";
@@ -6,6 +5,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ProfileProvider } from "@/context/ProfileContext";
+import AuthWrapper from "./components/AuthWrapper";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -33,9 +33,11 @@ export default function RootLayout({
       <ProfileProvider>
         <html lang="en">
           <body className={`${archivo.variable} ${poppins.variable} antialiased bg-primary`}>
-            <Header />
-            {children}
-            <Footer />
+            <AuthWrapper>
+              <Header />
+              {children}
+              <Footer />
+            </AuthWrapper>
           </body>
         </html>
       </ProfileProvider>
