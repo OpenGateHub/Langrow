@@ -1,8 +1,9 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useProfile, Profile } from "@/hooks/useProfile";
+import { useProfile } from "@/hooks/useProfile";
+import { UserProfile as Profile } from "@/types/userProfile";
 
 interface ProfileContextValue {
   clerkUser: ReturnType<typeof useUser>["user"] | null;
@@ -26,9 +27,16 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ? user.unsafeMetadata.role
       : null;
 
-  // Una vez que Clerk esté cargado y tengamos el usuario, usamos su id para traer el perfil.
+  // Usamos el id del usuario una vez que Clerk esté cargado
   const profileId = isLoaded && user ? user.id : "";
   const { profile, loading, error, refetch, updateProfile } = useProfile(profileId);
+
+  // Este useEffect se ejecuta cuando el usuario se carga y así refresca el perfil
+  useEffect(() => {
+    if (isLoaded && user) {
+      refetch();
+    }
+  }, [isLoaded, user]);
 
   const value: ProfileContextValue = {
     clerkUser: user || null,

@@ -126,17 +126,25 @@ const Header = () => {
           </div>
 
           {/* Botones de navegación */}
+          
           <div className="hidden md:flex space-x-8">
+          { clerkUser ? (
+            <Link href="/mis-clases">
+              <button className="text-gray-600 px-3 py-2 text-sm font-medium font-archivo rounded-full hover:scale-105 hover:bg-primary hover:text-white transition-all duration-300 ease-in-out">
+                Mis Clases
+              </button>
+            </Link>
+          ) : null } 
             {role === "org:alumno" ? (
               <Link href="/browse-tutor">
                 <button className="text-gray-600 px-3 py-2 text-sm font-medium font-archivo rounded-full hover:scale-105 hover:bg-primary hover:text-white transition-all duration-300 ease-in-out">
-                  Encontrá un Profesor
+                  Browse Tutor
                 </button>
               </Link>
             ) : role === "org:profesor" ? (
               <Link href="/beneficios">
                 <button className="text-gray-600 px-3 py-2 text-sm font-medium font-archivo rounded-full hover:scale-105 hover:bg-primary hover:text-white transition-all duration-300 ease-in-out">
-                  Mis Beneficios
+                  Beneficios
                 </button>
               </Link>
             ) : null}
@@ -155,7 +163,7 @@ const Header = () => {
           {/* Perfil, notificaciones o botón de Iniciar Sesión */}
           {!hideProfileOrLogin && (
             <div className="flex items-center space-x-4 relative">
-              {clerkUser && profile ? (
+              {clerkUser ? (
                 <>
                   {/* Campanita de notificaciones */}
                   <div className="relative">
