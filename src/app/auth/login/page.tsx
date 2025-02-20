@@ -3,25 +3,25 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
-import { useSignIn, SignInButton, useUser } from "@clerk/nextjs"; // Cambiar a SignInButton
+import { useRouter } from "next/navigation";
+import { useClerk, useSignIn, SignInButton, useUser } from "@clerk/nextjs";
 import BlockUi from "@/app/components/BlockUi";
-
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isSignedIn, isLoaded: loadingUser, user } = useUser();
-  const { signIn, isLoaded } = useSignIn(); // Hook de Clerk para manejo de inicio de sesión
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const clerk = useClerk();
+  const { isSignedIn, isLoaded: userLoaded } = useUser();
+  const { signIn, isLoaded: signInLoaded } = useSignIn();
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  if (isSignedIn) {
-    router.push('/browse-tutor');
-  }
+  // Redirige cuando Clerk ya cargó y el usuario está autenticado
+  useEffect(() => {
+    if (userLoaded && isSignedIn) {
+      window.location.replace("/home");
+    }
+  }, [userLoaded, isSignedIn]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -31,19 +31,17 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    if (!isLoaded) return; // Esperar a que Clerk esté cargado
+    if (!signInLoaded) return;
     setErrorMessage(null);
 
     try {
       const { email, password } = formData;
-      const result = await signIn.create({
-        identifier: email,
-        password,
-      });
-
+      const result = await signIn.create({ identifier: email, password });
       if (result.status === "complete") {
-        // TODO:: create a home page to redirect there and use that one to check the user role
-        router.push('/browse-tutor');
+        // Activa la sesión en el cliente usando useClerk
+        await clerk.setActive({ session: result.createdSessionId });
+        // Redirige y forzamos recarga completa
+        window.location.replace("/home");
       } else {
         console.log(result);
       }
@@ -62,8 +60,8 @@ export default function LoginPage() {
         <Image
           src="/bg-login.jpg"
           alt="Background"
-          layout="fill"
-          objectFit="cover"
+          fill
+          style={{ objectFit: "cover" }}
           className="opacity-80"
         />
       </div>
@@ -124,7 +122,7 @@ export default function LoginPage() {
         <div className="flex items-center justify-between mt-6">
           {/* Botón para iniciar sesión con Google */}
           <SignInButton mode="redirect">
-            <button className="flex items-center  bg-white border border-gray-300 rounded-md px-4 py-2 shadow-sm hover:bg-gray-200 transition duration-200">
+            <button className="flex items-center bg-white border border-gray-300 rounded-md px-4 py-2 shadow-sm hover:bg-gray-200 transition duration-200">
               <img src="/google.png" alt="Google" className="w-5 h-5 mr-2" />
               Inicia sesión con Google
             </button>
