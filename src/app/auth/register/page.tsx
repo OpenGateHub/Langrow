@@ -1,34 +1,29 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { SignInButton } from "@clerk/nextjs";
-import { useSignUp } from "@clerk/clerk-react";
+import { SignInButton, useSignUp } from "@clerk/nextjs";
+import { useClerk } from "@clerk/nextjs"; // Importa useClerk
 import { useProfile } from "@/hooks/useProfile";
 import Link from "next/link";
 import useRecaptcha from "@/hooks/useRecaptcha";
 import BlockUi from "@/app/components/BlockUi";
 import MessageModal from "@/app/components/Modal";
-import { Profile } from "@/types/profile";
 
 export default function RegisterPage() {
-  const { isLoaded, signUp } = useSignUp();
   const router = useRouter();
+  const clerk = useClerk(); // Obtenemos el objeto Clerk
+  const { isLoaded, signUp } = useSignUp();
   const { createProfile } = useProfile();
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
-  const {
-    captchaValue,
-    captchaError,
-    validateCaptcha,
-    RecaptchaComponent,
-  } = useRecaptcha(siteKey);
+  const { captchaValue, captchaError, validateCaptcha, RecaptchaComponent } = useRecaptcha(siteKey);
 
   const [loading, setLoading] = useState(false);
   const [isVerificating, setIsVerificating] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<string| null>('org:alumno');
+  const [role, setRole] = useState<string | null>("org:alumno");
 
   const [display, setDisplay] = useState(false);
   const [messageType, setMessageType] = useState<"error" | "success">("error");
@@ -96,15 +91,19 @@ export default function RegisterPage() {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     try {
-      const result = await signUp?.attemptEmailAddressVerification({
-        code: formData.get("verificationToken") as string
+      if (!signUp) {
+        throw new Error("signUp is not loaded");
+      }
+      const result = await signUp.attemptEmailAddressVerification({
+        code: formData.get("verificationToken") as string,
       });
       if (result && result.status === "complete") {
-        // Obtén el ID del usuario
+        // Activa la sesión en el cliente usando useClerk
+        await clerk.setActive({ session: result.createdSessionId });
+        // Crea el perfil del usuario
         const userId = result.createdUserId;
-
         const newUserProfile = {
-          code: userId as string,
+          code: userId,
           fullName: name,
           email: email,
           role: role as string,
@@ -112,7 +111,8 @@ export default function RegisterPage() {
         const response = await createProfile(newUserProfile);
         if (response && response.result) {
           setIsVerificating(false);
-          router.push('/browse-tutor');
+          // Forzamos una recarga completa para que se actualice el estado de Clerk
+          window.location.replace("/home");
         }
       }
     } catch (e: any) {
@@ -126,16 +126,20 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen flex items-center justify-center relative">
       <BlockUi isActive={loading} />
-      <MessageModal isOpen={display}
-          message={message}
-          onClose={() => { setDisplay(false) }}
-          type={messageType} />
+      <MessageModal
+        isOpen={display}
+        message={message}
+        onClose={() => {
+          setDisplay(false);
+        }}
+        type={messageType}
+      />
       <div className="absolute inset-0 -z-10">
         <Image
           src="/bg-login.jpg"
           alt="Background"
-          layout="fill"
-          objectFit="cover"
+          fill
+          style={{ objectFit: "cover" }}
           className="opacity-80"
         />
       </div>
@@ -165,7 +169,7 @@ export default function RegisterPage() {
           <h2 className="text-2xl font-bold mb-6 text-left">Regístrate</h2>
           {!isVerificating && (
             <form name={"register-user"} onSubmit={handleSubmit} className="space-y-4">
-              {/* Inputs de Nombre y Apellido en columna en mobile y en fila en sm+ */}
+              {/* Inputs de Nombre y Apellido */}
               <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                 <div className="flex-1">
                   <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
@@ -242,6 +246,7 @@ export default function RegisterPage() {
               {/* CAPTCHA */}
               <div>
                 {RecaptchaComponent()}
+                {/* Muestra error de captcha si existe */}
                 {captchaError && (
                   <p className="text-sm text-red-600 mt-2">{captchaError}</p>
                 )}
