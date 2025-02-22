@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
                     updatedAt,
                     profileImg
                 `)
-            .eq('isActive', true);
+            .eq('isActive', true)
+            .eq('role', PROFILE_ROLE["org:profesor"]);
 
         if (error) {
             console.error(error.message);
