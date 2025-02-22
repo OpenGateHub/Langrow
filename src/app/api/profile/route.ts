@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { PROFILE_ROLE_STRING, PROFILE_ROLE, ROLE_MAP } from "@/app/config";
 import { z as zod } from "zod";
 import { supabaseClient } from "@/app/api/supabaseClient";
 
@@ -21,7 +22,8 @@ export async function GET(req: NextRequest) {
                     updatedAt,
                     profileImg
                 `)
-            .eq('isActive', true);
+            .eq('isActive', true)
+            .eq('role', PROFILE_ROLE["org:profesor"]);
 
         if (error) {
             console.error(error.message);
@@ -74,21 +76,30 @@ export async function POST(req: Request) {
                 { status: 400 }
             );
         }
+        const roleValue = ROLE_MAP[body.data.role as PROFILE_ROLE_STRING];
+        if (!roleValue) {
+            return NextResponse.json(
+                { message: "Role not enabled", result: false },
+                { status: 400 }
+            );
+        }
         const minCreateData = {
             name: body.data.fullName,
             userId: body.data.code,
-        }
-        console.log(body.data.role);
+            email: body.data.email,
+            role: roleValue,  // Ahora tiene el número correcto
+        };
+
         let result;
+        console.log(`Registering new user - ${body.data.role}:: ${body.data.code}`);
+        result = await createProfile(minCreateData, body.data);
         switch (body.data.role) {
-            case 'org:profesor':
-                result = await createProfessorProfile(minCreateData, body.data);
-                break;
-            case 'org:alumno':
+            case PROFILE_ROLE_STRING.ALUMNO:
+                console.log('Creating student profile')
                 result = await createStudentProfile(minCreateData, body.data);
                 break;
             default:
-                console.log('Role not enabled');
+                console.warn(`Role given not enabled - ${body.data.role}:: ${body.data.code}`);
                 return NextResponse.json(
                     { message: "Role not enabled", result: false },
                     { status: 200 }
@@ -99,6 +110,7 @@ export async function POST(req: Request) {
             { status: 201 }
         );
     } catch (err) {
+        console.error(`An unexpected error occurred creating a new user`);
         console.error(err);
         return NextResponse.json(
             { message: 'Ha ocurrido un error al crear el perfil', error: err },
@@ -215,7 +227,7 @@ export async function DELETE(req: Request) {
 }
 
 
-const createProfessorProfile = async (min: { name: string; userId: string }, payload: CreateFields) => {
+const createProfile = async (min: { name: string; userId: string }, payload: CreateFields) => {
     // Construir el objeto de perfil combinando `min` y `payload`
     const profileData = {
         ...min,
@@ -239,9 +251,7 @@ const createProfessorProfile = async (min: { name: string; userId: string }, pay
 
 const createStudentProfile = async (min: { name: string; userId: string }, payload: CreateFields) => {
     const profileData = {
-        fullName: min.name,
         userId: min.userId,
-        email: payload.email || null,
     };
     const { data, error } = await supabaseClient
         .from('StudentProfile')
