@@ -72,7 +72,7 @@ export default function RegisterPage() {
         password,
         firstName,
         lastName,
-        unsafeMetadata: { role },
+        unsafeMetadata: { formRole },
       });
 
       await signUp.prepareEmailAddressVerification();
