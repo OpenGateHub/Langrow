@@ -22,10 +22,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Determinamos el role (si es "org:alumno" o "org:profesor")
   const role =
-    user?.unsafeMetadata?.role === "org:alumno" ||
-    user?.unsafeMetadata?.role === "org:profesor"
-      ? user.unsafeMetadata.role
-      : null;
+    user?.unsafeMetadata?.formRole === "org:alumno" ||
+    user?.unsafeMetadata?.formRole === "org:profesor"
+      ? user.unsafeMetadata.formRole
+      : null; //está llegando nulo
 
   // Usamos el id del usuario una vez que Clerk esté cargado
   const profileId = isLoaded && user ? user.id : "";

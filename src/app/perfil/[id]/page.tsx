@@ -2,14 +2,12 @@
 import React from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import ProfilePage from "../../components/profile/ProfilePage";
-import mockTutors from "../../data/mockTutors";
 
 export default function TutorProfile() {
     const params = useParams<{ id: string }>();
     const searchParams = useSearchParams();
-    const editMode = searchParams?.get("edit") === "true"; // Convert to boolean
+    const editMode = searchParams?.get("edit") === "true"; 
 
-    // Early return if the ID is invalid
     if (!params.id) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-100">
