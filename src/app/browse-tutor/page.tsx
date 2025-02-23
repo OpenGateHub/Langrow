@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaCalendarAlt } from "react-icons/fa";
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
+import { Profile } from "@/types/profile";
 
 // Mock data con fechas de próxima clase
 const mockTeachers = [
@@ -69,12 +70,13 @@ const getProfiles = async () => {
   } catch (error) {
     // Manejamos errores en la solicitud
     console.error('Error al obtener los perfiles:', error);
-    return { message: 'Hubo un error al obtener los perfiles', error: error.message };
+    return { message: 'Hubo un error al obtener los perfiles', error: (error as any).message };
   }
 }
 
 export default function TeachersList() {
-  const [teachers, setTeachers] = useState([]);
+  const [allTeachers, setAllTeachers] = useState<Profile[]>([]);
+  const [teachers, setTeachers] = useState<Profile[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 50]);
@@ -85,6 +87,7 @@ export default function TeachersList() {
       const profiles = await getProfiles();
       if (profiles.count > 0) {
         setTeachers(profiles.data);
+        setAllTeachers(profiles.data);
       } else {
         console.log(profiles.message);
       }
@@ -93,30 +96,41 @@ export default function TeachersList() {
     fetchProfiles();
   }, []);
 
-  // Lógica de filtros y ordenamiento
   useEffect(() => {
-    let filteredTeachers = [...teachers];
-
+    let filteredTeachers = [...allTeachers];
+  
     if (searchTerm) {
       filteredTeachers = filteredTeachers.filter((teacher) =>
-        teacher.name.toLowerCase().includes(searchTerm.toLowerCase())
+        teacher.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
-    if (sortBy === "availability") {
-      filteredTeachers.sort((a, b) => (a.availability > b.availability ? -1 : 1));
-    } else if (sortBy === "reviews") {
-      filteredTeachers.sort((a, b) => b.reviews - a.reviews);
+  
+    if (sortBy === "reviews") {
+      filteredTeachers.sort(
+        (a, b) => (b.reviews?.length ?? 0) - (a.reviews?.length ?? 0)
+      );
     } else if (sortBy === "rating") {
-      filteredTeachers.sort((a, b) => b.rating - a.rating);
+      filteredTeachers.sort(
+        (a, b) => (b.rating ?? 0) - (a.rating ?? 0)
+      );
     }
-
+  
+    // TODO de nuevo ver bien mis clases y hacer esto 
+    // if (sortBy === "availability") {
+    //   filteredTeachers.sort(
+    //     (a, b) => (b.availability ?? 0) - (a.availability ?? 0)
+    //   );
+    // }
+  
     filteredTeachers = filteredTeachers.filter(
-      (teacher) => teacher.price >= priceRange[0] && teacher.price <= priceRange[1]
+      (teacher) =>
+        (teacher.price ?? 0) >= priceRange[0] &&
+        (teacher.price ?? 0) <= priceRange[1]
     );
-
+  
     setTeachers(filteredTeachers);
-  }, [searchTerm, sortBy, priceRange]);
+  }, [searchTerm, sortBy, priceRange, allTeachers]);
+  
 
   return (
     <main className="bg-white min-h-screen p-8">
@@ -188,10 +202,10 @@ export default function TeachersList() {
         {/* Lista de profesores */}
         <div className="space-y-4">
           {teachers.map((teacher, index) => (
-            <AnimateOnScroll key={teacher.id} delay={index * 100}>
+            <AnimateOnScroll key={teacher?.userId} delay={index * 100}>
               <div className="flex items-center bg-white border border-gray-200 rounded-2xl py-4 pr-4 shadow-md hover:shadow-lg transition-shadow">
                 <Link
-                  href={`/perfil/${teacher.id}`}
+                  href={`/perfil/${teacher.userId}`}
                   className="flex items-center space-x-4 flex-1 group transition-transform duration-200 rounded-lg p-2 relative"
                 >
                   {/* Tooltip */}
@@ -199,8 +213,8 @@ export default function TeachersList() {
                     Ver perfil
                   </div>
                   <Image
-                    src={teacher.profileImage || "/logo-green-orange.png"}
-                    alt={teacher.name}
+                    src={teacher.profileImg || "/logo-green-orange.png"}
+                    alt={teacher.name || "Teacher"}
                     width={64}
                     height={64}
                     className="rounded-full border border-gray-300 group-hover:scale-110 transition-all duration-200"
@@ -215,13 +229,15 @@ export default function TeachersList() {
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
                       Próxima clase disponible:{" "}
-                      {calculateDaysToNextClass(teacher.nextClass)}
+                      
+                      {/* TODO descomentar esto y ver cómo ponemos las clases 
+                      {calculateDaysToNextClass(teacher.nextClass)} */}
                     </p>
                   </div>
                 </Link>
 
                 <div className="relative group">
-                  <Link href={`/reserva/${teacher.id}`}>
+                  <Link href={`/reserva/${teacher.userId}`}>
                   <button className="bg-secondary text-white p-3 rounded-full hover:bg-secondary-hover">
                     <FaCalendarAlt size={20} />
                   </button>

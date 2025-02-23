@@ -7,4 +7,11 @@ export interface Profile {
     updatedAt?: string;
     isActive?: boolean;
     email?: string;
+    role?: number;
+    profileImg?: string;
+    description?: string;
+    reviews?: string;
+    rating?: number;
+    price?: number;
+
 };
