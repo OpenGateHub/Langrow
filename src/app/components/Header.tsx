@@ -183,8 +183,8 @@ const Header = () => {
                     <div
                       style={{ zIndex: 1000 }}
                       className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${isNotificationsOpen
-                          ? "opacity-100 scale-y-100"
-                          : "opacity-0 scale-y-0"
+                        ? "opacity-100 scale-y-100"
+                        : "opacity-0 scale-y-0"
                         }`}
                     >
                       {notificationsList}
@@ -210,11 +210,11 @@ const Header = () => {
                     <div
                       style={{ zIndex: 1000 }}
                       className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${isMenuOpen
-                          ? "opacity-100 scale-y-100"
-                          : "opacity-0 scale-y-0"
+                        ? "opacity-100 scale-y-100"
+                        : "opacity-0 scale-y-0"
                         }`}
                     >
-                      <Link href={`/perfil/${clerkUser.id}`}>
+                      <Link href={`/perfil/${clerkUser.id}?edit=true`}>
                         <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
                           Perfil
                         </span>

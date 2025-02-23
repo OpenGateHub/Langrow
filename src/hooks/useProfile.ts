@@ -3,7 +3,7 @@ import { Profile as BaseProfile } from "@/types/profile";
 import { UserProfile as Profile } from "@/types/userProfile";
 
 interface CreateProfilePayload extends BaseProfile {
-  role: string | null;
+  role: number | undefined;
   code: string | null;
 };
 

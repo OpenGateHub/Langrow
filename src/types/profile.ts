@@ -10,8 +10,9 @@ export interface Profile {
     role?: number;
     profileImg?: string;
     description?: string;
-    reviews?: string;
+    reviews?: number;
     rating?: number;
     price?: number;
+    location?: string;
 
 };

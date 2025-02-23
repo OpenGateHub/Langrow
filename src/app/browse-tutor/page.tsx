@@ -6,43 +6,6 @@ import { FaCalendarAlt } from "react-icons/fa";
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 import { Profile } from "@/types/profile";
 
-// Mock data con fechas de próxima clase
-const mockTeachers = [
-  {
-    id: 1,
-    name: "John Doe",
-    description: "Especialista en inglés para negocios.",
-    price: 20,
-    reviews: 50,
-    rating: 4.8,
-    availability: "Alta",
-    profileImage: "/logo-green-orange.png",
-    nextClass: "2025-01-29", // Fecha ISO
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    description: "Experta en preparación de exámenes IELTS y TOEFL.",
-    price: 25,
-    reviews: 120,
-    rating: 5.0,
-    availability: "Media",
-    profileImage: "/logo-green-orange.png",
-    nextClass: "2025-01-28",
-  },
-  {
-    id: 3,
-    name: "Mike Johnson",
-    description: "Clases personalizadas para principiantes.",
-    price: 18,
-    reviews: 30,
-    rating: 4.5,
-    availability: "Baja",
-    profileImage: "/logo-green-orange.png",
-    nextClass: "2025-01-30",
-  },
-];
-
 // Función para calcular días hasta la próxima clase
 const calculateDaysToNextClass = (nextClass: string) => {
   const today = new Date();
@@ -107,7 +70,7 @@ export default function TeachersList() {
   
     if (sortBy === "reviews") {
       filteredTeachers.sort(
-        (a, b) => (b.reviews?.length ?? 0) - (a.reviews?.length ?? 0)
+        (a, b) => (b.reviews ?? 0) - (a.reviews ?? 0)
       );
     } else if (sortBy === "rating") {
       filteredTeachers.sort(
@@ -205,7 +168,7 @@ export default function TeachersList() {
             <AnimateOnScroll key={teacher?.userId} delay={index * 100}>
               <div className="flex items-center bg-white border border-gray-200 rounded-2xl py-4 pr-4 shadow-md hover:shadow-lg transition-shadow">
                 <Link
-                  href={`/perfil/${teacher.userId}`}
+                  href={`/perfil/${teacher?.userId}`}
                   className="flex items-center space-x-4 flex-1 group transition-transform duration-200 rounded-lg p-2 relative"
                 >
                   {/* Tooltip */}
