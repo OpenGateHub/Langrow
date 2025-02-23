@@ -126,15 +126,15 @@ const Header = () => {
           </div>
 
           {/* Botones de navegación */}
-          
+
           <div className="hidden md:flex space-x-8">
-          { clerkUser ? (
-            <Link href="/mis-clases">
-              <button className="text-gray-600 px-3 py-2 text-sm font-medium font-archivo rounded-full hover:scale-105 hover:bg-primary hover:text-white transition-all duration-300 ease-in-out">
-                Mis Clases
-              </button>
-            </Link>
-          ) : null } 
+            {clerkUser ? (
+              <Link href="/mis-clases">
+                <button className="text-gray-600 px-3 py-2 text-sm font-medium font-archivo rounded-full hover:scale-105 hover:bg-primary hover:text-white transition-all duration-300 ease-in-out">
+                  Mis Clases
+                </button>
+              </Link>
+            ) : null}
             {role === "org:alumno" ? (
               <Link href="/browse-tutor">
                 <button className="text-gray-600 px-3 py-2 text-sm font-medium font-archivo rounded-full hover:scale-105 hover:bg-primary hover:text-white transition-all duration-300 ease-in-out">
@@ -182,11 +182,10 @@ const Header = () => {
                     {/* Dropdown de notificaciones */}
                     <div
                       style={{ zIndex: 1000 }}
-                      className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${
-                        isNotificationsOpen
+                      className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${isNotificationsOpen
                           ? "opacity-100 scale-y-100"
                           : "opacity-0 scale-y-0"
-                      }`}
+                        }`}
                     >
                       {notificationsList}
                     </div>
@@ -210,11 +209,10 @@ const Header = () => {
                     {/* Dropdown de perfil */}
                     <div
                       style={{ zIndex: 1000 }}
-                      className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${
-                        isMenuOpen
+                      className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${isMenuOpen
                           ? "opacity-100 scale-y-100"
                           : "opacity-0 scale-y-0"
-                      }`}
+                        }`}
                     >
                       <Link href={`/perfil/${clerkUser.id}`}>
                         <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
@@ -228,7 +226,15 @@ const Header = () => {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => signOut()}
+                        onClick={async () => {
+                          try {
+                            await signOut();
+                            // Puedes redirigir a la página de login o a la home
+                            router.push("/auth/login");
+                          } catch (error) {
+                            console.error("Error al cerrar sesión:", error);
+                          }
+                        }}
                         className="block px-4 py-2 text-red-500 hover:bg-gray-100 w-full text-left cursor-pointer"
                       >
                         Cerrar Sesión
