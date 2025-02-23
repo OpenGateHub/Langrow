@@ -18,8 +18,10 @@ interface ProfilePageProps {
 }
 
 const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: ProfilePageProps) => {
-  // Si se pasó un profileId, usamos useProfile para cargar ese perfil; de lo contrario, usamos el contexto
-  const profileData = profileId ? useProfile(profileId) : useProfileContext();
+  // Llamamos a ambos hooks siempre, en el mismo orden.
+  const profileDataFromHook = useProfile(profileId);
+  const profileDataFromContext = useProfileContext();
+  const profileData = profileId ? profileDataFromHook : profileDataFromContext;
   const { profile, loading, error, updateProfile, refetch } = profileData;
 
   // Para las reseñas, usamos el id del perfil cargado. Si no se ha cargado, evitamos errores usando 0.
@@ -260,10 +262,10 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
               </AnimateOnScroll>
               {/* Botón de Reservar (solo si no se está editando) */}
               <AnimateOnScroll delay={500}>
-                <div className="md:mt-0 ">
-                  {!computedCanEdit && isTutor && (
+              <div className="md:mt-0 ">
+              {!computedCanEdit && isTutor && (
                     <Link href={`/reserva/${profile.userId}`}>
-                      <button className="mb-3 md:absolute md:mt-[20px] md:left-0 bg-white text-secondary focus:bg-secondary focus:text-white hover:bg-gray-200 group font-semibold px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-60 border-2 border-gray-300 transition-all duration-200 ease-in-out xs:ml-0 md:ml-[150px] md-lg:ml-[250px] lg:ml-[300px] ">
+                     <button className="mb-3 md:absolute md:mt-[20px] md:left-0 bg-white text-secondary focus:bg-secondary focus:text-white hover:bg-gray-200 group font-semibold px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-60 border-2 border-gray-300 transition-all duration-200 ease-in-out xs:ml-0 md:ml-[150px] md-lg:ml-[250px] lg:ml-[300px] ">
                         Reservar
                       </button>
                     </Link>
