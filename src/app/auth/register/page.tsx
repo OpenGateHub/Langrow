@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { SignInButton, useSignUp } from "@clerk/nextjs";
-import { useClerk } from "@clerk/nextjs"; // Importa useClerk
+import { useClerk } from "@clerk/nextjs";
 import { useProfile } from "@/hooks/useProfile";
 import Link from "next/link";
 import useRecaptcha from "@/hooks/useRecaptcha";
@@ -13,7 +13,7 @@ import MessageModal from "@/app/components/Modal";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const clerk = useClerk(); // Obtenemos el objeto Clerk
+  const clerk = useClerk(); 
   const { isLoaded, signUp } = useSignUp();
   const { createProfile } = useProfile();
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
@@ -38,6 +38,15 @@ export default function RegisterPage() {
       console.error("Invalid message type:", type);
     }
   };
+
+// session exists?
+  useEffect(() => {
+    console.log("sessionnnnnnn:", clerk.session);
+    if (clerk?.session) {
+    
+      router.push("/home");
+    }
+  }, [clerk?.session]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +108,7 @@ export default function RegisterPage() {
       });
       if (result && result.status === "complete") {
         // Activa la sesión en el cliente usando useClerk
-        await clerk.setActive({ session: result.createdSessionId });
+        // await clerk.setActive({ session: result.createdSessionId });
         // Crea el perfil del usuario
         const userId = result.createdUserId;
         const newUserProfile = {
@@ -107,11 +116,13 @@ export default function RegisterPage() {
           fullName: name,
           email: email,
           role: role as string,
-        };
+         };
         const response = await createProfile(newUserProfile);
+
         if (response && response.result) {
           setIsVerificating(false);
           // Forzamos una recarga completa para que se actualice el estado de Clerk
+          console.log("Profile created successfully", "RESPONSE: ", response);
           window.location.replace("/home");
         }
       }

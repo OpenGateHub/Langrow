@@ -23,6 +23,13 @@ export default function LoginPage() {
     }
   }, [userLoaded, isSignedIn]);
 
+  useEffect(() => {
+    if (clerk?.session) {
+    
+      router.push("/home");
+    }
+  }, [clerk?.session]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData({ ...formData, [id]: value });
