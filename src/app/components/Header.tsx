@@ -224,6 +224,14 @@ const Header = () => {
                           Ver mis Clases
                         </button>
                       </Link>
+                      {role === "org:profesor" && (
+                        <Link href="/mi-agenda">
+                          <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
+                            Modificar Disponibilidad
+                          </button>
+                        </Link>
+                      )
+                      }
                       <button
                         type="button"
                         onClick={async () => {
