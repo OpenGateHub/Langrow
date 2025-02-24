@@ -17,11 +17,12 @@ interface FormErrors {
   email?: string;
   password?: string;
   confirmPassword?: string;
+  role?: string;
 }
 
 export default function RegisterPage() {
   const router = useRouter();
-  const clerk = useClerk(); 
+  const clerk = useClerk();
   const { isLoaded, signUp } = useSignUp();
   const { createProfile } = useProfile();
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
@@ -31,8 +32,7 @@ export default function RegisterPage() {
   const [isVerificating, setIsVerificating] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<string | null>("org:alumno");
-
+  const [role, setRole] = useState<string>("");
   // Estados para errores de validación de los campos
   const [clientErrors, setClientErrors] = useState<FormErrors>({});
 
@@ -102,7 +102,10 @@ export default function RegisterPage() {
     if (password !== confirmPassword) {
       errors.confirmPassword = "Las contraseñas no coinciden. ¡Verificalas, por favor!";
     }
-    
+    if (!formRole.trim()) {
+      errors.role = "Aún no elegiste tu rol. Por favor, selecciona una opción.";
+    }
+
     if (Object.keys(errors).length > 0) {
       setClientErrors(errors);
       setLoading(false);
@@ -318,9 +321,13 @@ export default function RegisterPage() {
                   required
                   className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
                 >
+                  <option value="">Elige tu rol</option>
                   <option value="org:alumno">Quiero aprender inglés</option>
                   <option value="org:profesor">Quiero dar clases</option>
                 </select>
+                {clientErrors.role && (
+                  <p className="text-sm text-red-600 mt-1">{clientErrors.role}</p>
+                )}
               </div>
 
               {/* CAPTCHA */}
