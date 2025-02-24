@@ -11,6 +11,14 @@ import useRecaptcha from "@/hooks/useRecaptcha";
 import BlockUi from "@/app/components/BlockUi";
 import MessageModal from "@/app/components/Modal";
 
+interface FormErrors {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const clerk = useClerk(); 
@@ -24,6 +32,9 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string | null>("org:alumno");
+
+  // Estados para errores de validación de los campos
+  const [clientErrors, setClientErrors] = useState<FormErrors>({});
 
   const [display, setDisplay] = useState(false);
   const [messageType, setMessageType] = useState<"error" | "success">("error");
@@ -39,19 +50,18 @@ export default function RegisterPage() {
     }
   };
 
-// session exists?
+  // Redirige si ya hay sesión
   useEffect(() => {
-    console.log("sessionnnnnnn:", clerk.session);
     if (clerk?.session) {
-    
       router.push("/home");
     }
-  }, [clerk?.session]);
+  }, [clerk?.session, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+    setClientErrors({}); // Limpiar errores previos
 
     if (!validateCaptcha()) {
       setLoading(false);
@@ -61,12 +71,45 @@ export default function RegisterPage() {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
 
-    const email = formData.get("email") as string;
+    const emailVal = formData.get("email") as string;
     const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
     const firstName = formData.get("firstName") as string;
     const lastName = formData.get("lastName") as string;
     const formRole = formData.get("role") as string;
-    setEmail(email);
+
+    const errors: FormErrors = {};
+
+    if (!firstName.trim()) {
+      errors.firstName = "¡Ups! Parece que olvidaste tu nombre. Por favor, ingresalo.";
+    }
+    if (!lastName.trim()) {
+      errors.lastName = "¡No te olvides de tu apellido! Ingrésalo, por favor.";
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailVal)) {
+      errors.email = "El correo electrónico ingresado no parece correcto. ¿Podrías revisarlo?";
+    }
+    if (password.length < 8) {
+      errors.password = "Tu contraseña debe tener al menos 8 caracteres para ser segura.";
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.password = (errors.password ? errors.password + " " : "") + "Incluí al menos una letra mayúscula, por favor.";
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.password = (errors.password ? errors.password + " " : "") + "No olvides incluir al menos un número.";
+    }
+    if (password !== confirmPassword) {
+      errors.confirmPassword = "Las contraseñas no coinciden. ¡Verificalas, por favor!";
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setClientErrors(errors);
+      setLoading(false);
+      return;
+    }
+
+    setEmail(emailVal);
     setName(`${firstName} ${lastName}`);
     setRole(formRole);
 
@@ -77,7 +120,7 @@ export default function RegisterPage() {
 
     try {
       await signUp.create({
-        emailAddress: email,
+        emailAddress: emailVal,
         password,
         firstName,
         lastName,
@@ -107,22 +150,18 @@ export default function RegisterPage() {
         code: formData.get("verificationToken") as string,
       });
       if (result && result.status === "complete") {
-        // Activa la sesión en el cliente usando useClerk
-        // await clerk.setActive({ session: result.createdSessionId });
-        // Crea el perfil del usuario
         const userId = result.createdUserId;
+        const dbRole = role === "org:alumno" ? 1 : role === "org:profesor" ? 2 : undefined;
         const newUserProfile = {
           code: userId,
           fullName: name,
           email: email,
-          role: role as string,
-         };
+          role: dbRole,
+        };
         const response = await createProfile(newUserProfile);
 
         if (response && response.result) {
           setIsVerificating(false);
-          // Forzamos una recarga completa para que se actualice el estado de Clerk
-          console.log("Profile created successfully", "RESPONSE: ", response);
           window.location.replace("/home");
         }
       }
@@ -140,9 +179,7 @@ export default function RegisterPage() {
       <MessageModal
         isOpen={display}
         message={message}
-        onClose={() => {
-          setDisplay(false);
-        }}
+        onClose={() => setDisplay(false)}
         type={messageType}
       />
       <div className="absolute inset-0 -z-10">
@@ -179,7 +216,7 @@ export default function RegisterPage() {
         <div className="flex-1 p-8 sm:p-12 bg-gray">
           <h2 className="text-2xl font-bold mb-6 text-left">Regístrate</h2>
           {!isVerificating && (
-            <form name={"register-user"} onSubmit={handleSubmit} className="space-y-4">
+            <form noValidate name="register-user" onSubmit={handleSubmit} className="space-y-4">
               {/* Inputs de Nombre y Apellido */}
               <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                 <div className="flex-1">
@@ -194,6 +231,9 @@ export default function RegisterPage() {
                     placeholder="Pedro"
                     className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
                   />
+                  {clientErrors.firstName && (
+                    <p className="text-sm text-red-600 mt-1">{clientErrors.firstName}</p>
+                  )}
                 </div>
                 <div className="flex-1">
                   <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
@@ -207,9 +247,13 @@ export default function RegisterPage() {
                     placeholder="Sánchez"
                     className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
                   />
+                  {clientErrors.lastName && (
+                    <p className="text-sm text-red-600 mt-1">{clientErrors.lastName}</p>
+                  )}
                 </div>
               </div>
 
+              {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Correo electrónico
@@ -222,8 +266,12 @@ export default function RegisterPage() {
                   placeholder="ejemplo@gmail.com"
                   className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
                 />
+                {clientErrors.email && (
+                  <p className="text-sm text-red-600 mt-1">{clientErrors.email}</p>
+                )}
               </div>
 
+              {/* Password */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Contraseña
@@ -236,6 +284,27 @@ export default function RegisterPage() {
                   placeholder="********"
                   className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
                 />
+                {clientErrors.password && (
+                  <p className="text-sm text-red-600 mt-1">{clientErrors.password}</p>
+                )}
+              </div>
+
+              {/* Confirmar contraseña */}
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                  Confirmar contraseña
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  required
+                  placeholder="********"
+                  className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
+                />
+                {clientErrors.confirmPassword && (
+                  <p className="text-sm text-red-600 mt-1">{clientErrors.confirmPassword}</p>
+                )}
               </div>
 
               {/* Selección de rol */}
@@ -257,7 +326,6 @@ export default function RegisterPage() {
               {/* CAPTCHA */}
               <div>
                 {RecaptchaComponent()}
-                {/* Muestra error de captcha si existe */}
                 {captchaError && (
                   <p className="text-sm text-red-600 mt-2">{captchaError}</p>
                 )}
@@ -273,7 +341,7 @@ export default function RegisterPage() {
             </form>
           )}
           {isVerificating && (
-            <form name={"validate-user"} onSubmit={handleEmailValidation} className="space-y-4">
+            <form name="validate-user" onSubmit={handleEmailValidation} className="space-y-4">
               <div className="flex flex-col">
                 <div className="flex-1">
                   <label htmlFor="verificationToken" className="block text-sm font-medium text-gray-700">
