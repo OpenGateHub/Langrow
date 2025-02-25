@@ -1,7 +1,8 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
-import useWindowSize from "../../hooks/useWindowSize"; // Asegúrate de ajustar la ruta
+import useWindowSize from "../../hooks/useWindowSize";
 
 export type SelectedSlotType = {
   date: Date;
@@ -24,25 +25,25 @@ export type WeeklyAgendaModalProps = {
 };
 
 const WEEK_DAYS_MAP: { [key: string]: string } = {
-  "Dom": "Domingo",
-  "Lun": "Lunes",
-  "Mar": "Martes",
+  Dom: "Domingo",
+  Lun: "Lunes",
+  Mar: "Martes",
   "Mié": "Miércoles",
-  "Jue": "Jueves",
-  "Vie": "Viernes",
-  "Sáb": "Sábado"
+  Jue: "Jueves",
+  Vie: "Viernes",
+  Sáb: "Sábado",
 };
 
 const WEEK_DAYS = Object.keys(WEEK_DAYS_MAP);
 
-const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
+export default function WeeklyAgendaModal({
   isOpen,
   onClose,
   requiredClasses,
   availableSchedule,
   professor,
   onSubmit,
-}) => {
+}: WeeklyAgendaModalProps) {
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
     const now = new Date();
     const day = now.getDay();
@@ -79,7 +80,6 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
 
   // Hook que obtiene el tamaño de la ventana
   const { width } = useWindowSize();
-  // Determina cuántos días mostrar según el ancho de la pantalla
   let daysToShow = 7;
   if (width < 640) {
     daysToShow = 3;
@@ -87,10 +87,7 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
     daysToShow = 5;
   }
 
-  // Estado para controlar el índice de inicio del slider en mobile
   const [startIndex, setStartIndex] = useState(0);
-
-  // Reinicia el índice cuando cambie el número de días a mostrar
   useEffect(() => {
     setStartIndex(0);
   }, [daysToShow]);
@@ -128,7 +125,6 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
 
   if (!visible) return null;
 
-  // Calcula la porción visible del array de días
   const visibleDays = weekDays.slice(startIndex, startIndex + daysToShow);
 
   return (
@@ -146,13 +142,10 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
           <h2 className="text-xl font-bold">Agenda Semanal - {professor}</h2>
         </div>
         <div className="flex justify-between mb-4">
-          {/* Botón izquierdo: si estamos en mobile (menos días), desplaza el slider; si no, cambia de semana */}
           <button
             onClick={() => {
               if (daysToShow < 7) {
-                if (startIndex > 0) {
-                  setStartIndex(startIndex - 1);
-                }
+                if (startIndex > 0) setStartIndex(startIndex - 1);
               } else {
                 setCurrentWeekStart((prev) => {
                   const newDate = new Date(prev);
@@ -165,13 +158,10 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
           >
             <FaArrowLeft />
           </button>
-          {/* Botón derecho */}
           <button
             onClick={() => {
               if (daysToShow < 7) {
-                if (startIndex + daysToShow < 7) {
-                  setStartIndex(startIndex + 1);
-                }
+                if (startIndex + daysToShow < 7) setStartIndex(startIndex + 1);
               } else {
                 setCurrentWeekStart((prev) => {
                   const newDate = new Date(prev);
@@ -185,7 +175,6 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
             <FaArrowRight />
           </button>
         </div>
-        {/* Muestra los días visibles en una grilla cuyo número de columnas depende de daysToShow */}
         <div
           className="gap-2 text-center"
           style={{ display: "grid", gridTemplateColumns: `repeat(${daysToShow}, minmax(0, 1fr))` }}
@@ -204,8 +193,7 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
                   {availableSchedule.find((s) => s.day === fullDayName)?.slots.map((time, i) => {
                     const isSelected = selectedSlots.some(
                       (slot) =>
-                        slot.date.toDateString() === date.toDateString() &&
-                        slot.time === time
+                        slot.date.toDateString() === date.toDateString() && slot.time === time
                     );
                     return (
                       <button
@@ -246,6 +234,4 @@ const WeeklyAgendaModal: React.FC<WeeklyAgendaModalProps> = ({
       </div>
     </div>
   );
-};
-
-export default WeeklyAgendaModal;
+}
