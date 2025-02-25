@@ -363,7 +363,7 @@ const MisClases: React.FC = () => {
       // Actualizamos la data: removemos la clase de su categoría original y la agregamos a "Próximas"
       setClassesData((prev) => {
         const newData = { ...prev };
-        for (let key in newData) {
+        for (const key in newData) {
           newData[key] = newData[key].filter((c) => c.id !== updatedClass.id);
         }
         newData["Próximas"] = newData["Próximas"] ? [...newData["Próximas"], updatedClass] : [updatedClass];

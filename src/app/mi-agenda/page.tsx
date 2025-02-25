@@ -4,13 +4,20 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { useProfileContext } from "@/context/ProfileContext";
 import useWindowSize from "@/hooks/useWindowSize";
-import MessageModal from "@/app/components/Modal"; // Asegurate de que la ruta sea correcta
+import MessageModal from "@/app/components/Modal"; // Modal de éxito/error
 
 const WEEK_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 export default function WeeklySchedulePage() {
-  // Solo permite el acceso si el usuario tiene rol "org:profesor"
+  // Llamamos a todos los hooks incondicionalmente
   const { role } = useProfileContext();
+  const { width } = useWindowSize();
+  const [availableSlots, setAvailableSlots] = useState<{ day: string; hour: number }[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<"success" | "error">("success");
+  const [modalMessage, setModalMessage] = useState("");
+
+  // Si el rol no es "org:profesor", retornamos el mensaje de error
   if (role !== "org:profesor") {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
@@ -21,21 +28,12 @@ export default function WeeklySchedulePage() {
     );
   }
 
-  // Hook para conocer el tamaño de la ventana y definir nombres de días según el breakpoint
-  const { width } = useWindowSize();
+  // Definición de días según tamaño de pantalla
   const DAYS = width < 768 
     ? ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
     : WEEK_DAYS;
 
-  // Estado para los horarios disponibles
-  const [availableSlots, setAvailableSlots] = useState<{ day: string; hour: number }[]>([]);
-
-  // Estado para el modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<"success" | "error">("success");
-  const [modalMessage, setModalMessage] = useState("");
-
-  // Calcula el lunes de la semana actual
+  // Función para calcular el lunes de la semana actual
   const getMonday = (d: Date): Date => {
     const date = new Date(d);
     const day = date.getDay();
@@ -90,9 +88,9 @@ export default function WeeklySchedulePage() {
   // Horarios: de 5 a 23 horas (19 filas)
   const hours = Array.from({ length: 19 }, (_, i) => i + 5);
 
+  // Simula guardar la disponibilidad (retardo de 1 segundo)
   const handleSave = async () => {
     try {
-      // Simulamos una llamada a la API con un retardo
       await new Promise((resolve) => setTimeout(resolve, 1000));
       console.log("Disponibilidad guardada:", availableSlots);
       setModalType("success");
@@ -108,7 +106,7 @@ export default function WeeklySchedulePage() {
 
   return (
     <main className="min-h-screen relative bg-gray-100 p-4 flex flex-col">
-      {/* Modal */}
+      {/* Modal de éxito/error */}
       <MessageModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
