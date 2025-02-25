@@ -3,9 +3,12 @@
 import { useState } from "react";
 import ReviewModal from "../components/ModalReview";
 import WeeklyAgendaModal, { SelectedSlotType, DaySchedule } from "../components/ModalClassRequest";
+import RescheduleModal from "../components/RescheduleModal";
+import MessageModal from "../components/Modal"; // El que nos pasaste
 import { useProfileContext } from "@/context/ProfileContext";
 import { useReviews } from "@/hooks/useReview";
 
+// --- Tipos ---
 type Review = {
   id: number;
   reviewerName: string;
@@ -24,14 +27,14 @@ export type ClassData = {
   time: string;
   duration: string;
   cost: string;
-  status: string; // "solicitada", "no-confirmada", "reagendar", "revisada"
+  status: string; // "solicitada", "no-confirmada", "reagendar", "proxima", "revisada"
   requestDescription: string;
   professorReview?: { text: string; rating: number };
   studentReview?: { text: string; rating: number };
 };
 
 // --- Datos Mock ---
-const mockClasses: Record<string, ClassData[]> = {
+const initialClassesData: Record<string, ClassData[]> = {
   "Solicitudes": [
     {
       id: 4,
@@ -45,7 +48,7 @@ const mockClasses: Record<string, ClassData[]> = {
       duration: "30 min",
       cost: "3 USD",
       status: "solicitada",
-      requestDescription: "Quiero mejorar mi lectura sin usar traductores",
+      requestDescription: "Quiero mejorar mi lectura sin usar traductores.",
     },
   ],
   "Próximas": [
@@ -91,7 +94,7 @@ const mockClasses: Record<string, ClassData[]> = {
       duration: "30 min",
       cost: "3 USD",
       status: "reagendar",
-      requestDescription: "No usar tanto el chat gpt para redactar mis mails.",
+      requestDescription: "No usar tanto el chat GPT para redactar mis mails.",
       professorReview: { text: "El alumno estuvo muy atento y participativo.", rating: 5 },
       studentReview: { text: "La clase fue muy amena y útil.", rating: 4 },
     },
@@ -120,10 +123,11 @@ const mockClasses: Record<string, ClassData[]> = {
 type TabsProps = {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  classesData: Record<string, ClassData[]>;
 };
 
-const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => {
-  const tabs = Object.keys(mockClasses);
+const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab, classesData }) => {
+  const tabs = Object.keys(initialClassesData);
   return (
     <div className="flex flex-col sm:flex-row border-b mb-4 text-gray-700 font-medium">
       {tabs.map((tab, index) => (
@@ -136,7 +140,7 @@ const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => {
               : "bg-gray-100 hover:bg-gray-200"
           } ${index !== tabs.length - 1 ? "mb-2 sm:mb-0 sm:mr-2" : ""}`}
         >
-          {tab} ({mockClasses[tab].length})
+          {tab} ({classesData[tab]?.length || 0})
         </button>
       ))}
     </div>
@@ -231,17 +235,18 @@ const ClassCard: React.FC<ClassCardProps> = ({ classData, activeTab, onConfirm }
           className="overflow-hidden transition-all duration-500 ease-in-out"
           style={{ maxHeight: isExpanded ? "300px" : "0px" }}
         >
-          {/* Para "Necesita Atención", "Solicitudes" y "Próximas" se muestran detalles básicos */}
           {(activeTab === "Necesita Atención" ||
             activeTab === "Solicitudes" ||
             activeTab === "Próximas") && (
             <div className="mt-2">
-                <p className="text-gray-700 mt-1">
-                Motivo: {classData.requestDescription}
+              <p className="text-gray-800 font-semibold">
+                Categoría: {classData.category}
+              </p>
+              <p className="text-gray-700 mt-1">
+                Detalle: {classData.requestDescription}
               </p>
             </div>
           )}
-          {/* En "Revisadas", se muestran reseñas si existen */}
           {activeTab === "Revisadas" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
               <div className="p-2 border rounded-lg">
@@ -280,48 +285,42 @@ const ClassCard: React.FC<ClassCardProps> = ({ classData, activeTab, onConfirm }
   );
 };
 
-// --- Componente ClassList ---
-type ClassListProps = {
-  activeTab: string;
-  onConfirm: (classData: ClassData, action: string) => void;
-};
-
-const ClassList: React.FC<ClassListProps> = ({ activeTab, onConfirm }) => (
-  <div className="mt-6">
-    {mockClasses[activeTab].length > 0 ? (
-      mockClasses[activeTab].map((classItem) => (
-        <ClassCard key={classItem.id} classData={classItem} activeTab={activeTab} onConfirm={onConfirm} />
-      ))
-    ) : (
-      <p className="text-gray-500 text-center">No hay clases en esta categoría.</p>
-    )}
-  </div>
-);
-
 // --- Componente principal MisClases ---
 const MisClases: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("Necesita Atención");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState<boolean>(false);
   const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
+  const [selectedAction, setSelectedAction] = useState<string>("");
   const { clerkUser, role } = useProfileContext();
 
-  // Para el modal de reseñas: si el usuario es alumno, target es el profesor; si es profesor, target es el alumno.
+  // Usamos un estado local para la data de clases, para simular la actualización
+  const [classesData, setClassesData] = useState<Record<string, ClassData[]>>({
+    ...initialClassesData,
+  });
+
+  // Para el modal de reseñas: si es alumno, target es el profesor; si es profesor, target es el alumno.
   const targetForModal =
     role === "org:alumno"
       ? selectedClass?.professorId
       : selectedClass?.studentId || "";
   const { submitReview } = useReviews(String(targetForModal || ""), role === "org:alumno" ? "professor" : "student");
 
+  // Estado para el modal de éxito/error
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState<boolean>(false);
+  const [modalMessage, setModalMessage] = useState<string>("");
+  const [modalType, setModalType] = useState<"success" | "error">("success");
+
   const openModal = (classData: ClassData, action: string) => {
+    setSelectedClass(classData);
+    setSelectedAction(action);
     if (action === "confirmar") {
-      setSelectedClass(classData);
       setIsReviewModalOpen(true);
-    } else if (action === "reagendar") {
-      setSelectedClass(classData);
+    } else if (action === "reagendar" && role === "org:profesor") {
+      // Para profesores, se abre el modal de reagendar (RescheduleModal)
       setIsScheduleModalOpen(true);
-    } else if (action === "reagendar_alumno") {
-      setSelectedClass(classData);
+    } else if (action === "reagendar_alumno" && role === "org:alumno") {
+      // Para alumnos, se abre el modal de agendar clase (WeeklyAgendaModal)
       setIsScheduleModalOpen(true);
     } else if (action === "aceptar") {
       alert("Clase aceptada");
@@ -332,6 +331,7 @@ const MisClases: React.FC = () => {
     setIsReviewModalOpen(false);
     setIsScheduleModalOpen(false);
     setSelectedClass(null);
+    setSelectedAction("");
   };
 
   const handleReviewSubmit = async (reviewText: string, rating: number) => {
@@ -345,36 +345,86 @@ const MisClases: React.FC = () => {
     }
   };
 
-  // Datos ficticios para el modal de agenda
-  const availableSchedule: DaySchedule[] = [
-    { day: "Lunes", slots: ["10:00", "11:00", "15:00"] },
-    { day: "Martes", slots: ["09:00", "13:00", "16:00"] },
-    { day: "Miércoles", slots: ["10:00", "12:00", "17:00"] },
-    { day: "Jueves", slots: ["11:00", "14:00", "18:00"] },
-    { day: "Viernes", slots: ["09:00", "15:00", "16:00"] },
-    { day: "Sábado", slots: [] },
-    { day: "Domingo", slots: [] },
-  ];
-  const requiredClasses = 1; // Por ejemplo
+  // Para el modal de agenda: cuando se confirma la selección
+  const handleScheduleSubmit = (selectedSlots: SelectedSlotType[]) => {
+    if (selectedClass) {
+      // Según el rol y la acción, actualizamos el status
+      const updatedStatus = role === "org:alumno" ? "proxima" : "reagendar";
+      const updatedClass: ClassData = {
+        ...selectedClass,
+        status: updatedStatus,
+        date: selectedSlots[0].date.toLocaleDateString("es-ES", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
+        time: selectedSlots[0].time,
+      };
+      // Actualizamos la data: removemos la clase de su categoría original y la agregamos a "Próximas"
+      setClassesData((prev) => {
+        const newData = { ...prev };
+        for (let key in newData) {
+          newData[key] = newData[key].filter((c) => c.id !== updatedClass.id);
+        }
+        newData["Próximas"] = newData["Próximas"] ? [...newData["Próximas"], updatedClass] : [updatedClass];
+        return newData;
+      });
+      setModalMessage("¡Clase reagendada con éxito!");
+      setModalType("success");
+      setIsMessageModalOpen(true);
+      closeModal();
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-6 bg-gray-100 py-6 my-6 rounded-xl min-h-screen">
-      <h1 className="text-3xl font-bold text-center text-gray-900 mb-6">Mis Clases</h1>
-      <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
-      <ClassList activeTab={activeTab} onConfirm={openModal} />
+      <MessageModal
+        isOpen={isMessageModalOpen}
+        onClose={() => setIsMessageModalOpen(false)}
+        type={modalType}
+        message={modalMessage}
+      />
+      <Tabs activeTab={activeTab} setActiveTab={setActiveTab} classesData={classesData} />
+      <div className="mt-6">
+        {classesData[activeTab] && classesData[activeTab].length > 0 ? (
+          classesData[activeTab].map((classItem) => (
+            <ClassCard key={classItem.id} classData={classItem} activeTab={activeTab} onConfirm={openModal} />
+          ))
+        ) : (
+          <p className="text-gray-500 text-center">No hay clases en esta categoría.</p>
+        )}
+      </div>
       <ReviewModal isOpen={isReviewModalOpen} onClose={closeModal} onSubmit={handleReviewSubmit} />
       {isScheduleModalOpen && selectedClass && (
-        <WeeklyAgendaModal
-          isOpen={isScheduleModalOpen}
-          onClose={closeModal}
-          requiredClasses={requiredClasses}
-          availableSchedule={availableSchedule}
-          professor={selectedClass.instructor}
-          onSubmit={(selectedSlots) => {
-            alert("Modal de agendar confirmado (Alumno): " + JSON.stringify(selectedSlots));
-            closeModal();
-          }}
-        />
+        <>
+          {role === "org:alumno" ? (
+            <WeeklyAgendaModal
+              isOpen={isScheduleModalOpen}
+              onClose={closeModal}
+              requiredClasses={1}
+              availableSchedule={[
+                { day: "Lunes", slots: ["10:00", "11:00", "15:00"] },
+                { day: "Martes", slots: ["09:00", "13:00", "16:00"] },
+                { day: "Miércoles", slots: ["10:00", "12:00", "17:00"] },
+                { day: "Jueves", slots: ["11:00", "14:00", "18:00"] },
+                { day: "Viernes", slots: ["09:00", "15:00", "16:00"] },
+                { day: "Sábado", slots: [] },
+                { day: "Domingo", slots: [] },
+              ]}
+              professor={selectedClass.instructor}
+              onSubmit={handleScheduleSubmit}
+            />
+          ) : (
+            <RescheduleModal
+              isOpen={isScheduleModalOpen}
+              onClose={closeModal}
+              onConfirm={() => {
+                // Para profesor, al confirmar se actualiza la clase con status "reagendar"
+                handleScheduleSubmit([{ date: new Date(), dayName: selectedClass.category, time: selectedClass.time }]);
+              }}
+            />
+          )}
+        </>
       )}
     </div>
   );
