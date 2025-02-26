@@ -7,7 +7,7 @@ export interface Profile {
     updatedAt?: string;
     isActive?: boolean;
     email?: string;
-    role?: number;
+    role?: string | number;
     profileImg?: string;
     description?: string;
     reviews?: number;

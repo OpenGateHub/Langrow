@@ -83,6 +83,10 @@ export default function RegisterPage() {
         if (!/[A-Z]/.test(value)) {
           error += (error ? " " : "") + "Incluí al menos una letra mayúscula, por favor.";
         }
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
+          error += (error ? " " : "") + "Incluí al menos un carácter especial (por ejemplo: !, @, #, $).";
+        }
+        
         if (!/[0-9]/.test(value)) {
           error += (error ? " " : "") + "No olvides incluir al menos un número.";
         }
@@ -213,12 +217,11 @@ export default function RegisterPage() {
       });
       if (result && result.status === "complete") {
         const userId = result.createdUserId;
-        const dbRole = role === "org:alumno" ? 1 : role === "org:profesor" ? 2 : undefined;
         const newUserProfile = {
           code: userId,
           fullName: `${firstName} ${lastName}`,
           email: email,
-          role: dbRole,
+          role: role,
         };
         const response = await createProfile(newUserProfile);
         if (response && response.result) {
