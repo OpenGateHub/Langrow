@@ -16,7 +16,7 @@ const getProfessorReviews = async (userId: string) => {
         qualification: review.qualification,
         createdAt: review.review_date,
         isActive: review.is_active,
-        StudentProfile: {
+        reviewer: {
             id: review.reviewer_user_profile_id,
             fullName: review.reviewer_name,
             isActive: true,
@@ -55,7 +55,7 @@ const getStudentReviews = async (studentIdStr: string) => {
         qualification: review.professorRate,
         createdAt: review.reviewDate,
         isActive: true,
-        ProfessorProfile: review.UserProfile
+        reviewer: review.UserProfile
             ? {
                 id: review.UserProfile.id,
                 fullName: review.UserProfile.name,

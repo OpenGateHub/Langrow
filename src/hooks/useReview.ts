@@ -10,7 +10,7 @@ export interface Review {
   qualification: number;
   createdAt: string;
   isActive: boolean;
-  StudentProfile: StudentProfile | null;
+  reviewer: StudentProfile | null;
 }
 
 interface UseReviewsReturn {
