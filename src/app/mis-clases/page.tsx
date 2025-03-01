@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import ReviewModal from "../components/ModalReview";
+import WeeklyAgendaModal, { SelectedSlotType, DaySchedule } from "../components/ModalClassRequest";
+import RescheduleModal from "../components/RescheduleModal";
+import MessageModal from "../components/Modal"; // El que nos pasaste
 import { useProfileContext } from "@/context/ProfileContext";
 import { useReviews } from "@/hooks/useReview";
 
@@ -13,23 +16,25 @@ type Review = {
   stars: number;
 };
 
-type ClassData = {
+export type ClassData = {
   id: number;
   title: string;
   instructor: string;
   professorId: number;
-  studentId?: number; // para cuando el profesor deba reseñar al alumno
+  studentId?: number;
   category: string;
   date: string;
   time: string;
   duration: string;
   cost: string;
-  status: string;
+  status: string; // "solicitada", "no-confirmada", "reagendar", "proxima", "revisada"
   requestDescription: string;
+  professorReview?: { text: string; rating: number };
+  studentReview?: { text: string; rating: number };
 };
 
-// --- Datos Mock (se agregó studentId para las clases donde corresponda) ---
-const mockClasses: Record<string, ClassData[]> = {
+// --- Datos Mock ---
+const initialClassesData: Record<string, ClassData[]> = {
   "Solicitudes": [
     {
       id: 4,
@@ -43,8 +48,7 @@ const mockClasses: Record<string, ClassData[]> = {
       duration: "30 min",
       cost: "3 USD",
       status: "solicitada",
-      requestDescription:
-        "Quiero mejorar mi lectura para poder leer newsletters de mi trabajo sin usar el traductor.",
+      requestDescription: "Quiero mejorar mi lectura sin usar traductores.",
     },
   ],
   "Próximas": [
@@ -60,8 +64,7 @@ const mockClasses: Record<string, ClassData[]> = {
       duration: "30 min",
       cost: "3 USD",
       status: "proxima",
-      requestDescription:
-        "Quiero seguir incorporando nuevo vocabulario para mi trabajo como abogado de comercio exterior.",
+      requestDescription: "Continuar las clases de vocabulario laboral.",
     },
   ],
   "Necesita Atención": [
@@ -77,7 +80,23 @@ const mockClasses: Record<string, ClassData[]> = {
       duration: "30 min",
       cost: "3 USD",
       status: "no-confirmada",
-      requestDescription: "Revisión pendiente de confirmación.",
+      requestDescription: "Conversar e incorporar más seguridad en el idioma.",
+    },
+    {
+      id: 5,
+      title: "Clase para reagendar",
+      instructor: "Profesor Ejemplo",
+      professorId: 104,
+      studentId: 204,
+      category: "Gramática",
+      date: "Lunes, 15 Febrero",
+      time: "10:00 AM - 10:30 AM",
+      duration: "30 min",
+      cost: "3 USD",
+      status: "reagendar",
+      requestDescription: "No usar tanto el chat GPT para redactar mis mails.",
+      professorReview: { text: "El alumno estuvo muy atento y participativo.", rating: 5 },
+      studentReview: { text: "La clase fue muy amena y útil.", rating: 4 },
     },
   ],
   "Revisadas": [
@@ -93,8 +112,9 @@ const mockClasses: Record<string, ClassData[]> = {
       duration: "30 min",
       cost: "3 USD",
       status: "revisada",
-      requestDescription:
-        "Tengo que aprender a redactar mails para mi nuevo trabajo en inglés.",
+      requestDescription: "Clase realizada, pendiente de reseña.",
+      professorReview: { text: "El alumno estuvo muy atento y participativo.", rating: 5 },
+      studentReview: { text: "La clase fue muy amena y útil.", rating: 4 },
     },
   ],
 };
@@ -103,10 +123,11 @@ const mockClasses: Record<string, ClassData[]> = {
 type TabsProps = {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  classesData: Record<string, ClassData[]>;
 };
 
-const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => {
-  const tabs = Object.keys(mockClasses);
+const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab, classesData }) => {
+  const tabs = Object.keys(initialClassesData);
   return (
     <div className="flex flex-col sm:flex-row border-b mb-4 text-gray-700 font-medium">
       {tabs.map((tab, index) => (
@@ -119,7 +140,7 @@ const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => {
               : "bg-gray-100 hover:bg-gray-200"
           } ${index !== tabs.length - 1 ? "mb-2 sm:mb-0 sm:mr-2" : ""}`}
         >
-          {tab} ({mockClasses[tab].length})
+          {tab} ({classesData[tab]?.length || 0})
         </button>
       ))}
     </div>
@@ -129,36 +150,62 @@ const Tabs: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => {
 // --- Componente ClassCard ---
 type ClassCardProps = {
   classData: ClassData;
-  onConfirm: (classData: ClassData) => void;
+  activeTab: string;
+  onConfirm: (classData: ClassData, action: string) => void;
 };
 
-const ClassCard: React.FC<ClassCardProps> = ({ classData, onConfirm }) => {
+const ClassCard: React.FC<ClassCardProps> = ({ classData, activeTab, onConfirm }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  const { clerkUser, role } = useProfileContext();
+  const { role } = useProfileContext();
 
-  // Si el usuario es alumno, se muestran reseñas del profesor;
-  // si es profesor, se muestran reseñas del alumno (utilizando studentId)
-  const reviewType = role === "org:alumno" ? "professor" : "student";
-  const targetUserId =
-    role === "org:alumno" ? classData.professorId : classData.studentId || "";
-  const { reviews, loading, error } = useReviews(String(targetUserId), reviewType);
-
-  const buttonLabel =
-    classData.status === "no-confirmada" ? "Confirmar" : isExpanded ? "Ocultar" : "Ver";
-
-  const handleButtonClick = () => {
-    if (classData.status === "no-confirmada") {
-      onConfirm(classData);
-    } else {
-      setIsExpanded((prev) => !prev);
+  const renderActions = () => {
+    if (activeTab === "Solicitudes") {
+      if (role === "org:profesor") {
+        return (
+          <div className="flex flex-col space-y-2">
+            <div className="flex space-x-2">
+              <button
+                onClick={() => onConfirm(classData, "aceptar")}
+                className="bg-green-500 text-white px-3 py-1 rounded-md text-sm font-medium shadow hover:bg-green-600 transition"
+              >
+                Aceptar
+              </button>
+              <button
+                onClick={() => onConfirm(classData, "reagendar")}
+                className="bg-yellow-500 text-white px-3 py-1 rounded-md text-sm font-medium shadow hover:bg-yellow-600 transition"
+              >
+                Re-agendar
+              </button>
+            </div>
+          </div>
+        );
+      } else if (role === "org:alumno") {
+        return (
+          <button
+            onClick={() => onConfirm(classData, "reagendar_alumno")}
+            className="bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-medium shadow hover:bg-yellow-600 transition"
+          >
+            Re-agendar
+          </button>
+        );
+      }
+    } else if (activeTab === "Necesita Atención") {
+      return (
+        <button
+          onClick={() => onConfirm(classData, "confirmar")}
+          className="bg-secondary text-white px-4 py-2 rounded-md text-sm font-medium shadow hover:bg-secondary-hover transition"
+        >
+          ¿Ya tuviste esta clase?
+        </button>
+      );
     }
+    return null;
   };
 
-  const renderStars = (stars: number) =>
-    "★".repeat(stars) + "☆".repeat(5 - stars);
+  const toggleExpand = () => setIsExpanded(!isExpanded);
 
   return (
-    <div className="border border-gray-200 rounded-xl p-6 shadow-md bg-white">
+    <div className="border border-gray-200 rounded-xl p-6 shadow-md bg-white mb-4">
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-xl font-semibold text-gray-900">{classData.title}</h3>
@@ -175,92 +222,120 @@ const ClassCard: React.FC<ClassCardProps> = ({ classData, onConfirm }) => {
             Duración: {classData.duration} | Costo: {classData.cost}
           </p>
         </div>
-        <button
-          onClick={handleButtonClick}
-          className="bg-secondary text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:bg-secondary-hover transition-all"
-        >
-          {buttonLabel}
-        </button>
+        <div>{renderActions()}</div>
       </div>
-      <div
-        className={`border-t overflow-hidden transition-all duration-500 ease-in-out ${
-          isExpanded
-            ? "scale-y-100 max-h-[500px] opacity-100 py-4"
-            : "scale-y-0 max-h-0 opacity-0 py-0"
-        }`}
-        style={{ transformOrigin: "top" }}
-      >
-        {loading && <p>Cargando reseñas...</p>}
-        {error && <p>Error al cargar reseñas: {error}</p>}
-        {!loading && reviews.length > 0 ? (
-          reviews.map((review) => (
-            <div key={review.id} className="mb-4">
-              <p className="font-semibold text-gray-800">{review.userId}</p>
-              <p className="text-gray-700">{review.notes}</p>
-              <p className="text-yellow-500">{renderStars(review.qualification)}</p>
+      <div className="mt-4">
+        <button
+          onClick={toggleExpand}
+          className="text-sm text-blue-600 hover:underline mb-2"
+        >
+          {isExpanded ? "Ocultar detalles" : "Ver detalles"}
+        </button>
+        <div
+          className="overflow-hidden transition-all duration-500 ease-in-out"
+          style={{ maxHeight: isExpanded ? "300px" : "0px" }}
+        >
+          {(activeTab === "Necesita Atención" ||
+            activeTab === "Solicitudes" ||
+            activeTab === "Próximas") && (
+            <div className="mt-2">
+              <p className="text-gray-800 font-semibold">
+                Categoría: {classData.category}
+              </p>
+              <p className="text-gray-700 mt-1">
+                Detalle: {classData.requestDescription}
+              </p>
             </div>
-          ))
-        ) : (
-          <div>
-            <h4 className="font-semibold text-gray-800">Descripción de la Solicitud</h4>
-            <p className="text-gray-700">{classData.requestDescription}</p>
-          </div>
-        )}
+          )}
+          {activeTab === "Revisadas" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              <div className="p-2 border rounded-lg">
+                <h5 className="font-semibold text-gray-800 mb-2">Reseña del Profesor</h5>
+                {classData.professorReview ? (
+                  <>
+                    <p className="text-gray-700">{classData.professorReview.text}</p>
+                    <p className="text-yellow-500">
+                      {"★".repeat(classData.professorReview.rating) +
+                        "☆".repeat(5 - classData.professorReview.rating)}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-gray-500 italic">Sin reseña</p>
+                )}
+              </div>
+              <div className="p-2 border rounded-lg">
+                <h5 className="font-semibold text-gray-800 mb-2">Reseña del Alumno</h5>
+                {classData.studentReview ? (
+                  <>
+                    <p className="text-gray-700">{classData.studentReview.text}</p>
+                    <p className="text-yellow-500">
+                      {"★".repeat(classData.studentReview.rating) +
+                        "☆".repeat(5 - classData.studentReview.rating)}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-gray-500 italic">Sin reseña</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-// --- Componente ClassList ---
-type ClassListProps = {
-  activeTab: string;
-  onConfirm: (classData: ClassData) => void;
-};
-
-const ClassList: React.FC<ClassListProps> = ({ activeTab, onConfirm }) => (
-  <div className="mt-6">
-    {mockClasses[activeTab].length > 0 ? (
-      mockClasses[activeTab].map((classItem) => (
-        <ClassCard key={classItem.id} classData={classItem} onConfirm={onConfirm} />
-      ))
-    ) : (
-      <p className="text-gray-500 text-center">No hay clases en esta categoría.</p>
-    )}
-  </div>
-);
-
 // --- Componente principal MisClases ---
 const MisClases: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("Necesita Atención");
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState<boolean>(false);
   const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
+  const [selectedAction, setSelectedAction] = useState<string>("");
   const { clerkUser, role } = useProfileContext();
 
-  // Para el modal, el target depende del rol:
-  // - Si el usuario es alumno, target es el profesor (selectedClass.professorId)
-  // - Si es profesor, target es el alumno (selectedClass.studentId)
+  // Usamos un estado local para la data de clases, para simular la actualización
+  const [classesData, setClassesData] = useState<Record<string, ClassData[]>>({
+    ...initialClassesData,
+  });
+
+  // Para el modal de reseñas: si es alumno, target es el profesor; si es profesor, target es el alumno.
   const targetForModal =
     role === "org:alumno"
       ? selectedClass?.professorId
-      : selectedClass?.studentId;
+      : selectedClass?.studentId || "";
+  const { submitReview } = useReviews(String(targetForModal || ""), role === "org:alumno" ? "professor" : "student");
 
-  const { submitReview } = useReviews(
-    String(targetForModal || ""),
-    role === "org:alumno" ? "professor" : "student"
-  );
+  // Estado para el modal de éxito/error
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState<boolean>(false);
+  const [modalMessage, setModalMessage] = useState<string>("");
+  const [modalType, setModalType] = useState<"success" | "error">("success");
 
-  const openModal = (classData: ClassData) => {
+  const openModal = (classData: ClassData, action: string) => {
     setSelectedClass(classData);
-    setIsModalOpen(true);
+    setSelectedAction(action);
+    if (action === "confirmar") {
+      setIsReviewModalOpen(true);
+    } else if (action === "reagendar" && role === "org:profesor") {
+      // Para profesores, se abre el modal de reagendar (RescheduleModal)
+      setIsScheduleModalOpen(true);
+    } else if (action === "reagendar_alumno" && role === "org:alumno") {
+      // Para alumnos, se abre el modal de agendar clase (WeeklyAgendaModal)
+      setIsScheduleModalOpen(true);
+    } else if (action === "aceptar") {
+      alert("Clase aceptada");
+    }
   };
+
   const closeModal = () => {
-    setIsModalOpen(false);
+    setIsReviewModalOpen(false);
+    setIsScheduleModalOpen(false);
     setSelectedClass(null);
+    setSelectedAction("");
   };
 
   const handleReviewSubmit = async (reviewText: string, rating: number) => {
     if (!selectedClass || !clerkUser) return;
-    // Convertimos el id a número si es necesario
     const reviewerId = Number(clerkUser.id);
     try {
       await submitReview(reviewText, rating, reviewerId);
@@ -270,16 +345,87 @@ const MisClases: React.FC = () => {
     }
   };
 
+  // Para el modal de agenda: cuando se confirma la selección
+  const handleScheduleSubmit = (selectedSlots: SelectedSlotType[]) => {
+    if (selectedClass) {
+      // Según el rol y la acción, actualizamos el status
+      const updatedStatus = role === "org:alumno" ? "proxima" : "reagendar";
+      const updatedClass: ClassData = {
+        ...selectedClass,
+        status: updatedStatus,
+        date: selectedSlots[0].date.toLocaleDateString("es-ES", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
+        time: selectedSlots[0].time,
+      };
+      // Actualizamos la data: removemos la clase de su categoría original y la agregamos a "Próximas"
+      setClassesData((prev) => {
+        const newData = { ...prev };
+        for (const key in newData) {
+          newData[key] = newData[key].filter((c) => c.id !== updatedClass.id);
+        }
+        newData["Próximas"] = newData["Próximas"] ? [...newData["Próximas"], updatedClass] : [updatedClass];
+        return newData;
+      });
+      setModalMessage("¡Clase reagendada con éxito!");
+      setModalType("success");
+      setIsMessageModalOpen(true);
+      closeModal();
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-6 bg-gray-100 py-6 my-6 rounded-xl min-h-screen">
-      <h1 className="text-3xl font-bold text-center text-gray-900 mb-6">Mis Clases</h1>
-      <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
-      <ClassList activeTab={activeTab} onConfirm={openModal} />
-      <ReviewModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onSubmit={handleReviewSubmit}
+      <MessageModal
+        isOpen={isMessageModalOpen}
+        onClose={() => setIsMessageModalOpen(false)}
+        type={modalType}
+        message={modalMessage}
       />
+      <Tabs activeTab={activeTab} setActiveTab={setActiveTab} classesData={classesData} />
+      <div className="mt-6">
+        {classesData[activeTab] && classesData[activeTab].length > 0 ? (
+          classesData[activeTab].map((classItem) => (
+            <ClassCard key={classItem.id} classData={classItem} activeTab={activeTab} onConfirm={openModal} />
+          ))
+        ) : (
+          <p className="text-gray-500 text-center">No hay clases en esta categoría.</p>
+        )}
+      </div>
+      <ReviewModal isOpen={isReviewModalOpen} onClose={closeModal} onSubmit={handleReviewSubmit} />
+      {isScheduleModalOpen && selectedClass && (
+        <>
+          {role === "org:alumno" ? (
+            <WeeklyAgendaModal
+              isOpen={isScheduleModalOpen}
+              onClose={closeModal}
+              requiredClasses={1}
+              availableSchedule={[
+                { day: "Lunes", slots: ["10:00", "11:00", "15:00"] },
+                { day: "Martes", slots: ["09:00", "13:00", "16:00"] },
+                { day: "Miércoles", slots: ["10:00", "12:00", "17:00"] },
+                { day: "Jueves", slots: ["11:00", "14:00", "18:00"] },
+                { day: "Viernes", slots: ["09:00", "15:00", "16:00"] },
+                { day: "Sábado", slots: [] },
+                { day: "Domingo", slots: [] },
+              ]}
+              professor={selectedClass.instructor}
+              onSubmit={handleScheduleSubmit}
+            />
+          ) : (
+            <RescheduleModal
+              isOpen={isScheduleModalOpen}
+              onClose={closeModal}
+              onConfirm={() => {
+                // Para profesor, al confirmar se actualiza la clase con status "reagendar"
+                handleScheduleSubmit([{ date: new Date(), dayName: selectedClass.category, time: selectedClass.time }]);
+              }}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 };

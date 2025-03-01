@@ -9,22 +9,29 @@ import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 import Link from "next/link";
 import { useReviews } from "@/hooks/useReview";
 import { useProfileContext } from "@/context/ProfileContext";
+import { useProfile } from "@/hooks/useProfile";
 
 interface ProfilePageProps {
+  profileId?: string; // Si se pasa, se carga ese perfil; sino se usa el del contexto
   isTutor?: boolean;
+  editEnabled?: boolean;
 }
 
-const ProfilePage = ({ isTutor = false }: ProfilePageProps) => {
-  const { clerkUser, role, profile, loading, error, updateProfile, refetch } =
-    useProfileContext();
-  const reviewType = isTutor ? "professor" : "student";
-  const { reviews, loading: reviewsLoading, error: reviewsError } = useReviews(
-    profile?.id as number,
-    reviewType
+const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: ProfilePageProps) => {
+  // Llamamos a ambos hooks siempre, en el mismo orden.
+  const profileDataFromHook = useProfile(profileId);
+  const profileDataFromContext = useProfileContext();
+  const profileData = profileId ? profileDataFromHook : profileDataFromContext;
+  const { profile, loading, error, updateProfile, refetch } = profileData;
+
+  // Para las reseñas, usamos el id del perfil cargado. Si no se ha cargado, evitamos errores usando 0.
+  const { reviews = [], loading: reviewsLoading, error: reviewsError } = useReviews(
+    profile?.id ? (profile.id as number) : 0,
+    isTutor ? "professor" : "student"
   );
 
-  // Compara el id del usuario de Clerk con el userId del perfil de la base de datos
-  const computedCanEdit = clerkUser?.id === profile?.userId;
+  // Permitir edición si editEnabled es true
+  const computedCanEdit = editEnabled;
 
   // Estados locales para la edición de cada campo
   const [isEditingPhoto, setIsEditingPhoto] = useState(false);
@@ -41,11 +48,11 @@ const ProfilePage = ({ isTutor = false }: ProfilePageProps) => {
 
   useEffect(() => {
     if (profile) {
-      setNewProfileImage(profile.profileImg);
-      setNewName(profile.name);
-      setNewDescription(profile.description);
-      setNewTitle(profile.title);
-      setNewLocation(profile.location);
+      setNewProfileImage(profile.profileImg || "/default-profile.png");
+      setNewName(profile.name || "");
+      setNewDescription(profile.description || "");
+      setNewTitle(profile.title || "");
+      setNewLocation(profile.location || "");
     }
   }, [profile]);
 
@@ -107,11 +114,9 @@ const ProfilePage = ({ isTutor = false }: ProfilePageProps) => {
     }
   };
 
-  const loggedUserRole = role; // role obtenido del contexto
-
   return (
     <main className="p-8 bg-gray-100">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 ">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
         {/* Banner y sección de encabezado */}
         <AnimateOnScroll>
           <div
@@ -125,26 +130,21 @@ const ProfilePage = ({ isTutor = false }: ProfilePageProps) => {
                   <Image
                     width={150}
                     height={150}
-                    src={newProfileImage}
+                    src={newProfileImage || "/profile-default.png"}
                     alt={newName}
-                    className="rounded-full relative mt-3 md:absolute md:mt-[-30px] md:z-50 w-[150px] max-w-[150px] h-[150px] border-4 border-white"
+                    className="rounded-full relative mt-3 md:absolute md:mt-[-40px] md:z-50 w-[150px] max-w-[150px] h-[150px] border-4 border-white"
+                    onError={(e) => {
+                      e.currentTarget.src = "/profile-default.png";
+                    }}
                   />
                   {computedCanEdit && (
-                    <div
-                      className="absolute top-0 left-0"
-                      style={{ zIndex: 500 }}
-                    >
+                    <div className="absolute top-0 left-0 z-50">
                       {isEditingPhoto ? (
-                        <form
-                          onSubmit={handlePhotoSubmit}
-                          className="flex space-x-2"
-                        >
+                        <form onSubmit={handlePhotoSubmit} className="flex space-x-2">
                           <input
                             type="text"
                             value={newProfileImage}
-                            onChange={(e) =>
-                              setNewProfileImage(e.target.value)
-                            }
+                            onChange={(e) => setNewProfileImage(e.target.value)}
                             placeholder="URL de la nueva foto"
                             className="text-secondary px-2 py-1 rounded-full text-xs shadow border"
                           />
@@ -178,12 +178,9 @@ const ProfilePage = ({ isTutor = false }: ProfilePageProps) => {
               <AnimateOnScroll delay={200}>
                 <div className="pl-0 md:pl-[140px] text-center md:text-left">
                   {/* Nombre */}
-                  <div className="flex items-center justify-center md:justify-start ">
+                  <div className="flex items-center justify-center md:justify-start">
                     {isEditingName ? (
-                      <form
-                        onSubmit={handleNameSubmit}
-                        className="flex items-center space-x-2"
-                      >
+                      <form onSubmit={handleNameSubmit} className="flex items-center space-x-2">
                         <input
                           type="text"
                           value={newName}
@@ -220,14 +217,10 @@ const ProfilePage = ({ isTutor = false }: ProfilePageProps) => {
                       </>
                     )}
                   </div>
-
                   {/* Ubicación */}
                   <div className="flex items-center justify-center md:justify-start">
                     {isEditingLocation ? (
-                      <form
-                        onSubmit={handleLocationSubmit}
-                        className="flex items-center space-x-2"
-                      >
+                      <form onSubmit={handleLocationSubmit} className="flex items-center space-x-2">
                         <input
                           type="text"
                           value={newLocation}
@@ -243,7 +236,7 @@ const ProfilePage = ({ isTutor = false }: ProfilePageProps) => {
                         <button
                           type="button"
                           onClick={() => setIsEditingLocation(false)}
-                          className="bg-white text-secondary px-2 hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out py-1 rounded-full text-xs shadow animate-slideInLeft delay-150"
+                          className="bg-white text-secondary px-2 py-1 hover:bg-secondary hover:text-white transition-all duration-300 ease-in-out rounded-full text-xs shadow animate-slideInLeft delay-150"
                         >
                           Cancelar
                         </button>
@@ -267,34 +260,28 @@ const ProfilePage = ({ isTutor = false }: ProfilePageProps) => {
                   </div>
                 </div>
               </AnimateOnScroll>
-              {/* Botón de Editar Perfil o Reservar */}
+              {/* Botón de Reservar (solo si no se está editando) */}
               <AnimateOnScroll delay={500}>
-                <div className="mt-4 md:mt-0 md:ml-auto">
-                  {computedCanEdit ? null : (
-                    loggedUserRole === "org:alumno" &&
-                    isTutor && (
-                      <Link href={`/reserva/${profile.userId}`} passHref>
-                        <button className="md:absolute md:mt-[40px] bg-white text-secondary focus:bg-secondary focus:text-white hover:bg-gray-200 group font-semibold px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-60 border-2 border-gray-300 transition-all duration-200 ease-in-out">
-                          Reservar
-                        </button>
-                      </Link>
-                    )
+              <div className="md:mt-0 ">
+              {!computedCanEdit && isTutor && (
+                    <Link href={`/reserva/${profile.userId}`}>
+                     <button className="mb-3 md:absolute md:mt-[20px] md:left-0 bg-white text-secondary focus:bg-secondary focus:text-white hover:bg-gray-200 group font-semibold px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-60 border-2 border-gray-300 transition-all duration-200 ease-in-out xs:ml-0 md:ml-[150px] md-lg:ml-[250px] lg:ml-[300px] ">
+                        Reservar
+                      </button>
+                    </Link>
                   )}
                 </div>
               </AnimateOnScroll>
             </div>
           </div>
         </AnimateOnScroll>
-        {/* Sección de Descripción */}
+        {/* Sección de Descripción y Edición */}
         <div className="px-3">
           <AnimateOnScroll delay={700}>
             <div className="relative opacity-0 animate-fade-in mt-[80px]">
               <div className="flex items-center justify-center md:justify-start mt-2">
                 {isEditingTitle ? (
-                  <form
-                    onSubmit={handleTitleSubmit}
-                    className="flex items-center space-x-2"
-                  >
+                  <form onSubmit={handleTitleSubmit} className="flex items-center space-x-2">
                     <input
                       type="text"
                       value={newTitle}
@@ -333,10 +320,7 @@ const ProfilePage = ({ isTutor = false }: ProfilePageProps) => {
               </div>
               <div className="flex items-center justify-center md:justify-start mt-2">
                 {isEditingDescription ? (
-                  <form
-                    onSubmit={handleDescriptionSubmit}
-                    className="flex w-full"
-                  >
+                  <form onSubmit={handleDescriptionSubmit} className="flex w-full">
                     <input
                       type="text"
                       value={newDescription}
@@ -410,12 +394,10 @@ const ProfilePage = ({ isTutor = false }: ProfilePageProps) => {
                 {reviews.map((review, index) => (
                   <AnimateOnScroll key={index} delay={1100 + index * 150}>
                     <ReviewCard
-                      reviewerName={review.StudentProfile?.fullName as string}
+                      reviewerName={review.StudentProfile?.fullName || "Anónimo"}
                       reviewText={review.notes}
                       stars={review.qualification}
-                      profilePicture={
-                        review.StudentProfile?.profileImg as string
-                      }
+                      profilePicture={review.StudentProfile?.profileImg || "/default-profile.png"}
                     />
                   </AnimateOnScroll>
                 ))}
