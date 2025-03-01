@@ -3,7 +3,7 @@ import { Profile as BaseProfile } from "@/types/profile";
 import { UserProfile as Profile } from "@/types/userProfile";
 
 interface CreateProfilePayload extends BaseProfile {
-  role: string | null;
+  role: string | undefined;  // Cambiado de number a string
   code: string | null;
 };
 
@@ -53,6 +53,7 @@ export function useProfile(profileId?: number | string): UseProfileReturn {
         location: data.location,
         isActive: data.isActive,
         createdAt: data.createdAt,
+        role: data.role === 1 ? "org:profesor" : data.role === 2 ? "org:alumno" : "",
         updatedAt: data.updatedAt,
         profileImg: data.profileImg,
         achievements: data.UserAchievements
