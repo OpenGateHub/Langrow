@@ -49,6 +49,7 @@ export type Database = {
           id: number
           professorRate: number | null
           professorReview: string | null
+          reviewDate: string | null
           studentId: number | null
           updatedAt: string | null
           userId: number | null
@@ -62,6 +63,7 @@ export type Database = {
           id?: number
           professorRate?: number | null
           professorReview?: string | null
+          reviewDate?: string | null
           studentId?: number | null
           updatedAt?: string | null
           userId?: number | null
@@ -75,6 +77,7 @@ export type Database = {
           id?: number
           professorRate?: number | null
           professorReview?: string | null
+          reviewDate?: string | null
           studentId?: number | null
           updatedAt?: string | null
           userId?: number | null

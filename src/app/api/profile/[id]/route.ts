@@ -31,6 +31,7 @@ export async function GET(
                 createdAt,
                 updatedAt,
                 profileImg,
+                role,
                 UserAchievements (
                     id,
                     Achievements (

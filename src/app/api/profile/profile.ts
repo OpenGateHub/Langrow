@@ -7,10 +7,10 @@ export const getStudentProfileById = async (studentId: number) => {
         const { data, error } = await supabaseClient
             .rpc(SUPABASE_FUNCTIONS.GET_STUDENT_PROFILE_ID, { student_id: studentId })
         if (error) {
-            throw new Error(`Error al obtener el perfil del estudiante: ${error.message}`);
+            console.error(`Error al obtener el perfil del estudiante: ${error.message}`);
+            return null;
         }
-
-        return data;
+        return data[0];
     } catch (e) {
         console.error(e);
         throw new Error("Error buscando el perfil del estudiante en la base de datos");

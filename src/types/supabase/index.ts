@@ -51,3 +51,15 @@ export interface SupabaseUserReview {
 }
 
 export type SupabaseUserReviews = SupabaseUserReview[];
+
+export interface SupabaseStudentReview {
+    id: number;
+    userId: number;
+    studentId: number;
+    professorRate: number;
+    professorReview: string;
+    reviewDate: string;
+    UserProfile: SupabaseUserProfile;
+}
+
+export type SupabaseStudentReviews = SupabaseStudentReview[];
