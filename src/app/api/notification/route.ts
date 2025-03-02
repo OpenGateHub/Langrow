@@ -25,6 +25,8 @@ export async function POST (req: NextRequest) {
             );
         }
         const { data: notification } = validation;
+        console.log("Datos validados:", notification);
+
         const { data, error } = await supabaseClient
             .from('Notifications')
             .insert([
@@ -32,16 +34,20 @@ export async function POST (req: NextRequest) {
                     profileId: notification.profileId,
                     message: notification.message,
                     isStaff: notification.isStaff,
+                    isActive: true,
                     ...(notification.url && { url: notification.url })
                 }
             ]).select();
         if (error) {
+            console.error("Error al insertar en Supabase:", error.message);
             console.error(error.message);
             return NextResponse.json(
                 { message: 'Error al crear el registro...', error: error.message },
                 { status: 500 }
             );
         }
+        console.log("Notificación creada con éxito:", data);
+
         return NextResponse.json(
             { message: "Notificación creada correctamente!", data },
             { status: 201 }
@@ -62,6 +68,8 @@ type ReadNotification = zod.infer<typeof markAsReadSchema>;
 export async function PUT (req: NextRequest) {
     try {
         const reqBody: ReadNotification = await req.json();
+        console.log("Datos recibidos en API:", reqBody);
+
         const validation =  markAsReadSchema.safeParse(reqBody);
         if (!validation.success) {
             return NextResponse.json(
