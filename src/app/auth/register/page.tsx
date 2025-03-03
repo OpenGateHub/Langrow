@@ -172,7 +172,7 @@ export default function RegisterPage() {
     }
     if (!/[^A-Za-z0-9]/.test(password)) {
       errors.password = (errors.password ? errors.password + " " : "") + "Incluí al menos un carácter especial (por ejemplo: !, @, #, $).";
-    }    
+    }
     if (password !== confirmPassword) {
       errors.confirmPassword = "Las contraseñas no coinciden. ¡Verificalas, por favor!";
     }
@@ -200,9 +200,14 @@ export default function RegisterPage() {
       });
       await signUp.prepareEmailAddressVerification();
       setIsVerificating(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      displayMessage("error", "Hubo un error al registrarte. Por favor, intenta nuevamente.");
+      // Si Clerk devuelve un error con detalle, lo mostramos en el modal.
+      const clerkError =
+        err?.errors && err.errors.length > 0
+          ? err.errors[0].message
+          : "Hubo un error al registrarte. Por favor, intenta nuevamente.";
+      displayMessage("error", clerkError);
     } finally {
       setLoading(false);
     }
@@ -235,7 +240,7 @@ export default function RegisterPage() {
           const profileClerkId = response.data[0].userId;
 
           console.log("profileId:", profileId);
-        
+
           await createNotification({
             profileId, // Usamos el ID numérico del perfil
             message: "Bienvenido! Por favor ahora completa tu perfil",
@@ -245,7 +250,7 @@ export default function RegisterPage() {
           setIsVerificating(false);
           window.location.replace("/home");
         }
-        
+
       }
     } catch (e: any) {
       console.error(e);
