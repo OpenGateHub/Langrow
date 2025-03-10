@@ -40,12 +40,20 @@ const Header = () => {
     setNotificationsOpen(false);
   }, [pathname]);
 
-  // Llamada al hook useNotifications
+  // Uso del hook useNotifications sin parámetros
   const {
     notifications,
     loading: notificationsLoading,
     error: notificationsError,
-  } = useNotifications(profile?.id || "", false);
+    getNotifications,
+  } = useNotifications();
+
+  // Llamamos a getNotifications cuando tenemos el profile
+  useEffect(() => {
+    if (profile?.id) {
+      getNotifications({ profileId: profile.id, isStaff: false });
+    }
+  }, [profile?.id]);
 
   const profileImage = clerkUser?.imageUrl || "/placeholder-profile.png";
   const hideProfileOrLogin =
@@ -72,9 +80,10 @@ const Header = () => {
     </div>
   ) : hasNotifications ? (
     notifications.map((notification) => {
-      const href = getRedirectUrl(notification.message);
+      // Si existe una url en la notificación, se usa esa, de lo contrario se usa getRedirectUrl
+      const href = notification.url ? notification.url : getRedirectUrl(notification.message);
       return (
-        <Link key={notification.id} href={href}>
+        <Link key={notification.url} href={href}>
           <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer text-sm">
             {notification.message}
           </span>
@@ -84,6 +93,7 @@ const Header = () => {
   ) : (
     <div className="px-4 py-2 text-gray-700 text-sm">No hay notificaciones</div>
   );
+  
 
   return (
     <header className="bg-white shadow-sm z-1000">
@@ -126,7 +136,6 @@ const Header = () => {
           </div>
 
           {/* Botones de navegación */}
-
           <div className="hidden md:flex space-x-8">
             {clerkUser ? (
               <Link href="/mis-clases">
@@ -176,16 +185,17 @@ const Header = () => {
                     >
                       <TbBell className="w-6 h-6 text-gray-600 group-hover:text-white group-hover:scale-105 transition-all duration-200 ease-in-out" />
                       {hasNotifications && (
-                        <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-orange-500 ring-2 ring-white"></span>
+                        <span className="absolute top-2 right-2 block h-2 w-2 rounded-full bg-orange"></span>
                       )}
                     </button>
                     {/* Dropdown de notificaciones */}
                     <div
                       style={{ zIndex: 1000 }}
-                      className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${isNotificationsOpen
-                        ? "opacity-100 scale-y-100"
-                        : "opacity-0 scale-y-0"
-                        }`}
+                      className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${
+                        isNotificationsOpen
+                          ? "opacity-100 scale-y-100"
+                          : "opacity-0 scale-y-0"
+                      }`}
                     >
                       {notificationsList}
                     </div>
@@ -209,10 +219,11 @@ const Header = () => {
                     {/* Dropdown de perfil */}
                     <div
                       style={{ zIndex: 1000 }}
-                      className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${isMenuOpen
-                        ? "opacity-100 scale-y-100"
-                        : "opacity-0 scale-y-0"
-                        }`}
+                      className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transform transition-all duration-300 ease-in-out origin-top overflow-hidden ${
+                        isMenuOpen
+                          ? "opacity-100 scale-y-100"
+                          : "opacity-0 scale-y-0"
+                      }`}
                     >
                       <Link href={`/perfil/${clerkUser.id}?edit=true`}>
                         <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
@@ -230,14 +241,12 @@ const Header = () => {
                             Modificar Disponibilidad
                           </button>
                         </Link>
-                      )
-                      }
+                      )}
                       <button
                         type="button"
                         onClick={async () => {
                           try {
                             await signOut();
-                            // Puedes redirigir a la página de login o a la home
                             router.push("/auth/login");
                           } catch (error) {
                             console.error("Error al cerrar sesión:", error);

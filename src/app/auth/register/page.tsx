@@ -56,7 +56,7 @@ export default function RegisterPage() {
     }
   };
 
-  // Función de validación para un campo dado
+  // Función de validación para cada campo
   const validateField = (fieldName: string, value: string) => {
     let error = "";
     switch (fieldName) {
@@ -86,7 +86,6 @@ export default function RegisterPage() {
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
           error += (error ? " " : "") + "Incluí al menos un carácter especial (por ejemplo: !, @, #, $).";
         }
-        
         if (!/[0-9]/.test(value)) {
           error += (error ? " " : "") + "No olvides incluir al menos un número.";
         }
@@ -107,7 +106,7 @@ export default function RegisterPage() {
     setClientErrors((prev) => ({ ...prev, [fieldName]: error }));
   };
 
-  // onChange: si ya se intentó enviar, se valida en tiempo real
+  // onChange: se valida en tiempo real si ya se intentó enviar
   const handleChange = (fieldName: string, value: string) => {
     switch (fieldName) {
       case "firstName":
@@ -142,12 +141,13 @@ export default function RegisterPage() {
     }
   }, [clerk?.session, router]);
 
+  // Función para enviar el formulario de registro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setHasSubmitted(true);
     setLoading(true);
     setMessage("");
-    // Validamos todos los campos al enviar
+    // Validación de campos
     const errors: FormErrors = {};
     if (!firstName.trim()) {
       errors.firstName = "¡Ups! Parece que olvidaste tu nombre. Por favor, ingresalo.";
@@ -167,6 +167,9 @@ export default function RegisterPage() {
     }
     if (!/[0-9]/.test(password)) {
       errors.password = (errors.password ? errors.password + " " : "") + "No olvides incluir al menos un número.";
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      errors.password = (errors.password ? errors.password + " " : "") + "Incluí al menos un carácter especial (por ejemplo: !, @, #, $).";
     }
     if (password !== confirmPassword) {
       errors.confirmPassword = "Las contraseñas no coinciden. ¡Verificalas, por favor!";
@@ -195,14 +198,20 @@ export default function RegisterPage() {
       });
       await signUp.prepareEmailAddressVerification();
       setIsVerificating(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      displayMessage("error", "Hubo un error al registrarte. Por favor, intenta nuevamente.");
+      // Si Clerk devuelve un error con detalle, lo mostramos en el modal.
+      const clerkError =
+        err?.errors && err.errors.length > 0
+          ? err.errors[0].message
+          : "Hubo un error al registrarte. Por favor, intenta nuevamente.";
+      displayMessage("error", clerkError);
     } finally {
       setLoading(false);
     }
   };
 
+  // Función para validar el código de verificación y completar el registro
   const handleEmailValidation = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -224,10 +233,11 @@ export default function RegisterPage() {
           role: role,
         };
         const response = await createProfile(newUserProfile);
-        if (response && response.result) {
+        if (response && response.data && response.data.length > 0) {
           setIsVerificating(false);
           window.location.replace("/home");
         }
+
       }
     } catch (e: any) {
       console.error(e);
