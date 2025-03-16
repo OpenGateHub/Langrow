@@ -1,17 +1,18 @@
 import { supabaseClient } from "@/app/api/supabaseClient";
 import { SUPABASE_TABLES } from "@/app/config";
+import { parse } from "path";
 
 export interface CreateClassRoomParams {
     studentId: number;
     professorId: number;
-    categoryId: number;
-    date: Date;
+    category: number;
+    date: string;
     time: string;
     duration: string;
     cost: string;
     status: string;
     title: string;
-    description: string;
+    requestDescription: string;
 }
 
 export const getClassRoomByStudentId = async (studentIdStr: number) => {}
@@ -25,13 +26,10 @@ export const getClassRoomByProfessorId = async (professorId: number) => {}
  */
 export const createClassRoom = async (params: CreateClassRoomParams): Promise<boolean> => {
     try {
-        const [hours, minutes] = params.time.split(':').map(Number);
-        const beginsAt = new Date(params.date);
-        beginsAt.setHours(hours, minutes, 0, 0);
-
-        const durationParts = params.duration.split(':').map(Number);
-        const endsAt = new Date(beginsAt);
-        endsAt.setHours(beginsAt.getHours() + durationParts[0], beginsAt.getMinutes() + durationParts[1]);
+        const [startTime, endTime] = params.time.split(' - ');
+        const beginsAt = mergeDateTime(params.date, startTime);
+        const endsAt = mergeDateTime(params.date, endTime);
+        console.log(beginsAt);
 
         const { data, error } = await supabaseClient
             .from(SUPABASE_TABLES.MENTORSHIP)
@@ -39,23 +37,39 @@ export const createClassRoom = async (params: CreateClassRoomParams): Promise<bo
                 { 
                     userId: params.professorId,
                     studentId: params.studentId,
-                    category: params.categoryId,
-                    requestDescription: params.description,
+                    category: params.category,
+                    requestDescription: params.requestDescription,
                     status: params.status,
                     title: params.title,
-                    duration: parseInt(params.duration),
-                    beginsAt: beginsAt.toISOString(),
-                    endsAt: endsAt.toISOString()
+                    duration: parseInt(params.duration, 10),
+                    beginsAt: beginsAt,
+                    endsAt: endsAt,
+                    confirmed: false
                 }
             )
             .select();
-            if (error) {
-                console.error(error);
-                return false;
-            }    
+        if (error) {
+            console.error(error);
+            return false;
+        }    
         return true;
     } catch (e) {
         console.error(e);
         return false;
     }
+}
+
+
+const mergeDateTime = (dateStr: string, timeStr: string) => {
+    const date = new Date(dateStr); // Convierte la fecha a un objeto Date
+    const [time, period] = timeStr.split(" "); // Separa la hora del periodo AM/PM
+    let [hours, minutes] = time.split(":").map(Number);
+
+    // Convierte la hora a formato 24h
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+
+    date.setUTCHours(hours, minutes, 0, 0); // Establece la hora en UTC
+
+    return date.toISOString(); // Devuelve la fecha combinada en formato ISO
 }

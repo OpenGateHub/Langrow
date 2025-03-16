@@ -2,19 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { z as zod } from "zod";
 import { createClassRoom } from "./classRoom";
 
-
 const createMentoringSchema = zod.object({
     studentId: zod.number().positive(),
     professorId: zod.number().positive(),
-    categoryId: zod.number().positive(),
-    date: zod.date(),
+    category: zod.number().positive(),
+    date: zod.string(),
     time: zod.string(),
     duration: zod.string(),
     cost: zod.string(),
     status: zod.string(),
     title: zod.string(),
-    description: zod.string()        
+    requestDescription: zod.string()        
 }); 
+
 export async function POST(req: NextRequest) {
     try {
         const reqBody = await req.json();

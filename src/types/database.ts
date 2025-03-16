@@ -42,6 +42,7 @@ export type Database = {
       Mentorship: {
         Row: {
           beginsAt: string | null
+          category: number | null
           confirmed: boolean | null
           createdAt: string
           duration: number | null
@@ -49,13 +50,17 @@ export type Database = {
           id: number
           professorRate: number | null
           professorReview: string | null
+          requestDescription: string | null
           reviewDate: string | null
+          status: string | null
           studentId: number | null
+          title: string | null
           updatedAt: string | null
           userId: number | null
         }
         Insert: {
           beginsAt?: string | null
+          category?: number | null
           confirmed?: boolean | null
           createdAt?: string
           duration?: number | null
@@ -63,13 +68,17 @@ export type Database = {
           id?: number
           professorRate?: number | null
           professorReview?: string | null
+          requestDescription?: string | null
           reviewDate?: string | null
+          status?: string | null
           studentId?: number | null
+          title?: string | null
           updatedAt?: string | null
           userId?: number | null
         }
         Update: {
           beginsAt?: string | null
+          category?: number | null
           confirmed?: boolean | null
           createdAt?: string
           duration?: number | null
@@ -77,12 +86,22 @@ export type Database = {
           id?: number
           professorRate?: number | null
           professorReview?: string | null
+          requestDescription?: string | null
           reviewDate?: string | null
+          status?: string | null
           studentId?: number | null
+          title?: string | null
           updatedAt?: string | null
           userId?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "Mentorship_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "MentorshipCategory"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "Mentorship_studentId_fkey"
             columns: ["studentId"]
@@ -98,6 +117,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      MentorshipCategory: {
+        Row: {
+          code: string | null
+          created_at: string
+          id: number
+          isActive: boolean | null
+          name: string | null
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          id?: number
+          isActive?: boolean | null
+          name?: string | null
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          id?: number
+          isActive?: boolean | null
+          name?: string | null
+        }
+        Relationships: []
       }
       Notifications: {
         Row: {
