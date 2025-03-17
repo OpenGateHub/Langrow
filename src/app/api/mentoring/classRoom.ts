@@ -206,7 +206,9 @@ export const getClassRoomByProfessorIdAndDate = async (
 const mergeDateTime = (dateStr: string, timeStr: string) => {
   const date = new Date(dateStr); // Convierte la fecha a un objeto Date
   const [time, period] = timeStr.split(" "); // Separa la hora del periodo AM/PM
-  let [hours, minutes] = time.split(":").map(Number);
+  const splitTime= time.split(":").map(Number);
+  const minutes = splitTime[1];
+  let hours = splitTime[0];
 
   // Convierte la hora a formato 24h
   if (period === "PM" && hours !== 12) hours += 12;
