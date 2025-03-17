@@ -34,9 +34,7 @@ export const getClassRoomByStudent = async (filter: GetMentoringFilter) => {
         }
         if (filter.dateFrom) {
             const dateFrom = mergeDateTime(filter.dateFrom, "00:00 AM");
-            console.log('dateFrom:', dateFrom);
             query = query.gte('beginsAt', dateFrom);
-    
         }
         if (filter.dateTo) {
             const dateTo = mergeDateTime(filter.dateTo, "11:59 PM");
@@ -52,7 +50,34 @@ export const getClassRoomByStudent = async (filter: GetMentoringFilter) => {
     return result || [];
 }
 
-export const getClassRoomByProfessor = async (professorId: number, filter: GetMentoringFilter) => {};
+export const getClassRoomByProfessor = async (professorId: number, filter: GetMentoringFilter) => {
+    let query = supabaseClient.from(SUPABASE_TABLES.MENTORSHIP).select().eq("userId", professorId);
+    if (filter.id) {
+        console.log("Filter by ID")
+        query = query.eq('id', filter.id);
+    } else {
+        console.log("Filter by status among others");
+        
+        if (filter.status) {
+            query = query.eq('status', filter.status);
+        }
+        if (filter.dateFrom) {
+            const dateFrom = mergeDateTime(filter.dateFrom, "00:00 AM");
+            query = query.gte('beginsAt', dateFrom);
+        }
+        if (filter.dateTo) {
+            const dateTo = mergeDateTime(filter.dateTo, "11:59 PM");
+            query = query.lte('beginsAt', dateTo);
+        }
+    }
+
+    const { data: result, error } = await query;
+
+    if (error) {
+        console.error('Error en la consulta:', error);
+    }
+    return result || [];
+};
 
 /**
  * Async function Creates a classroom for a mentorship session
