@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z as zod } from "zod";
-import { createClassRoom } from "./classRoom";
+import { createClassRoom,
+    getClassRoomByStudent,
+    getClassRoomByProfessor 
+} from "./classRoom";
 import { getStudentProfileByUserId } from "../profile/profile";
+import { ClassRoomStatus } from "@/types/classRoom";
+import { getProfileByUserId } from "../profile/profile";
+import { count } from "console";
 
 const createMentoringSchema = zod.object({
     studentId: zod.string(),
@@ -38,6 +44,7 @@ export async function POST(req: NextRequest) {
         const mentoring = {
             ...data,
             studentId: studentProfile.id,
+            status: ClassRoomStatus.REQUESTED
         };
         const result = await createClassRoom(mentoring);
         if (!result) {
@@ -60,9 +67,73 @@ export async function POST(req: NextRequest) {
     }
 }
 
+const getMentoringSchema = zod.object({
+    id: zod.number().positive(),
+    userId: zod.string(),
+    status: zod.string(),
+    dateFrom: zod.string(),
+    dateTo: zod.string(),
+    page: zod.number()
+});
+const getMentoringSchemaOptionalValues = getMentoringSchema.partial({
+    id: true,
+    status: true,
+    dateFrom: true,
+    dateTo: true,
+    page: true
+});
+export type GetMentoringFilter = zod.infer<typeof getMentoringSchemaOptionalValues>;
+
 export async function GET(req: NextRequest) {
-    return NextResponse.json(
-        { message: 'Mentoría obtenida correctamente!' },
-        { status: 200 }
-    );
+    try {
+        const { searchParams } = new URL(req.url);
+        const payload: GetMentoringFilter = {
+            id: searchParams.get('id') ? parseInt(searchParams.get('id') as string) : undefined,
+            userId: searchParams.get('userId') ?? '',
+            status: searchParams.get('status') ?? undefined,
+            dateFrom: searchParams.get('dateFrom') ?? undefined,
+            dateTo: searchParams.get('dateTo') ?? undefined,
+            page: parseInt(searchParams.get('page') as string) ?? 10
+        };
+        const validation = getMentoringSchemaOptionalValues.safeParse(payload);
+        if (!validation.success) {
+            return NextResponse.json(
+                { message: 'Error en la validación', error: validation.error.errors },
+                { status: 400 }
+            );
+        }
+        const { data } = validation;
+
+        const profile = await getProfileByUserId(data.userId);
+        if (!profile) {
+            return NextResponse.json(
+                { message: 'Perfil no encontrado' },
+                { status: 404 }
+            );
+        }
+        let metorins: { beginsAt: string | null; category: number | null; confirmed: boolean | null; createdAt: string; duration: number | null; endsAt: string | null; id: number; professorRate: number | null; studentId: number | null; title: string | null; userId: number | null; }[] | undefined;
+        switch (profile.role) {
+            case 2:
+                metorins = await getClassRoomByStudent(data);
+                break;
+            case 1:
+                metorins = await getClassRoomByProfessor(profile.id, data);
+                break;
+            default:
+                return NextResponse.json(
+                    { message: 'Rol no permitido' },
+                    { status: 403 }
+                );
+        }
+        return NextResponse.json(
+            { message: 'Mentoría obtenida correctamente!', data: metorins, count: metorins ? metorins.length : 0 },
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error('Error en el servidor:', error);
+        return NextResponse.json(
+            { message: 'Error interno del servidor' },
+            { status: 500 }
+        );
+    }
 }

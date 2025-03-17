@@ -9,13 +9,14 @@ export interface ClassRoom {
     time: string;
     duration: string;
     cost: string;
-    status: StudentStatus;
+    status: ClassRoomStatus;
     studentRequest?: string;
 }
 
-export enum StudentStatus {
+export enum ClassRoomStatus {
     REQUESTED = 'requested',
-    NEXT = 'next',
+    NEXT = 'pending',
     NOTCONFIRMED = 'not-confirmed',
     CONFIRMED = 'confirmed',
+    CANCELLED = 'cancelled',
 }

@@ -1,7 +1,7 @@
 import { supabaseClient } from "@/app/api/supabaseClient";
 import { SUPABASE_TABLES } from "@/app/config";
-import { parse } from "path";
-import { format } from "date-fns";
+import { GetMentoringFilter } from "./route";
+import { getStudentProfileByUserId } from "../profile/profile";
 
 export interface CreateClassRoomParams {
   studentId: number;
@@ -16,9 +16,43 @@ export interface CreateClassRoomParams {
   requestDescription: string;
 }
 
-export const getClassRoomByStudentId = async (studentIdStr: number) => {};
+export const getClassRoomByStudent = async (filter: GetMentoringFilter) => {
+    const student = await getStudentProfileByUserId(filter.userId);
+    if (!student) {
+        console.error('Estudiante no encontrado');
+        return [];
+    }
+    let query = supabaseClient.from(SUPABASE_TABLES.MENTORSHIP).select().eq("studentId", student.id);
+    if (filter.id) {
+        console.log("Filter by ID")
+        query = query.eq('id', filter.id);
+    } else {
+        console.log("Filter by status among others");
+        
+        if (filter.status) {
+            query = query.eq('status', filter.status);
+        }
+        if (filter.dateFrom) {
+            const dateFrom = mergeDateTime(filter.dateFrom, "00:00 AM");
+            console.log('dateFrom:', dateFrom);
+            query = query.gte('beginsAt', dateFrom);
+    
+        }
+        if (filter.dateTo) {
+            const dateTo = mergeDateTime(filter.dateTo, "11:59 PM");
+            query = query.lte('beginsAt', dateTo);
+        }
+    }
 
-export const getClassRoomByProfessorId = async (professorId: number) => {};
+    const { data: result, error } = await query;
+
+    if (error) {
+        console.error('Error en la consulta:', error);
+    }
+    return result || [];
+}
+
+export const getClassRoomByProfessor = async (professorId: number, filter: GetMentoringFilter) => {};
 
 /**
  * Async function Creates a classroom for a mentorship session

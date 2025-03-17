@@ -32,3 +32,20 @@ export const getStudentProfileByUserId = async (userId: string) => {
         throw new Error("Error buscando el perfil del estudiante en la base de datos");
     }
 }
+
+export const getProfileByUserId = async (profileUserId: string) => {
+    try {
+        const { data, error } = await supabaseClient
+            .from(SUPABASE_TABLES.PROFILES)
+            .select()
+            .eq("userId", profileUserId);
+        if (error) {
+            console.error(`Error al obtener el perfil del profesor: ${error.message}`);
+            return null;
+        }
+        return data[0];
+    } catch (e) {
+        console.error(e);
+        throw new Error("Error buscando el perfil del profesor en la base de datos");
+    }
+}
