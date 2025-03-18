@@ -136,7 +136,7 @@ export async function GET(req: NextRequest) {
             .from('Notifications')
             .select()
             .eq('profileId', payload.profileId)
-            .eq('isStaff', payload.isStaff)
+            .eq('isStaff', false)
             .eq('isActive', true)
             .limit(10);
 
