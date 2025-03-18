@@ -43,6 +43,7 @@ const Header = () => {
   // Uso del hook useNotifications sin parámetros
   const {
     notifications,
+    markAsRead,
     loading: notificationsLoading,
     error: notificationsError,
     getNotifications,
@@ -55,6 +56,22 @@ const Header = () => {
     }
   }, [profile?.id]);
 
+  const handleNotificationsClick = async () => {
+    // Alternar el open del dropdown
+    setNotificationsOpen(!isNotificationsOpen);
+  
+    // Solo si se está ABRIENDO (no cerrando) y hay notificaciones
+    if (!isNotificationsOpen && notifications?.length > 0) {
+      // Para cada notificación activa, la marcamos como leída
+      // (OJO: Esto hace llamadas múltiples al endpoint)
+      for (const n of notifications) {
+        if (n.isActive) {
+          await markAsRead({ notificationId: n.id });
+        }
+      }
+    }
+  };
+  
   const profileImage = clerkUser?.imageUrl || "/placeholder-profile.png";
   const hideProfileOrLogin =
     pathname === "/auth/login" || pathname === "/auth/register";
@@ -69,6 +86,7 @@ const Header = () => {
   };
 
   const hasNotifications = notifications && notifications.length > 0;
+  const hasUnreadNotifications = notifications.some(n => n.isActive);
 
   const notificationsList = notificationsLoading ? (
     <div className="px-4 py-2 text-gray-700 text-sm">
@@ -82,12 +100,22 @@ const Header = () => {
     notifications.map((notification) => {
       // Si existe una url en la notificación, se usa esa, de lo contrario se usa getRedirectUrl
       const href = notification.url ? notification.url : getRedirectUrl(notification.message);
+      const isUnread = notification.isActive; 
       return (
-        <Link key={notification.url} href={href}>
-          <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer text-sm">
-            {notification.message}
-          </span>
-        </Link>
+        <Link key={notification.id} href={href}>
+        <span
+          className={`
+            block px-4 py-2 text-sm cursor-pointer 
+            ${isUnread ? 'font-bold bg-gray-50' : 'text-gray-700 hover:bg-gray-100'} 
+          `}
+        >
+          {/* Puntito si está no leída */}
+          {isUnread && (
+            <span className="inline-block w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
+          )}
+          {notification.message}
+        </span>
+      </Link>
       );
     })
   ) : (
@@ -177,14 +205,12 @@ const Header = () => {
                   {/* Campanita de notificaciones */}
                   <div className="relative">
                     <button
-                      onClick={() =>
-                        setNotificationsOpen(!isNotificationsOpen)
-                      }
+                      onClick={handleNotificationsClick}
                       className="group relative focus:outline-none hover:bg-primary-hover hover:scale-105 rounded-full p-2 transition-all duration-200 ease-in-out"
                       aria-label="Notificaciones"
                     >
                       <TbBell className="w-6 h-6 text-gray-600 group-hover:text-white group-hover:scale-105 transition-all duration-200 ease-in-out" />
-                      {hasNotifications && (
+                      {hasUnreadNotifications && (
                         <span className="absolute top-2 right-2 block h-2 w-2 rounded-full bg-orange"></span>
                       )}
                     </button>
