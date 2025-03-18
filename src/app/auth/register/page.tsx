@@ -6,6 +6,7 @@ import Image from "next/image";
 import { SignInButton, useSignUp } from "@clerk/nextjs";
 import { useClerk } from "@clerk/nextjs";
 import { useProfile } from "@/hooks/useProfile";
+import { useNotifications } from "@/hooks/useNotifications"; // Importamos el hook de notificaciones
 import Link from "next/link";
 import useRecaptcha from "@/hooks/useRecaptcha";
 import BlockUi from "@/app/components/BlockUi";
@@ -25,6 +26,7 @@ export default function RegisterPage() {
   const clerk = useClerk();
   const { isLoaded, signUp } = useSignUp();
   const { createProfile } = useProfile();
+  const { createNotification } = useNotifications(); // Obtenemos la función para crear notificaciones
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
   const { captchaValue, captchaError, validateCaptcha, RecaptchaComponent } = useRecaptcha(siteKey);
 

@@ -52,6 +52,8 @@ export const useNotifications = () => {
         throw new Error("Error al obtener notificaciones");
       }
       const data = await res.json();
+      console.log("Respuesta de /api/notification =>", data);
+
       setNotifications(data.data || []);
     } catch (err: any) {
       setError(err.message);

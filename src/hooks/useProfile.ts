@@ -125,8 +125,9 @@ export function useProfile(profileId?: number | string): UseProfileReturn {
       const json = await res.json();
       if (!res.ok) {
         throw new Error(json.message || "Error al crear el perfil");
+      }if (json.data && json.data.length > 0) {
+        setProfile(json.data[0]);
       }
-      setProfile((prev) => (prev ? { ...prev, ...newProfileData } : prev));
       return json;
     } catch (err: any) {
       setError(err.message);

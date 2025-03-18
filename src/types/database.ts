@@ -51,7 +51,7 @@ export type Database = {
           professorReview: string | null
           reviewDate: string | null
           studentId: number | null
-          updatedAt: string | null
+          updatedAt: Date | null
           userId: number | null
         }
         Insert: {
@@ -65,7 +65,7 @@ export type Database = {
           professorReview?: string | null
           reviewDate?: string | null
           studentId?: number | null
-          updatedAt?: string | null
+          updatedAt?: Date | null
           userId?: number | null
         }
         Update: {
@@ -79,7 +79,7 @@ export type Database = {
           professorReview?: string | null
           reviewDate?: string | null
           studentId?: number | null
-          updatedAt?: string | null
+          updatedAt?: Date | null
           userId?: number | null
         }
         Relationships: [
@@ -107,7 +107,7 @@ export type Database = {
           isStaff: boolean | null
           message: string | null
           profileId: number | null
-          updatedAt: string | null
+          updatedAt: Date | null
           url: string | null
         }
         Insert: {
@@ -117,7 +117,7 @@ export type Database = {
           isStaff?: boolean | null
           message?: string | null
           profileId?: number | null
-          updatedAt?: string | null
+          updatedAt?: Date | null
           url?: string | null
         }
         Update: {
@@ -127,7 +127,7 @@ export type Database = {
           isStaff?: boolean | null
           message?: string | null
           profileId?: number | null
-          updatedAt?: string | null
+          updatedAt?: Date | null
           url?: string | null
         }
         Relationships: []
@@ -137,21 +137,21 @@ export type Database = {
           createdAt: string
           id: number
           isActive: boolean | null
-          updatedAt: string | null
+          updatedAt: Date | null
           userId: string | null
         }
         Insert: {
           createdAt?: string
           id?: number
           isActive?: boolean | null
-          updatedAt?: string | null
+          updatedAt?: Date | null
           userId?: string | null
         }
         Update: {
           createdAt?: string
           id?: number
           isActive?: boolean | null
-          updatedAt?: string | null
+          updatedAt?: Date | null
           userId?: string | null
         }
         Relationships: []
@@ -214,7 +214,7 @@ export type Database = {
           reviews: number | null
           role: number | null
           title: string | null
-          updatedAt: string | null
+          updatedAt: Date | null
           userId: string
         }
         Insert: {
@@ -232,7 +232,7 @@ export type Database = {
           reviews?: number | null
           role?: number | null
           title?: string | null
-          updatedAt?: string | null
+          updatedAt?: Date | null
           userId: string
         }
         Update: {
@@ -250,7 +250,7 @@ export type Database = {
           reviews?: number | null
           role?: number | null
           title?: string | null
-          updatedAt?: string | null
+          updatedAt?: Date | null
           userId?: string
         }
         Relationships: [
@@ -295,7 +295,7 @@ export type Database = {
           notes: string | null
           qualification: number
           studentId: number
-          updatedAt: string | null
+          updatedAt: Date | null
           userId: number
         }
         Insert: {
@@ -305,7 +305,7 @@ export type Database = {
           notes?: string | null
           qualification?: number
           studentId: number
-          updatedAt?: string | null
+          updatedAt?: Date | null
           userId: number
         }
         Update: {
@@ -315,7 +315,7 @@ export type Database = {
           notes?: string | null
           qualification?: number
           studentId?: number
-          updatedAt?: string | null
+          updatedAt?: Date | null
           userId?: number
         }
         Relationships: [
@@ -370,7 +370,7 @@ export type Database = {
           title: string
           description: string
           location: string
-          updatedat: string
+          updatedat: Date
           userid: string
           isactive: boolean
           isstaff: boolean

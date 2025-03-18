@@ -136,8 +136,8 @@ export async function GET(req: NextRequest) {
             .from('Notifications')
             .select()
             .eq('profileId', payload.profileId)
-            .eq('isStaff', payload.isStaff)
-            .eq('isActive', true)
+            .order('id', { ascending: false })
+            .eq('isStaff', false)
             .limit(10);
 
         if (error) {

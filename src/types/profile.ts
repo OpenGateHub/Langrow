@@ -4,7 +4,7 @@ export interface Profile {
     userId?: string;
     name?: string;
     createdAt?: string;
-    updatedAt?: string;
+    updatedAt?: Date;
     isActive?: boolean;
     email?: string;
     role?: string | number;
