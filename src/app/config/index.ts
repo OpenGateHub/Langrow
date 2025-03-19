@@ -21,6 +21,7 @@ export enum SUPABASE_TABLES {
     STUDENT_PROFILES = "StudentProfile",
     PROFESSOR_REVIEWS = "UserReviews",
     MENTORSHIP = "Mentorship",
+    MENTORSHIP_VIEW = "mentorships_with_names"
 }
 
 export enum SUPABASE_FUNCTIONS {

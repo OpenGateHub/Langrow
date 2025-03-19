@@ -73,7 +73,7 @@ const getMentoringSchema = zod.object({
     status: zod.string(),
     dateFrom: zod.string(),
     dateTo: zod.string(),
-    page: zod.number()
+    page: zod.number().positive()
 });
 const getMentoringSchemaOptionalValues = getMentoringSchema.partial({
     id: true,

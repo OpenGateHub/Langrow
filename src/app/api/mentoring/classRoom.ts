@@ -22,7 +22,7 @@ export const getClassRoomByStudent = async (filter: GetMentoringFilter) => {
         console.error('Estudiante no encontrado');
         return [];
     }
-    let query = supabaseClient.from(SUPABASE_TABLES.MENTORSHIP).select().eq("studentId", student.id);
+    let query = supabaseClient.from(SUPABASE_TABLES.MENTORSHIP_VIEW).select().eq("studentId", student.id);
     if (filter.id) {
         console.log("Filter by ID")
         query = query.eq('id', filter.id);
@@ -51,7 +51,7 @@ export const getClassRoomByStudent = async (filter: GetMentoringFilter) => {
 }
 
 export const getClassRoomByProfessor = async (professorId: number, filter: GetMentoringFilter) => {
-    let query = supabaseClient.from(SUPABASE_TABLES.MENTORSHIP).select().eq("userId", professorId);
+    let query = supabaseClient.from(SUPABASE_TABLES.MENTORSHIP_VIEW).select().eq("userId", professorId);
     if (filter.id) {
         console.log("Filter by ID")
         query = query.eq('id', filter.id);
