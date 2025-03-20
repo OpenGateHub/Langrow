@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
         }
 
         return NextResponse.json(
-            { message: 'Consulta exitosa', count: data?.length, data  },
+            { message: 'Consulta exitosa', count: data?.length, data },
             { status: 200 }
         );
 
@@ -87,28 +87,37 @@ export async function POST(req: Request) {
             name: body.data.fullName,
             userId: body.data.code,
             email: body.data.email,
-            role: roleValue,  // Ahora tiene el número correcto
+            role: roleValue,
         };
 
         let result;
         console.log(`Registering new user - ${body.data.role}:: ${body.data.code}`);
         result = await createProfile(minCreateData, body.data);
-        switch (body.data.role) {
-            case PROFILE_ROLE_STRING.ALUMNO:
-                console.log('Creating student profile')
-                result = await createStudentProfile(minCreateData, body.data);
-                break;
-            default:
-                console.warn(`Role given not enabled - ${body.data.role}:: ${body.data.code}`);
-                return NextResponse.json(
-                    { message: "Role not enabled", result: false },
-                    { status: 200 }
-                );
+
+        const newProfile = result && result.length > 0 ? result[0] : null;
+
+        if (newProfile) {
+            await supabaseClient
+                .from('Notifications')
+                .insert([
+                    {
+                        profileId: newProfile.id,
+                        message: "Te damos la bienvenida! Clickea aquí para completar tu perfil", isStaff: newProfile.isStaff ?? false,
+                        url: `/perfil/${newProfile.userId}?edit=true`
+                    }
+                ]);
         }
+
+        if (body.data.role === PROFILE_ROLE_STRING.ALUMNO) {
+            console.log('Creating student profile');
+            result = await createStudentProfile(minCreateData, body.data);
+        }
+
         return NextResponse.json(
-            { message: "Perfil creado correctamente", result: true, data: result},
+            { message: "Perfil creado correctamente", result: true, data: result },
             { status: 201 }
         );
+
     } catch (err) {
         console.error(`An unexpected error occurred creating a new user`);
         console.error(err);
@@ -163,7 +172,7 @@ export async function PUT(req: Request) {
         }
 
         const { data: profile } = validation;
-        const updateData =  {
+        const updateData = {
             isStaff: profile.isStaff,
             updatedAt: new Date(),
             ...(profile.title != null && { title: profile.title }),
@@ -201,7 +210,7 @@ export async function DELETE(req: Request) {
     try {
         const body = await req.json();
         const { data, error } = await supabaseClient.from('UserProfile')
-            .update({'isActive': false})
+            .update({ 'isActive': false })
             .eq('userId', body.code)
             .select();
 
@@ -213,7 +222,7 @@ export async function DELETE(req: Request) {
             );
         }
         return NextResponse.json(
-            { message: 'Registro eliminado correctamente', count: data?.length, data  },
+            { message: 'Registro eliminado correctamente', count: data?.length, data },
             { status: 200 }
         );
 
