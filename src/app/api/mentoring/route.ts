@@ -150,6 +150,18 @@ const putMentoringSchema = zod.object({
 });
 export type PutMentoringPayload = zod.infer<typeof putMentoringSchema>; 
 
+const VALID_STATE_TRANSITIONS: Record<ClassRoomStatus, ClassRoomStatus[]> = {
+    [ClassRoomStatus.REQUESTED]: [ClassRoomStatus.NEXT, ClassRoomStatus.CANCELLED], // Solo puede ir a NEXT
+    [ClassRoomStatus.NEXT]: [
+        ClassRoomStatus.CONFIRMED,
+        ClassRoomStatus.CANCELLED,
+        ClassRoomStatus.NOTCONFIRMED
+    ], // Puede ir a cualquiera de estos
+    [ClassRoomStatus.CONFIRMED]: [], // No puede cambiar
+    [ClassRoomStatus.CANCELLED]: [], // No puede cambiar
+    [ClassRoomStatus.NOTCONFIRMED]: [] // No puede cambiar
+};
+
 export async function PUT(req: NextRequest) {
     try {
         const reqBody = await req.json();
@@ -161,14 +173,28 @@ export async function PUT(req: NextRequest) {
             );
         }
         const { id, status } = validation.data;
-        const metoring = await getClassRoomById(id);
-        if (!metoring) {
+        const mentoring = await getClassRoomById(id);
+
+        if (!mentoring) {
             return NextResponse.json(
                 { message: 'Mentoría no encontrada' },
                 { status: 404 }
             );
         }
+
+        const currentStatus = mentoring.status as ClassRoomStatus;
+        const allowedTransitions = VALID_STATE_TRANSITIONS[currentStatus];
+
+        // 🚀 Validar si el cambio de estado es permitido
+        if (!allowedTransitions || !allowedTransitions.includes(status as ClassRoomStatus)) {
+            return NextResponse.json(
+                { message: `Transición no permitida: ${currentStatus} → ${status}` },
+                { status: 400 }
+            );
+        }
+
         let result: boolean;
+
         switch (status) {
             case ClassRoomStatus.CONFIRMED:
                 const confirmResult = await confirmClassRoom(id);
@@ -189,11 +215,16 @@ export async function PUT(req: NextRequest) {
                     { status: 400 }
                 );
         }
-        
+
+        return NextResponse.json(
+            { message: 'Estado actualizado correctamente', success: result },
+            { status: result ? 200 : 500 }
+        );
+
     } catch (error) {
         console.error('Error en el servidor:', error);
         return NextResponse.json(
-            { message: 'Error interno del servidor', result: false },
+            { message: 'Error interno del servidor', success: false },
             { status: 500 }
         );
     }
