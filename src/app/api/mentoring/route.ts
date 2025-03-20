@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z as zod } from "zod";
-import { createClassRoom,
-    getClassRoomByStudent,
-    getClassRoomByProfessor 
-} from "./classRoom";
-import { getStudentProfileByUserId } from "../profile/profile";
 import { ClassRoomStatus } from "@/types/classRoom";
-import { getProfileByUserId } from "../profile/profile";
-import { count } from "console";
+import {
+    createClassRoom,
+    getClassRoomByStudent,
+    getClassRoomByProfessor,
+    getClassRoomById,
+    confirmClassRoom,
+    cancelClassRoom,
+    updateClassRoomStatus
+} from "./classRoom";
+import {
+    getStudentProfileByUserId,
+    getProfileByUserId 
+} from "../profile/profile";
 
 const createMentoringSchema = zod.object({
     studentId: zod.string(),
@@ -17,7 +23,6 @@ const createMentoringSchema = zod.object({
     time: zod.string(),
     duration: zod.string(),
     cost: zod.string(),
-    status: zod.string(),
     title: zod.string(),
     requestDescription: zod.string()        
 }); 
@@ -111,7 +116,7 @@ export async function GET(req: NextRequest) {
                 { status: 404 }
             );
         }
-        let metorins: { beginsAt: string | null; category: number | null; confirmed: boolean | null; createdAt: string; duration: number | null; endsAt: string | null; id: number; professorRate: number | null; studentId: number | null; title: string | null; userId: number | null; }[] | undefined;
+        let metorins;
         switch (profile.role) {
             case 2:
                 metorins = await getClassRoomByStudent(data);
@@ -133,6 +138,62 @@ export async function GET(req: NextRequest) {
         console.error('Error en el servidor:', error);
         return NextResponse.json(
             { message: 'Error interno del servidor' },
+            { status: 500 }
+        );
+    }
+}
+
+
+const putMentoringSchema = zod.object({
+    id: zod.number().positive(),
+    status: zod.string()
+});
+export type PutMentoringPayload = zod.infer<typeof putMentoringSchema>; 
+
+export async function PUT(req: NextRequest) {
+    try {
+        const reqBody = await req.json();
+        const validation = putMentoringSchema.safeParse(reqBody);
+        if (!validation.success) {
+            return NextResponse.json(
+                { message: 'Error en la validación', error: validation.error.errors },
+                { status: 400 }
+            );
+        }
+        const { id, status } = validation.data;
+        const metoring = await getClassRoomById(id);
+        if (!metoring) {
+            return NextResponse.json(
+                { message: 'Mentoría no encontrada' },
+                { status: 404 }
+            );
+        }
+        let result: boolean;
+        switch (status) {
+            case ClassRoomStatus.CONFIRMED:
+                const confirmResult = await confirmClassRoom(id);
+                result = confirmResult.success;
+                break;
+            case ClassRoomStatus.CANCELLED:
+                const cancelResult = await cancelClassRoom(id);
+                result = cancelResult.success;
+                break;
+            case ClassRoomStatus.NOTCONFIRMED:
+            case ClassRoomStatus.NEXT:
+                const updateResult = await updateClassRoomStatus(id, status);
+                result = updateResult.success;
+                break;
+            default:
+                return NextResponse.json(
+                    { message: 'Estado no permitido' },
+                    { status: 400 }
+                );
+        }
+        
+    } catch (error) {
+        console.error('Error en el servidor:', error);
+        return NextResponse.json(
+            { message: 'Error interno del servidor', result: false },
             { status: 500 }
         );
     }

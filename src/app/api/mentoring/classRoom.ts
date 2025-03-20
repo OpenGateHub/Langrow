@@ -2,6 +2,7 @@ import { supabaseClient } from "@/app/api/supabaseClient";
 import { SUPABASE_TABLES } from "@/app/config";
 import { GetMentoringFilter } from "./route";
 import { getStudentProfileByUserId } from "../profile/profile";
+import { ClassRoomStatus } from "@/types/classRoom";
 
 export interface CreateClassRoomParams {
   studentId: number;
@@ -140,7 +141,7 @@ export const cancelClassRoom = async (id: number) => {
 
   const { data, error } = await supabaseClient
     .from(SUPABASE_TABLES.MENTORSHIP)
-    .update({ status: "cancelled" })
+    .update({ status: ClassRoomStatus.CANCELLED })
     .eq("id", id)
     .select(); // Retorna los datos actualizados
 
@@ -166,7 +167,7 @@ export const confirmClassRoom = async (id: number) => {
 
   const { data, error } = await supabaseClient
     .from(SUPABASE_TABLES.MENTORSHIP)
-    .update({ confirmed: true, status: "completed" })
+    .update({ confirmed: true, status: ClassRoomStatus.CONFIRMED })
     .eq("id", id)
     .select();
 
@@ -185,6 +186,12 @@ export const confirmClassRoom = async (id: number) => {
   return { success: true, data };
 };
 
+/**
+ * Function to find the classes that a professor has in a day 
+ * @param professorId number
+ * @param rawDate string
+ * @returns Promise
+ */
 export const getClassRoomByProfessorIdAndDate = async (
   professorId: number,
   rawDate: string
@@ -201,6 +208,47 @@ export const getClassRoomByProfessorIdAndDate = async (
   }
 
   return data;
+};
+
+export const getClassRoomById = async (id: number) => {
+    const { data, error } = await supabaseClient
+      .from(SUPABASE_TABLES.MENTORSHIP_VIEW)  // Usar la vista en vez de la tabla
+      .select()
+      .eq("id", id)
+      .single();  // `.single()` para obtener un solo objeto en lugar de un array
+  
+    if (error) {
+      console.error("Error al obtener la clase:", error);
+      return null;  // Retornar `null` en lugar de `[]` si hay error o no hay datos
+    }
+  
+    return data;
+};
+
+export const updateClassRoomStatus = async (id: number, status: string) => {
+    if (!id || typeof id !== "number") {
+        return { success: false, error: "ID inválido" };
+      }
+    
+      const { data, error } = await supabaseClient
+        .from(SUPABASE_TABLES.MENTORSHIP)
+        .update({ status: status })
+        .eq("id", id)
+        .select(); // Retorna los datos actualizados
+    
+      if (error) {
+        console.error("Error al actualizar la clase:", error);
+        return { success: false, error: error.message };
+      }
+    
+      if (!data || data.length === 0) {
+        return {
+          success: false,
+          error: "Clase no encontrada o no pudo ser actualizada.",
+        };
+      }
+    
+      return { success: true, data };
 };
 
 const mergeDateTime = (dateStr: string, timeStr: string) => {
