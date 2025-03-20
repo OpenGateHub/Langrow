@@ -42,6 +42,8 @@ export type Database = {
       Mentorship: {
         Row: {
           beginsAt: string | null
+          category: number | null
+          classRoomUrl: string | null
           confirmed: boolean | null
           createdAt: string
           duration: number | null
@@ -49,13 +51,18 @@ export type Database = {
           id: number
           professorRate: number | null
           professorReview: string | null
+          requestDescription: string | null
           reviewDate: string | null
+          status: string | null
           studentId: number | null
-          updatedAt: Date | null
+          title: string | null
+          updatedAt: string | null
           userId: number | null
         }
         Insert: {
           beginsAt?: string | null
+          category?: number | null
+          classRoomUrl?: string | null
           confirmed?: boolean | null
           createdAt?: string
           duration?: number | null
@@ -63,13 +70,18 @@ export type Database = {
           id?: number
           professorRate?: number | null
           professorReview?: string | null
+          requestDescription?: string | null
           reviewDate?: string | null
+          status?: string | null
           studentId?: number | null
-          updatedAt?: Date | null
+          title?: string | null
+          updatedAt?: string | null
           userId?: number | null
         }
         Update: {
           beginsAt?: string | null
+          category?: number | null
+          classRoomUrl?: string | null
           confirmed?: boolean | null
           createdAt?: string
           duration?: number | null
@@ -77,12 +89,22 @@ export type Database = {
           id?: number
           professorRate?: number | null
           professorReview?: string | null
+          requestDescription?: string | null
           reviewDate?: string | null
+          status?: string | null
           studentId?: number | null
-          updatedAt?: Date | null
+          title?: string | null
+          updatedAt?: string | null
           userId?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "Mentorship_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "MentorshipCategory"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "Mentorship_studentId_fkey"
             columns: ["studentId"]
@@ -98,6 +120,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      MentorshipCategory: {
+        Row: {
+          code: string | null
+          created_at: string
+          id: number
+          isActive: boolean | null
+          name: string | null
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          id?: number
+          isActive?: boolean | null
+          name?: string | null
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          id?: number
+          isActive?: boolean | null
+          name?: string | null
+        }
+        Relationships: []
       }
       Notifications: {
         Row: {
@@ -337,7 +383,52 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mentorships_with_names: {
+        Row: {
+          beginsAt: string | null
+          category: number | null
+          confirmed: boolean | null
+          createdAt: string | null
+          duration: number | null
+          endsAt: string | null
+          id: number | null
+          professorName: string | null
+          professorRate: number | null
+          professorReview: string | null
+          requestDescription: string | null
+          reviewDate: string | null
+          status: string | null
+          studentId: number | null
+          studentName: string | null
+          title: string | null
+          updatedAt: string | null
+          url: string | null
+          userId: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Mentorship_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "MentorshipCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Mentorship_studentId_fkey"
+            columns: ["studentId"]
+            isOneToOne: false
+            referencedRelation: "StudentProfile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Mentorship_userId_fkey"
+            columns: ["userId"]
+            isOneToOne: false
+            referencedRelation: "UserProfile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_professor_reviews: {
