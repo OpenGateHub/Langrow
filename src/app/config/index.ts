@@ -17,14 +17,15 @@ export const ROLE_MAP: Record<PROFILE_ROLE_STRING, PROFILE_ROLE> = {
 };
 
 export enum SUPABASE_TABLES {
-    PROFILES = "UserProfile",
-    STUDENT_PROFILES = "StudentProfile",
-    PROFESSOR_REVIEWS = "UserReviews",
+    ACHIEVEMENT = "Achievements",
     MENTORSHIP = "Mentorship",
-    MENTORSHIP_VIEW = "mentorships_with_names"
+    MENTORSHIP_VIEW = "mentorships_with_names",
+    PROFESSOR_REVIEWS = "UserReviews",
+    PROFILES = "UserProfile",
+    STUDENT_PROFILES = "StudentProfile"
 }
 
 export enum SUPABASE_FUNCTIONS {
-    PROFESSOR_REVIEWS = "get_professor_reviews",
     GET_STUDENT_PROFILE_ID = "get_user_profile_by_student_id",
+    PROFESSOR_REVIEWS = "get_professor_reviews",
 }
