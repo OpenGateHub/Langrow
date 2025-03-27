@@ -11,6 +11,8 @@ export type Database = {
     Tables: {
       Achievements: {
         Row: {
+          code: string | null
+          condition: string | null
           createdAt: string
           description: string | null
           iconImg: string | null
@@ -20,6 +22,8 @@ export type Database = {
           title: string | null
         }
         Insert: {
+          code?: string | null
+          condition?: string | null
           createdAt?: string
           description?: string | null
           iconImg?: string | null
@@ -29,6 +33,8 @@ export type Database = {
           title?: string | null
         }
         Update: {
+          code?: string | null
+          condition?: string | null
           createdAt?: string
           description?: string | null
           iconImg?: string | null
@@ -153,7 +159,7 @@ export type Database = {
           isStaff: boolean | null
           message: string | null
           profileId: number | null
-          updatedAt: Date | null
+          updatedAt: string | null
           url: string | null
         }
         Insert: {
@@ -163,7 +169,7 @@ export type Database = {
           isStaff?: boolean | null
           message?: string | null
           profileId?: number | null
-          updatedAt?: Date | null
+          updatedAt?: string | null
           url?: string | null
         }
         Update: {
@@ -173,7 +179,7 @@ export type Database = {
           isStaff?: boolean | null
           message?: string | null
           profileId?: number | null
-          updatedAt?: Date | null
+          updatedAt?: string | null
           url?: string | null
         }
         Relationships: []
@@ -183,21 +189,21 @@ export type Database = {
           createdAt: string
           id: number
           isActive: boolean | null
-          updatedAt: Date | null
+          updatedAt: string | null
           userId: string | null
         }
         Insert: {
           createdAt?: string
           id?: number
           isActive?: boolean | null
-          updatedAt?: Date | null
+          updatedAt?: string | null
           userId?: string | null
         }
         Update: {
           createdAt?: string
           id?: number
           isActive?: boolean | null
-          updatedAt?: Date | null
+          updatedAt?: string | null
           userId?: string | null
         }
         Relationships: []
@@ -260,7 +266,7 @@ export type Database = {
           reviews: number | null
           role: number | null
           title: string | null
-          updatedAt: Date | null
+          updatedAt: string | null
           userId: string
         }
         Insert: {
@@ -278,7 +284,7 @@ export type Database = {
           reviews?: number | null
           role?: number | null
           title?: string | null
-          updatedAt?: Date | null
+          updatedAt?: string | null
           userId: string
         }
         Update: {
@@ -296,7 +302,7 @@ export type Database = {
           reviews?: number | null
           role?: number | null
           title?: string | null
-          updatedAt?: Date | null
+          updatedAt?: string | null
           userId?: string
         }
         Relationships: [
@@ -341,7 +347,7 @@ export type Database = {
           notes: string | null
           qualification: number
           studentId: number
-          updatedAt: Date | null
+          updatedAt: string | null
           userId: number
         }
         Insert: {
@@ -351,7 +357,7 @@ export type Database = {
           notes?: string | null
           qualification?: number
           studentId: number
-          updatedAt?: Date | null
+          updatedAt?: string | null
           userId: number
         }
         Update: {
@@ -361,7 +367,7 @@ export type Database = {
           notes?: string | null
           qualification?: number
           studentId?: number
-          updatedAt?: Date | null
+          updatedAt?: string | null
           userId?: number
         }
         Relationships: [
@@ -461,7 +467,7 @@ export type Database = {
           title: string
           description: string
           location: string
-          updatedat: Date
+          updatedat: string
           userid: string
           isactive: boolean
           isstaff: boolean

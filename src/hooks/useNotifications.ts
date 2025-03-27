@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { supabaseClient } from "@/app/api/supabaseClient";
+import { supabaseClientUi } from "@/app/api/supabaseClientUi";
 
 export interface Notification {
   id: number;
@@ -67,7 +67,7 @@ export const useNotifications = () => {
     // Se crea la suscripción solo si se han obtenido parámetros previamente (por ejemplo, el profileId)
     if (!lastParams) return;
 
-    const channel = supabaseClient
+    const channel = supabaseClientUi
       .channel("notifications-channel")
       .on(
         "postgres_changes",
@@ -81,7 +81,7 @@ export const useNotifications = () => {
 
     // Limpiar la suscripción al desmontar el hook o si cambia lastParams
     return () => {
-      supabaseClient.removeChannel(channel);
+      supabaseClientUi.removeChannel(channel);
     };
   }, [lastParams, getNotifications]);
 
