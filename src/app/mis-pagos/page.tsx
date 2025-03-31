@@ -13,17 +13,18 @@ interface Payment {
 }
 
 const PaymentsPage = () => {
+  // 1) Primero obtenemos role
   const { role } = useProfileContext();
 
-  // 1) Definís tus Hooks SIEMPRE antes de cualquier return condicional
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // Si NO es profesor, salimos
+  // 2) Hacemos un early-return si NO es profesor
   if (role !== "org:profesor") {
     return null; // o <p>No tienes acceso</p>
   }
 
-  // 2) Lógica normal que use tus Hooks
+  // 3) Luego definimos todos los Hooks
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // 4) Resto de la lógica
   const payments: Payment[] = [
     {
       id: "1234",
@@ -108,13 +109,16 @@ const PaymentsPage = () => {
   const paidPayments = payments.filter((p) => p.status === "Paid");
   const totalAnnual = paidPayments.reduce((acc, p) => acc + p.amount, 0);
 
-  const monthlyTotals = paidPayments.reduce<Record<string, number>>((acc, payment) => {
-    const monthName = new Date(payment.date).toLocaleString("es-ES", {
-      month: "long",
-    });
-    acc[monthName] = (acc[monthName] || 0) + payment.amount;
-    return acc;
-  }, {});
+  const monthlyTotals = paidPayments.reduce<Record<string, number>>(
+    (acc, payment) => {
+      const monthName = new Date(payment.date).toLocaleString("es-ES", {
+        month: "long",
+      });
+      acc[monthName] = (acc[monthName] || 0) + payment.amount;
+      return acc;
+    },
+    {}
+  );
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4">
@@ -124,11 +128,21 @@ const PaymentsPage = () => {
         <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-md">
           <thead>
             <tr className="bg-gray-200 text-gray-800">
-              <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wide">ID</th>
-              <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wide">Fecha</th>
-              <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wide">Concepto</th>
-              <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wide">Monto</th>
-              <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wide">Estado</th>
+              <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wide">
+                ID
+              </th>
+              <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wide">
+                Fecha
+              </th>
+              <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wide">
+                Concepto
+              </th>
+              <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wide">
+                Monto
+              </th>
+              <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wide">
+                Estado
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -139,11 +153,14 @@ const PaymentsPage = () => {
                 <td className="py-3 px-4 text-sm text-gray-700">
                   {payment.concept || "Sin especificar"}
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-700">${payment.amount}</td>
+                <td className="py-3 px-4 text-sm text-gray-700">
+                  ${payment.amount}
+                </td>
                 <td className="py-3 px-4">
                   <span
                     className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                      statusColor[payment.status] || "bg-gray-100 text-gray-800"
+                      statusColor[payment.status] ||
+                      "bg-gray-100 text-gray-800"
                     }`}
                   >
                     {payment.status}
@@ -214,4 +231,3 @@ const PaymentsPage = () => {
 };
 
 export default PaymentsPage;
-
