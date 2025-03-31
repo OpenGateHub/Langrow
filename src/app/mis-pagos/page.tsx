@@ -14,16 +14,12 @@ interface Payment {
 
 const PaymentsPage = () => {
   const { role } = useProfileContext();
-
-  // 1) Definís tus Hooks SIEMPRE antes de cualquier return condicional
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Si NO es profesor, salimos
-  if (role !== "org:profesor") {
-    return null; // o <p>No tienes acceso</p>
-  }
+  // En caso de que role aún no esté definido, podemos retornar algo o null
+  if (!role) return null;
 
-  // 2) Lógica normal que use tus Hooks
+  // En vez de retornar temprano, usamos renderizado condicional en el return
   const payments: Payment[] = [
     {
       id: "1234",
@@ -109,14 +105,14 @@ const PaymentsPage = () => {
   const totalAnnual = paidPayments.reduce((acc, p) => acc + p.amount, 0);
 
   const monthlyTotals = paidPayments.reduce<Record<string, number>>((acc, payment) => {
-    const monthName = new Date(payment.date).toLocaleString("es-ES", {
-      month: "long",
-    });
+    const monthName = new Date(payment.date).toLocaleString("es-ES", { month: "long" });
     acc[monthName] = (acc[monthName] || 0) + payment.amount;
     return acc;
   }, {});
 
-  return (
+  return role !== "org:profesor" ? (
+    <p>No tienes acceso</p>
+  ) : (
     <div className="max-w-4xl mx-auto py-10 px-4">
       {/* Tabla de pagos */}
       <div className="bg-white shadow-sm rounded-xl p-6 mb-6">
