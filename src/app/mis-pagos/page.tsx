@@ -1,7 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import { useProfileContext } from "@/context/ProfileContext";
-
 type StatusType = "Paid" | "Pending" | "Scheduled";
 
 interface Payment {
@@ -13,7 +11,6 @@ interface Payment {
 }
 
 const PaymentsPage = () => {
-  const { role } = useProfileContext();
   const [currentPage, setCurrentPage] = useState(1);
 
   // Lógica de pagos (se ejecuta siempre, independientemente del role)
@@ -110,9 +107,7 @@ const PaymentsPage = () => {
   // Renderizamos siempre el mismo árbol, y dentro condicionamos lo que se muestra según role.
   return (
     <div className="max-w-4xl mx-auto py-10 px-4">
-      {role !== "org:profesor" ? (
-        <p>No tienes acceso</p>
-      ) : (
+      
         <>
           {/* Tabla de pagos */}
           <div className="bg-white shadow-sm rounded-xl p-6 mb-6">
@@ -206,8 +201,7 @@ const PaymentsPage = () => {
             </div>
           </div>
         </>
-      )}
-    </div>
+          </div>
   );
 };
 
