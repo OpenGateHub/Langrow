@@ -13,18 +13,16 @@ interface Payment {
 }
 
 const PaymentsPage = () => {
-  // 1) Primero obtenemos role
+  // 1) Todos los Hooks, primero
   const { role } = useProfileContext();
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // 2) Hacemos un early-return si NO es profesor
+  // 2) Si no es profesor, return
   if (role !== "org:profesor") {
     return null; // o <p>No tienes acceso</p>
   }
 
-  // 3) Luego definimos todos los Hooks
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // 4) Resto de la lógica
+  // 3) Resto de la lógica
   const payments: Payment[] = [
     {
       id: "1234",
@@ -153,14 +151,11 @@ const PaymentsPage = () => {
                 <td className="py-3 px-4 text-sm text-gray-700">
                   {payment.concept || "Sin especificar"}
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-700">
-                  ${payment.amount}
-                </td>
+                <td className="py-3 px-4 text-sm text-gray-700">${payment.amount}</td>
                 <td className="py-3 px-4">
                   <span
                     className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                      statusColor[payment.status] ||
-                      "bg-gray-100 text-gray-800"
+                      statusColor[payment.status] ?? "bg-gray-100 text-gray-800"
                     }`}
                   >
                     {payment.status}
