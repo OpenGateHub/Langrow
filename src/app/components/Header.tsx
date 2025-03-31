@@ -267,6 +267,15 @@ const Header = () => {
                             Modificar Disponibilidad
                           </button>
                         </Link>
+                        
+                      )}
+                               {role === "org:profesor" && (
+                        <Link href="/mis-pagos">
+                          <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
+                            Mis pagos
+                          </button>
+                        </Link>
+                        
                       )}
                       <button
                         type="button"
