@@ -15,12 +15,15 @@ interface Payment {
 const PaymentsPage = () => {
   const { role } = useProfileContext();
 
-  // Si NO es profesor, no se muestra nada (o podés retornar un mensaje)
+  // 1) Definís tus Hooks SIEMPRE antes de cualquier return condicional
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Si NO es profesor, salimos
   if (role !== "org:profesor") {
-    return null;
+    return null; // o <p>No tienes acceso</p>
   }
 
-  // Mock de pagos (sin teacherId)
+  // 2) Lógica normal que use tus Hooks
   const payments: Payment[] = [
     {
       id: "1234",
@@ -80,15 +83,14 @@ const PaymentsPage = () => {
     },
   ];
 
-  // --- Colores según estado ---
+  // Colores de estado
   const statusColor: Record<StatusType, string> = {
     Paid: "bg-green-100 text-green-800",
     Pending: "bg-yellow-100 text-yellow-800",
     Scheduled: "bg-blue-100 text-blue-800",
   };
 
-  // --- PAGINACIÓN ---
-  const [currentPage, setCurrentPage] = useState(1);
+  // Paginación
   const itemsPerPage = 5;
   const totalPages = Math.ceil(payments.length / itemsPerPage);
 
@@ -102,24 +104,17 @@ const PaymentsPage = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentPayments = payments.slice(startIndex, endIndex);
 
-  // --- RESUMEN DE PAGOS ---
-  // Solo sumamos los pagos con estado "Paid"
+  // Resumen
   const paidPayments = payments.filter((p) => p.status === "Paid");
-
-  // Total anual
   const totalAnnual = paidPayments.reduce((acc, p) => acc + p.amount, 0);
 
-  // Totales mensuales
-  const monthlyTotals = paidPayments.reduce<Record<string, number>>(
-    (acc, payment) => {
-      const monthName = new Date(payment.date).toLocaleString("es-ES", {
-        month: "long",
-      });
-      acc[monthName] = (acc[monthName] || 0) + payment.amount;
-      return acc;
-    },
-    {}
-  );
+  const monthlyTotals = paidPayments.reduce<Record<string, number>>((acc, payment) => {
+    const monthName = new Date(payment.date).toLocaleString("es-ES", {
+      month: "long",
+    });
+    acc[monthName] = (acc[monthName] || 0) + payment.amount;
+    return acc;
+  }, {});
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4">
@@ -219,3 +214,4 @@ const PaymentsPage = () => {
 };
 
 export default PaymentsPage;
+
