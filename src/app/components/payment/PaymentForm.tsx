@@ -5,9 +5,12 @@ interface PaymentFormProps {
   clases: number;
   precioClase: number;
   total: number;
+  alumnoId: string;
+  profesorId: string;
+  purchaseId: string;
 }
 
-const PaymentForm = ({ clases, precioClase, total }: PaymentFormProps) => {
+const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchaseId }: PaymentFormProps) => {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +29,12 @@ const PaymentForm = ({ clases, precioClase, total }: PaymentFormProps) => {
               unit_price: precioClase,
             },
           ],
+          external_reference: `reserva-${purchaseId}-${alumnoId}`,
+          metadata: {
+            alumnoId: alumnoId,
+            profesorId: profesorId,
+            purchaseId: purchaseId,
+          },
         }),
       });
 
@@ -58,9 +67,7 @@ const PaymentForm = ({ clases, precioClase, total }: PaymentFormProps) => {
         <h2 className="text-xl font-semibold mb-2">Detalle del pago</h2>
         <div className="mt-4 p-4 bg-gray-50 rounded-lg">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-gray-700">
-              Clase de inglés x {clases}
-            </span>
+            <span className="text-gray-700">Clase de inglés x {clases}</span>
             <span className="text-gray-900 font-medium">
               ${precioClase.toLocaleString("es-AR")}
             </span>
@@ -69,7 +76,7 @@ const PaymentForm = ({ clases, precioClase, total }: PaymentFormProps) => {
             <div className="flex justify-between items-center">
               <span className="font-semibold">Total</span>
               <span className="text-gray-900 font-bold">
-              ${total ? total.toLocaleString("es-AR") : "0"}
+                ${total ? total.toLocaleString("es-AR") : "0"}
               </span>
             </div>
           </div>

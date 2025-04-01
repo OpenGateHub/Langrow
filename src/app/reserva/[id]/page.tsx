@@ -1,9 +1,11 @@
 "use client";
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useContext } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import WeeklyAgendaModal, { SelectedSlotType, DaySchedule } from "../../components/ModalClassRequest";
-import PaymentForm from "../../components/payment/PaymentForm"; // Importamos el PaymentForm embebido
+import PaymentForm from "../../components/payment/PaymentForm";
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
+// Se asume que tienes un AuthContext configurado para obtener el usuario autenticado
+import { useProfileContext } from "@/context/ProfileContext";
 
 // Tipo de paquete con datos y estilos
 type Package = {
@@ -64,7 +66,6 @@ const categories = [
   "Pronunciación",
 ];
 
-// Agenda disponible para el profesor
 const professorSchedule: DaySchedule[] = [
   { day: "Lunes", slots: ["10:00", "14:00"] },
   { day: "Martes", slots: ["11:00", "15:00"] },
@@ -76,18 +77,25 @@ const professorSchedule: DaySchedule[] = [
 ];
 
 const SolicitudClase: React.FC = () => {
+  const { clerkUser } = useProfileContext();
+  const alumnoId = clerkUser?.id || "";
+
+  // Se obtiene el id del profesor a partir de la URL
+  const pathname = usePathname();
+  const pathParts = pathname.split("/");
+  const profesorId = pathParts[pathParts.length - 1];
+
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [category, setCategory] = useState<string>("");
   const [motivo, setMotivo] = useState<string>("");
   const [categoryError, setCategoryError] = useState<string>("");
   const [motivoError, setMotivoError] = useState<string>("");
 
-  // Estados para el modal de selección de horarios y la selección guardada
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState<boolean>(false);
   const [selectedSlots, setSelectedSlots] = useState<SelectedSlotType[]>([]);
-
-  // Estado para activar el paso de pago
   const [isPaymentStep, setIsPaymentStep] = useState<boolean>(false);
+  // Se genera el id de la clase al confirmar la reserva
+  const [purchaseId, setpurchaseId] = useState<string>("");
 
   const router = useRouter();
 
@@ -104,8 +112,7 @@ const SolicitudClase: React.FC = () => {
     setIsScheduleModalOpen(false);
   };
 
-  // Al confirmar la reserva se validan todos los campos y la cantidad de horarios seleccionados.
-  // Si todo es correcto, se activa el paso de pago que mostrará el PaymentForm embebido.
+  // Al confirmar la reserva se validan los datos y se genera un id para la clase
   const handleConfirmReserva = () => {
     let valid = true;
     if (!selectedPackage) {
@@ -133,8 +140,8 @@ const SolicitudClase: React.FC = () => {
     }
     if (!valid) return;
 
-    // Aquí podrías realizar la lógica de confirmación de la reserva y generar bookingId y eventTypeId.
-    // Por ahora, usamos valores de ejemplo.
+    // Genera un id único para la clase
+    setpurchaseId(`clase-${Date.now()}`);
     setIsPaymentStep(true);
   };
 
@@ -154,12 +161,13 @@ const SolicitudClase: React.FC = () => {
               <button
                 onClick={() => {
                   setSelectedPackage(pkg);
-                  setSelectedSlots([]); // Reinicia la selección de horarios al cambiar de paquete
+                  setSelectedSlots([]); // Reinicia selección de horarios al cambiar de paquete
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pkg.bg} ${pkg.hoverBg} ${selectedPackage?.nombre === pkg.nombre
-                  ? "shadow-md text-white border-2 border-white"
-                  : "text-white"
-                  }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${pkg.bg} ${pkg.hoverBg} ${
+                  selectedPackage?.nombre === pkg.nombre
+                    ? "shadow-md text-white border-2 border-white"
+                    : "text-white"
+                }`}
               >
                 {pkg.nombre}
               </button>
@@ -175,12 +183,12 @@ const SolicitudClase: React.FC = () => {
                         pkg.bg === "bg-blue-700"
                           ? "#1D4ED8"
                           : pkg.bg === "bg-green-700"
-                            ? "#047857"
-                            : pkg.bg === "bg-yellow-700"
-                              ? "#B45309"
-                              : pkg.bg === "bg-red-700"
-                                ? "#B91C1C"
-                                : "#000",
+                          ? "#047857"
+                          : pkg.bg === "bg-yellow-700"
+                          ? "#B45309"
+                          : pkg.bg === "bg-red-700"
+                          ? "#B91C1C"
+                          : "#000",
                     }}
                   ></div>
                 </div>
@@ -190,11 +198,14 @@ const SolicitudClase: React.FC = () => {
         </div>
       </AnimateOnScroll>
 
-      {/* Recuadro de precios con efecto collapse y scale suave */}
-      {/* Botón para abrir el modal de selección de horarios */}
+      {/* Botón para elegir horarios */}
       {selectedPackage && selectedSlots.length === 0 && (
-        <div className={` text-center overflow-hidden transform transition-all duration-700 ease-in-out origin-top ${selectedPackage ? "max-h-[1000px] opacity-100 scale-y-100" : "max-h-0 opacity-0 scale-y-0"}`}>
-          <div className={`mb-4 p-4 border rounded-md bg-gray-50 text-center`}>
+        <div
+          className={`text-center overflow-hidden transform transition-all duration-700 ease-in-out origin-top ${
+            selectedPackage ? "max-h-[1000px] opacity-100 scale-y-100" : "max-h-0 opacity-0 scale-y-0"
+          }`}
+        >
+          <div className="mb-4 p-4 border rounded-md bg-gray-50 text-center">
             <div className="mb-4 flex flex-col justify-center">
               <h3 className="text-md">
                 Precio Total: ${selectedPackage.total.toLocaleString("es-AR")}
@@ -210,17 +221,15 @@ const SolicitudClase: React.FC = () => {
           >
             Elegir Horarios
           </button>
-
         </div>
-
       )}
 
-      {/* Resumen opcional de horarios seleccionados */}
+      {/* Resumen de horarios seleccionados */}
       {selectedSlots.length > 0 && (
         <AnimateOnScroll delay={400}>
           <div className="mb-4 text-center">
             <p className="text-green-600 font-medium">Horarios seleccionados</p>
-            {/* Aquí podrías mapear y mostrar los horarios elegidos */}
+            {/* Aquí puedes mapear y mostrar los horarios elegidos */}
           </div>
         </AnimateOnScroll>
       )}
@@ -228,14 +237,13 @@ const SolicitudClase: React.FC = () => {
       {/* Selección de categoría */}
       <AnimateOnScroll delay={500}>
         <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2">
-            Selecciona la categoría
-          </label>
+          <label className="block text-gray-700 font-medium mb-2">Selecciona la categoría</label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className={`w-full p-2 border rounded-md focus:outline-none ${categoryError ? "border-red-500" : "border-gray-300"
-              }`}
+            className={`w-full p-2 border rounded-md focus:outline-none ${
+              categoryError ? "border-red-500" : "border-gray-300"
+            }`}
           >
             <option value="">-- Selecciona una categoría --</option>
             {categories.map((cat) => (
@@ -244,18 +252,14 @@ const SolicitudClase: React.FC = () => {
               </option>
             ))}
           </select>
-          {categoryError && (
-            <p className="text-red-500 text-sm mt-1">{categoryError}</p>
-          )}
+          {categoryError && <p className="text-red-500 text-sm mt-1">{categoryError}</p>}
         </div>
       </AnimateOnScroll>
 
       {/* Motivo de clase */}
       <AnimateOnScroll delay={600}>
         <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2">
-            Motivo de clase
-          </label>
+          <label className="block text-gray-700 font-medium mb-2">Motivo de clase</label>
           <textarea
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
@@ -265,12 +269,8 @@ const SolicitudClase: React.FC = () => {
             minLength={50}
             maxLength={200}
           />
-          {motivoError && (
-            <p className="text-red-500 text-sm mt-1">{motivoError}</p>
-          )}
-          <p className="mt-1 text-sm text-gray-500">
-            {motivo.length} / 200 caracteres
-          </p>
+          {motivoError && <p className="text-red-500 text-sm mt-1">{motivoError}</p>}
+          <p className="mt-1 text-sm text-gray-500">{motivo.length} / 200 caracteres</p>
         </div>
       </AnimateOnScroll>
 
@@ -286,9 +286,8 @@ const SolicitudClase: React.FC = () => {
         />
       )}
 
-      {/* Botón para confirmar reserva */}
+      {/* Botón para confirmar reserva y avanzar al paso de pago */}
       {!isPaymentStep && selectedSlots.length > 0 && (
-
         <div className="flex justify-end mt-4">
           <button
             onClick={handleConfirmReserva}
@@ -297,20 +296,23 @@ const SolicitudClase: React.FC = () => {
             Continuar al pago
           </button>
         </div>
-
       )}
 
-      {/* Componente de Pago embebido que se muestra debajo del formulario */}
+      {/* Componente de Pago embebido */}
       {selectedPackage !== null && (
         <AnimateOnScroll delay={800}>
           <div
-            className={`mt-8 overflow-hidden origin-top transition-all duration-300 ease-in-out ${isPaymentStep ? "max-h-[1000px] opacity-100 scale-100" : "max-h-0 opacity-0 scale-95"
-              }`}
+            className={`mt-8 overflow-hidden origin-top transition-all duration-300 ease-in-out ${
+              isPaymentStep ? "max-h-[1000px] opacity-100 scale-100" : "max-h-0 opacity-0 scale-95"
+            }`}
           >
             <PaymentForm
               clases={selectedPackage.clases}
               precioClase={Number(selectedPackage.precioClase.replace(/\./g, ""))}
               total={selectedPackage.total}
+              alumnoId={alumnoId || ""}
+              profesorId={profesorId}
+              purchaseId={purchaseId}
             />
           </div>
         </AnimateOnScroll>
