@@ -266,3 +266,34 @@ const mergeDateTime = (dateStr: string, timeStr: string) => {
 
   return date.toISOString(); // Devuelve la fecha combinada en formato ISO
 };
+
+export const getScheduledHours = async (professorId: number, startDate: string, endDate: string) => {
+    const { data, error } = await supabaseClient
+        .from(SUPABASE_TABLES.MENTORSHIP)
+        .select("beginsAt, endsAt, duration")
+        .eq("userId", professorId)
+        .eq("confirmed", true)
+        .gte("beginsAt", startDate)
+        .lte("endsAt", endDate);
+
+    if (error) {
+        console.error("Error al obtener las clases agendadas:", error);
+        return { success: false, error: error.message, totalHours: 0 };
+    }
+
+    if (!data || data.length === 0) {
+        return { success: true, totalHours: 0 };
+    }
+
+    // Calcular las horas totales
+    const totalHours = data.reduce((sum, classRoom) => {
+        const beginsAt = classRoom.beginsAt ? new Date(classRoom.beginsAt).getTime() : 0;
+        const endsAt = classRoom.endsAt ? new Date(classRoom.endsAt).getTime() : 0;
+        const durationInHours = (endsAt - beginsAt) / (1000 * 60 * 60); // Convertir de milisegundos a horas
+        return sum + durationInHours;
+    }, 0);
+
+    return { success: true, totalHours };
+};
+
+
