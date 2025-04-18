@@ -8,19 +8,28 @@ import MessageModal from "@/app/components/Modal"; // El modal que nos pasaste
 
 const WEEK_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
+type SlotStatus = "none" | "available" | "reserved";
+
 export default function WeeklySchedulePage() {
-  // Llamamos a todos los hooks incondicionalmente
   const { role } = useProfileContext();
   const { width } = useWindowSize();
-  const [availableSlots, setAvailableSlots] = useState<{ day: string; hour: number }[]>([]);
+
+  // A modo de mock se definen algunos horarios ocupados (clases reservadas)
+  // Nota: se usan los mismos nombres que en WEEK_DAYS para mayor consistencia (para pantallas grandes)
+  const [slotStates, setSlotStates] = useState<Record<string, SlotStatus>>({
+    "Lunes-10": "reserved",       // Lunes 10:00 ya está reservado
+    "Miércoles-14": "reserved",   // Miércoles 14:00 ya está reservado
+    "Viernes-18": "reserved",     // Viernes 18:00 ya está reservado
+  });
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"success" | "error">("success");
   const [modalMessage, setModalMessage] = useState("");
 
-  // Definición de días según el ancho de pantalla
+  // Dependiendo del ancho, se usa la versión corta o completa de los nombres de días.
   const DAYS = width < 768 ? ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] : WEEK_DAYS;
 
-  // Función para calcular el lunes de la semana actual
+  // Calcula el lunes de la semana actual
   const getMonday = (d: Date): Date => {
     const date = new Date(d);
     const day = date.getDay(); // 0 = domingo, 1 = lunes, etc.
@@ -59,27 +68,32 @@ export default function WeeklySchedulePage() {
     setCurrentWeekStart(newMonday);
   };
 
-  // Alterna un horario en una celda
-  const toggleSlot = (day: string, hour: number) => {
-    const exists = availableSlots.some(slot => slot.day === day && slot.hour === hour);
-    if (exists) {
-      setAvailableSlots(availableSlots.filter(slot => !(slot.day === day && slot.hour === hour)));
+  // Función para ciclar entre los tres estados: no disponible -> disponible -> reservado -> no disponible.
+  const cycleSlot = (day: string, hour: number) => {
+    const key = `${day}-${hour}`;
+    const currentStatus = slotStates[key] || "none";
+    let nextStatus: SlotStatus;
+    if (currentStatus === "none") {
+      nextStatus = "available";
+    } else if (currentStatus === "available") {
+      nextStatus = "reserved";
     } else {
-      setAvailableSlots([...availableSlots, { day, hour }]);
+      nextStatus = "none";
     }
+    setSlotStates({
+      ...slotStates,
+      [key]: nextStatus,
+    });
   };
-
-  const isSlotAvailable = (day: string, hour: number) =>
-    availableSlots.some(slot => slot.day === day && slot.hour === hour);
 
   // Horarios: de 5 a 23 horas (19 filas)
   const hours = Array.from({ length: 19 }, (_, i) => i + 5);
 
-  // Simula guardar la disponibilidad
+  // Función para simular guardar la disponibilidad/clases
   const handleSave = async () => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Disponibilidad guardada:", availableSlots);
+      console.log("Estados de horarios guardados:", slotStates);
       setModalType("success");
       setModalMessage("¡Disponibilidad guardada exitosamente!");
       setModalOpen(true);
@@ -91,7 +105,6 @@ export default function WeeklySchedulePage() {
     }
   };
 
-  // Renderizamos la UI de forma condicional, pero todos los hooks se llaman antes
   return (
     <>
       {role !== "org:profesor" ? (
@@ -100,14 +113,14 @@ export default function WeeklySchedulePage() {
         </main>
       ) : (
         <main className="min-h-screen relative bg-gray-100 p-4 flex flex-col">
-          {/* Modal de éxito/error */}
+          {/* Modal para notificaciones */}
           <MessageModal
             isOpen={modalOpen}
             onClose={() => setModalOpen(false)}
             type={modalType}
             message={modalMessage}
           />
-          {/* Fondo */}
+          {/* Imagen de fondo */}
           <div className="absolute inset-0 -z-10">
             <Image
               src="/bg-login.jpg"
@@ -117,7 +130,7 @@ export default function WeeklySchedulePage() {
               className="opacity-80"
             />
           </div>
-          {/* Header */}
+          {/* Encabezado */}
           <header className="mb-6 text-center">
             <h1 className="text-3xl md:text-4xl font-bold text-secondary">Agenda Semanal</h1>
             <p className="mt-2 text-base md:text-lg text-gray-700">
@@ -173,22 +186,48 @@ export default function WeeklySchedulePage() {
                       <span className="text-[8px] md:text-sm text-gray-600">{dayObj.date}</span>
                     </div>
                     {hours.map(hour => {
-                      const available = isSlotAvailable(dayObj.dayName, hour);
+                      const key = `${dayObj.dayName}-${hour}`;
+                      const status: SlotStatus = slotStates[key] || "none";
+                      let bgColor = "";
+                      let content = "";
+                      if (status === "available") {
+                        bgColor = "bg-[#9dd295]";
+                        content = "Disponible";
+                      } else if (status === "reserved") {
+                        bgColor = "bg-blue-300";
+                        content = "Clase Reservada";
+                      } else {
+                        bgColor = "bg-white";
+                        content = "X";
+                      }
                       return (
                         <div
-                          key={dayObj.dayName + hour}
-                          onClick={() => toggleSlot(dayObj.dayName, hour)}
-                          className={`h-8 md:h-12 flex items-center justify-center border-b border-gray-200 cursor-pointer transition-colors duration-200 text-[8px] md:text-sm ${
-                            available ? "bg-[#9dd295]" : "bg-white hover:bg-gray-100"
-                          }`}
+                          key={key}
+                          onClick={() => cycleSlot(dayObj.dayName, hour)}
+                          className={`h-8 md:h-12 flex items-center justify-center border-b border-gray-200 cursor-pointer transition-colors duration-200 text-[8px] md:text-sm ${bgColor}`}
                         >
-                          {available ? "✓" : ""}
+                          {content}
                         </div>
                       );
                     })}
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+          {/* Leyenda de estados */}
+          <div className="mt-4 flex justify-around">
+            <div className="flex items-center">
+              <span className="w-5 h-5 bg-white border border-gray-300 flex items-center justify-center text-xs mr-1">X</span>
+              <span className="text-sm">No disponible</span>
+            </div>
+            <div className="flex items-center">
+              <span className="w-5 h-5 bg-[#9dd295] flex items-center justify-center text-xs mr-1">✓</span>
+              <span className="text-sm">Disponible</span>
+            </div>
+            <div className="flex items-center">
+              <span className="w-5 h-5 bg-blue-300 flex items-center justify-center text-xs mr-1">RSV</span>
+              <span className="text-sm">Clase reservada</span>
             </div>
           </div>
           {/* Botón de Guardar */}
