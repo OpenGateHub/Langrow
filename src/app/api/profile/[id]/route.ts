@@ -32,6 +32,7 @@ export async function GET(
                 updatedAt,
                 profileImg,
                 role,
+                isZoomEnabled,
                 UserAchievements (
                     id,
                     Achievements (

@@ -285,6 +285,7 @@ export type Database = {
           id: number
           isActive: boolean | null
           isStaff: boolean | null
+          isZoomEnabled: boolean | null
           location: string | null
           name: string | null
           price: number | null
@@ -303,6 +304,7 @@ export type Database = {
           id?: number
           isActive?: boolean | null
           isStaff?: boolean | null
+          isZoomEnabled?: boolean | null
           location?: string | null
           name?: string | null
           price?: number | null
@@ -321,6 +323,7 @@ export type Database = {
           id?: number
           isActive?: boolean | null
           isStaff?: boolean | null
+          isZoomEnabled?: boolean | null
           location?: string | null
           name?: string | null
           price?: number | null
@@ -371,6 +374,8 @@ export type Database = {
           created_at: string
           expires_at: string | null
           id: number
+          scope: string | null
+          userId: number | null
           zoom_refresh_token: string | null
           zoom_token: string | null
         }
@@ -378,6 +383,8 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: number
+          scope?: string | null
+          userId?: number | null
           zoom_refresh_token?: string | null
           zoom_token?: string | null
         }
@@ -385,10 +392,20 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: number
+          scope?: string | null
+          userId?: number | null
           zoom_refresh_token?: string | null
           zoom_token?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "UserProfileSecrets_userId_fkey"
+            columns: ["userId"]
+            isOneToOne: false
+            referencedRelation: "UserProfile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       UserReviews: {
         Row: {

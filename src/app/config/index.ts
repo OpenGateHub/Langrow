@@ -23,6 +23,7 @@ export enum SUPABASE_TABLES {
     PAYMENTS = "Payments",
     PROFESSOR_REVIEWS = "UserReviews",
     PROFILES = "UserProfile",
+    PROFILES_SECRETS = "UserProfileSecrets",
     STUDENT_PROFILES = "StudentProfile"
 }
 
