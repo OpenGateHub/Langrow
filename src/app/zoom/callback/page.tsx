@@ -16,28 +16,25 @@ export default function ZoomCallbackPage() {
   const [tokenData, setTokenData] = useState<TokenData | null>(null);
   const { role, clerkUser, profile, loading, error } = useProfileContext();
 
-  if (loading) return <p>Cargando perfil...</p>;
-  if (error) return <p>Error: {error}</p>;
-
   useEffect(() => {
     const getToken = async () => {
       const code = new URLSearchParams(window.location.search).get('code');
-      if (!code) return;
+      if (!code || !profile?.id) return;
 
       const zoom = new ZoomIntegration();
       try {
         const data = await zoom.getAccessToken(code);
         setTokenData(data);
-        if(profile?.id) {
-          await createSecret(profile?.id, data);
-        }
+        await createSecret(profile.id, data);
       } catch (error) {
         console.error('Error al obtener token:', error);
       }
     };
 
-    getToken();
-  }, []);
+    if (!loading && !error && profile?.id) {
+      getToken();
+    }
+  }, [loading, error, profile]);
 
   const createSecret = async (userId: number, tokenData: TokenData) => {
     const { access_token, refresh_token, expires_in, scope } = tokenData;
@@ -64,6 +61,9 @@ export default function ZoomCallbackPage() {
 
     return response.json();
   }
+
+  if (loading) return <p>Cargando perfil...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div>
