@@ -10,5 +10,6 @@ export interface UserProfile extends Profile {
     rating?: number;
     location?: string;
     profileImg?: string;
+    isZoomEnabled?: boolean;
     achievements?: Achievement[];
 }

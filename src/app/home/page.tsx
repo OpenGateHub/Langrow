@@ -166,6 +166,21 @@ export default function HomePage() {
     },
   };
 
+  const handleZoomRedirect = () => {
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID!,
+      redirect_uri: process.env.NEXT_PUBLIC_ZOOM_REDIRECT_URI!,
+    });
+
+    window.location.href = `https://zoom.us/oauth/authorize?${params.toString()}`;
+  };
+
+  if (profile && !profile.isZoomEnabled) {
+    handleZoomRedirect();
+    return <p>Redirigiendo a Zoom...</p>;
+  }
+
   return (
     <HomeTemplate {...(userRole === "org:profesor" ? tutorProps : studentProps)} />
   );

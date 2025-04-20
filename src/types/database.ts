@@ -285,6 +285,7 @@ export type Database = {
           id: number
           isActive: boolean | null
           isStaff: boolean | null
+          isZoomEnabled: boolean | null
           location: string | null
           name: string | null
           price: number | null
@@ -303,6 +304,7 @@ export type Database = {
           id?: number
           isActive?: boolean | null
           isStaff?: boolean | null
+          isZoomEnabled?: boolean | null
           location?: string | null
           name?: string | null
           price?: number | null
@@ -321,6 +323,7 @@ export type Database = {
           id?: number
           isActive?: boolean | null
           isStaff?: boolean | null
+          isZoomEnabled?: boolean | null
           location?: string | null
           name?: string | null
           price?: number | null
