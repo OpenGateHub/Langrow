@@ -56,6 +56,7 @@ export function useProfile(profileId?: number | string): UseProfileReturn {
         role: data.role === 1 ? "org:profesor" : data.role === 2 ? "org:alumno" : "",
         updatedAt: data.updatedAt,
         profileImg: data.profileImg,
+        isZoomEnabled: data.isZoomEnabled,
         achievements: data.UserAchievements
           ? data.UserAchievements.map((ua: any) => ({
               id: ua.id,

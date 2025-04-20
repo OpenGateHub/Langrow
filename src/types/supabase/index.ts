@@ -63,3 +63,12 @@ export interface SupabaseStudentReview {
 }
 
 export type SupabaseStudentReviews = SupabaseStudentReview[];
+
+
+export interface SupabasePayment {
+    id?: number
+    payment_id: string;
+    payment_details: any;
+    external_reference: string;
+    created_at?: Date;
+}

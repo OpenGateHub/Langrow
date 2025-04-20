@@ -20,8 +20,10 @@ export enum SUPABASE_TABLES {
     ACHIEVEMENT = "Achievements",
     MENTORSHIP = "Mentorship",
     MENTORSHIP_VIEW = "mentorships_with_names",
+    PAYMENTS = "Payments",
     PROFESSOR_REVIEWS = "UserReviews",
     PROFILES = "UserProfile",
+    PROFILES_SECRETS = "UserProfileSecrets",
     STUDENT_PROFILES = "StudentProfile"
 }
 

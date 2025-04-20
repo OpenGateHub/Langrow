@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { storePayment } from '../payments/payments';
 
 export async function POST(request: Request) {
   try {
@@ -48,6 +49,11 @@ export async function POST(request: Request) {
     }
 
     // Aquí podrías guardar paymentDetails y externalReference en tu base de datos
+    storePayment({
+      payment_id: paymentId,
+      external_reference: externalReference,
+      payment_details: paymentDetails,
+    });
 
     return NextResponse.json({
       message: "Evento recibido y detalles consultados",
