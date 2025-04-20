@@ -1,78 +1,56 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import ZoomIntegration from '@/lib/ZoomIntegration';
 import { useProfileContext } from "@/context/ProfileContext";
 
-interface TokenData {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  token_type: string;
-  scope: string;
-}
-
 export default function ZoomCallbackPage() {
-  const [tokenData, setTokenData] = useState<TokenData | null>(null);
-  const { role, clerkUser, profile, loading, error } = useProfileContext();
+  const [result, setResult] = useState<null | { success: boolean; message: string }>({
+    success: false,
+    message: 'Procesando...',
+  });
+  const { profile, loading, error } = useProfileContext();
 
   useEffect(() => {
-    const getToken = async () => {
+    const sendCodeToBackend = async () => {
       const code = new URLSearchParams(window.location.search).get('code');
-      if (!code || !profile?.id) return;
+      if (!code) {
+        setResult({ success: false, message: 'Código de autorización no encontrado.' });
+        return;
+      }
 
-      const zoom = new ZoomIntegration();
+      if (!profile?.id) return;
+
       try {
-        const data = await zoom.getAccessToken(code);
-        setTokenData(data);
-        await createSecret(profile.id, data);
-      } catch (error) {
-        console.error('Error al obtener token:', error);
+        const response = await fetch('/api/zoom-meetings/secrets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, userId: profile.id }),
+        });
+
+        const resData = await response.json();
+
+        if (!response.ok) {
+          throw new Error(resData.message || 'Error inesperado del servidor');
+        }
+
+        setResult({ success: true, message: 'Integración con Zoom completada exitosamente.' });
+      } catch (err: any) {
+        setResult({ success: false, message: `Error: ${err.message}` });
       }
     };
 
     if (!loading && !error && profile?.id) {
-      getToken();
+      sendCodeToBackend();
     }
   }, [loading, error, profile]);
 
-  const createSecret = async (userId: number, tokenData: TokenData) => {
-    const { access_token, refresh_token, expires_in, scope } = tokenData;
-
-    const secret = {
-      userId: userId,
-      token: access_token,
-      refreshToken: refresh_token,
-      expiresIn: expires_in,
-      scope: scope,
-    };
-
-    const response = await fetch('/api/zoom-meetings/secrets', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(secret),
-    });
-
-    if (!response.ok) {
-      throw new Error('Error al guardar el secreto de Zoom');
-    }
-
-    return response.json();
-  }
-
   if (loading) return <p>Cargando perfil...</p>;
-  if (error) return <p>Error: {error}</p>;
+  if (error) return <p>Error cargando perfil: {error}</p>;
 
   return (
     <div>
       <h2>Resultado de autenticación con Zoom</h2>
-      {tokenData ? (
-        <pre>{JSON.stringify(tokenData, null, 2)}</pre>
-      ) : (
-        <p>Procesando token...</p>
-      )}
+      <p>{result?.message}</p>
     </div>
   );
 }
