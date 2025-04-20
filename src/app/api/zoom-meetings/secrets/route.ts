@@ -76,9 +76,9 @@ export async function POST(req: NextRequest) {
       .from(SUPABASE_TABLES.PROFILES_SECRETS)
       .upsert({
         userId,
-        token: access_token,
-        refreshToken: refresh_token,
-        expiresIn: expires_in,
+        zoom_token: access_token,
+        zoom_refresh_token: refresh_token,
+        expires_at: expires_in,
         scope,
       });
 
