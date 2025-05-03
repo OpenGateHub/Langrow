@@ -24,8 +24,8 @@ export async function POST(request: Request) {
       external_reference: body.external_reference,
       metadata: body.metadata,
       back_urls: {
-        success: `${process.env.NEXT_PUBLIC_BASE_URL}/components/payment/success`,
-        failure: `${process.env.NEXT_PUBLIC_BASE_URL}/components/payment/failure`,
+        success: process.env.NEXT_PUBLIC_PAYMENT_SUCCESS_URL,
+        failure: process.env.NEXT_PUBLIC_PAYMENT_FAILURE_URL,        
       },
       auto_return: 'approved' as const,
       payment_methods: {
