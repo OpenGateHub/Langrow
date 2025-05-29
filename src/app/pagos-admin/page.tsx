@@ -1,5 +1,7 @@
 "use client";
 import React, { useState } from "react";
+import { useProfileContext } from "@/context/ProfileContext";
+import { useRouter } from "next/navigation";
 
 interface Payment {
   id: string;
@@ -53,6 +55,14 @@ const mockPayments: Payment[] = [
 ];
 
 export default function Dashboard() {
+  const { role } = useProfileContext();
+  const router = useRouter();
+
+  if (role !== "org:admin") {
+    router.push('/');
+    return null;
+  }
+
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<SortField>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
