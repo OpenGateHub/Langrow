@@ -4,10 +4,11 @@ import React, { createContext, useContext, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useProfile } from "@/hooks/useProfile";
 import { UserProfile as Profile } from "@/types/userProfile";
+import { PROFILE_ROLE_STRING } from "@/app/config";
 
 interface ProfileContextValue {
   clerkUser: ReturnType<typeof useUser>["user"] | null;
-  role: "org:alumno" | "org:profesor" | null;
+  role: "org:alumno" | "org:profesor" | "org:admin" | null;
   profile: Profile | null;
   loading: boolean;
   error: string | null;
@@ -20,12 +21,13 @@ const ProfileContext = createContext<ProfileContextValue | undefined>(undefined)
 export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoaded } = useUser();
 
-  // Determinamos el role (si es "org:alumno" o "org:profesor")
+  // Determinamos el role (incluyendo admin)
   const role =
-    user?.unsafeMetadata?.formRole === "org:alumno" ||
-    user?.unsafeMetadata?.formRole === "org:profesor"
+    user?.unsafeMetadata?.formRole === PROFILE_ROLE_STRING.ALUMNO ||
+    user?.unsafeMetadata?.formRole === PROFILE_ROLE_STRING.PROFESOR ||
+    user?.unsafeMetadata?.formRole === PROFILE_ROLE_STRING.ADMIN
       ? user.unsafeMetadata.formRole
-      : null; //está llegando nulo
+      : null;
 
   // Usamos el id del usuario una vez que Clerk esté cargado
   const profileId = isLoaded && user ? user.id : "";
