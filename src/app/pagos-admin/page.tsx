@@ -1,7 +1,8 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useProfileContext } from "@/context/ProfileContext";
 import { useRouter } from "next/navigation";
+import { PROFILE_ROLE_STRING } from "@/app/config";
 
 interface Payment {
   id: string;
@@ -55,17 +56,23 @@ const mockPayments: Payment[] = [
 ];
 
 export default function Dashboard() {
-  const { role } = useProfileContext();
   const router = useRouter();
-
-  if (role !== "org:admin") {
-    router.push('/');
-    return null;
-  }
-
+  const { role } = useProfileContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<SortField>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  useEffect(() => {
+    if (role && role !== "org:admin") {
+      router.push('/');
+    }
+  }, [role, router]);
+
+  if (!role || role !== "org:admin") {
+    return <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
+      <p className="text-xl text-gray-600">Acceso no autorizado</p>
+    </div>;
+  }
 
   // Filtrar pagos por id, external_reference o nombre completo del profesor
   const filteredPayments = mockPayments.filter((payment) => {
