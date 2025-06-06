@@ -222,6 +222,7 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
                     {isEditingLocation ? (
                       <form onSubmit={handleLocationSubmit} className="flex items-center space-x-2">
                         <input
+                          placeholder="Ubicación"
                           type="text"
                           value={newLocation}
                           onChange={(e) => setNewLocation(e.target.value)}
@@ -245,7 +246,7 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
                       <>
                         <p className="flex items-center justify-center md:justify-start opacity-0 animate-fade-in delay-400">
                           <CiLocationOn className="mr-1" />
-                          <span className="text-sm">{newLocation}</span>
+                          {newLocation ? (<span className="text-sm">{newLocation}</span>) : (<span className="text-sm">Ubicación</span>)}
                         </p>
                         {computedCanEdit && (
                           <button
@@ -262,10 +263,10 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
               </AnimateOnScroll>
               {/* Botón de Reservar (solo si no se está editando) */}
               <AnimateOnScroll delay={500}>
-              <div className="md:mt-0 ">
-              {!computedCanEdit && isTutor && (
+                <div className="md:mt-0 ">
+                  {!computedCanEdit && isTutor && (
                     <Link href={`/reserva/${profile.userId}`}>
-                     <button className="mb-3 md:absolute md:mt-[20px] md:left-0 bg-white text-secondary focus:bg-secondary focus:text-white hover:bg-gray-200 group font-semibold px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-60 border-2 border-gray-300 transition-all duration-200 ease-in-out xs:ml-0 md:ml-[150px] md-lg:ml-[250px] lg:ml-[300px] ">
+                      <button className="mb-3 md:absolute md:mt-[20px] md:left-0 bg-white text-secondary focus:bg-secondary focus:text-white hover:bg-gray-200 group font-semibold px-4 py-2 rounded-full shadow hover:shadow-lg opacity-0 animate-fade-in delay-60 border-2 border-gray-300 transition-all duration-200 ease-in-out xs:ml-0 md:ml-[150px] md-lg:ml-[250px] lg:ml-[300px] ">
                         Reservar
                       </button>
                     </Link>
@@ -286,6 +287,7 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
                       type="text"
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
+                      placeholder="Título"
                       className="text-sm bg-transparent border-b border-transparent focus:border-secondary outline-none"
                     />
                     <button
@@ -304,6 +306,11 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
                   </form>
                 ) : (
                   <>
+                    {newTitle ? (<p className="text-xl font-bold text-secondary ml-[28px] md:ml-0 opacity-0 animate-fade-in delay-300">
+                      {newTitle}
+                    </p>) : (<p className="text-xl font-bold text-secondary ml-[28px] md:ml-0 opacity-0 animate-fade-in delay-300">
+                      Título
+                    </p>)}
                     <p className="text-xl font-bold text-secondary ml-[28px] md:ml-0 opacity-0 animate-fade-in delay-300">
                       {newTitle}
                     </p>
@@ -324,6 +331,7 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
                     <input
                       type="text"
                       value={newDescription}
+                      placeholder="Descripción"
                       onChange={(e) => setNewDescription(e.target.value)}
                       className="text-sm bg-transparent min-w-30 w-full border-b border-transparent focus:border-secondary outline-none flex-1"
                     />
@@ -344,10 +352,12 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
                     </div>
                   </form>
                 ) : (
-                  <>
-                    <p className="text-l ml-[28px] md:ml-0 text-center md:text-left text-black opacity-0 animate-fade-in delay-300">
-                      {newDescription}
-                    </p>
+                  <>{newDescription ? (<p className="text-l ml-[28px] md:ml-0 text-center md:text-left text-black opacity-0 animate-fade-in delay-300">
+                    {newDescription}
+                  </p>) : (<p className="text-l ml-[28px] md:ml-0 text-center md:text-left text-black opacity-0 animate-fade-in delay-300">
+                    Descripción
+                  </p>)}
+
                     {computedCanEdit && (
                       <button
                         onClick={() => setIsEditingDescription(true)}
