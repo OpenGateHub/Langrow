@@ -412,28 +412,31 @@ export type Database = {
           created_at: string
           expires_at: string | null
           id: number
+          provider: string | null
+          refresh_token: string | null
           scope: string | null
+          token: string | null
           userId: number | null
-          zoom_refresh_token: string | null
-          zoom_token: string | null
         }
         Insert: {
           created_at?: string
           expires_at?: string | null
           id?: number
+          provider?: string | null
+          refresh_token?: string | null
           scope?: string | null
+          token?: string | null
           userId?: number | null
-          zoom_refresh_token?: string | null
-          zoom_token?: string | null
         }
         Update: {
           created_at?: string
           expires_at?: string | null
           id?: number
+          provider?: string | null
+          refresh_token?: string | null
           scope?: string | null
+          token?: string | null
           userId?: number | null
-          zoom_refresh_token?: string | null
-          zoom_token?: string | null
         }
         Relationships: [
           {
