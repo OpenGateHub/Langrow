@@ -5,8 +5,7 @@ import { supabaseClient } from '@/app/api/supabaseClient';
 import { SUPABASE_TABLES } from '@/app/config';
 
 // --- Tipos para la Integración de Usuario ---
-// Ajusta esta interfaz para que coincida con la estructura de cómo guardas
-// los tokens de Google en tu base de datos para cada usuario.
+
 export interface UserIntegrationData {
   id?: number; // ID opcional si tu tabla tiene un campo 'id'
   userId: number;
@@ -84,7 +83,6 @@ async function getUserIntegration(userId: number): Promise<UserIntegrationData |
 };
 
 /**
- * **[DEBES IMPLEMENTAR ESTA FUNCIÓN CON TU ORM]**
  * Guarda o actualiza los datos de integración de Google Calendar para un usuario.
  * Esto es para almacenar el accessToken, refreshToken y expiresAt.
  * @param {number} userId - El ID del usuario.
