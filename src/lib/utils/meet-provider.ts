@@ -3,8 +3,10 @@ import { supabaseClient } from "@/app/api/supabaseClient";
 import { UserIntegrationData } from "@/interfaces/UserIntegration";
 
 /**
- * **Funciones de interacción con Supabase (Integración del ORM)**
- * Estas funciones se mueven aquí o se importan desde un archivo dedicado si ya las tienes.
+ * Funcion para obtener la integración de un usuario desde Supabase. 
+ * Permite recuperar los datos de integración de un usuario específico,
+ * incluyendo el token de acceso, el token de actualización, la fecha de expiración y el alcance.
+ * @param userId - ID del usuario para el cual se desea obtener la integración.
  */
 export async function getUserIntegration(
   userId: number
