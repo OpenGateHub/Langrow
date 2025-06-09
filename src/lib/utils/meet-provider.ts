@@ -13,18 +13,15 @@ export async function getUserIntegration(
     .from(SUPABASE_TABLES.PROFILES_SECRETS)
     .select("id, userId, provider, token, refresh_token, expires_at, scope") // Seleccionar campos específicos
     .eq("userId", userId)
-    .eq("provider", "GOOGLE_CALENDAR")
     .single();
 
   if (error && error.code !== "PGRST116") {
     // PGRST116 es 'no rows found'
     console.error(
-      `Error al obtener la integración de Google Calendar para el usuario ${userId}:`,
+      `Error al obtener la integración para el usuario ${userId}:`,
       error.message
     );
-    throw new Error(
-      `No se pudo obtener la integración de Google Calendar: ${error.message}`
-    );
+    throw new Error(`No se pudo obtener la integración  ${error.message}`);
   }
 
   if (!data) {
@@ -66,7 +63,7 @@ export async function saveUserIntegration(
 
   if (error) {
     console.error(
-      `Error al guardar/actualizar la integración de Google Calendar para el usuario ${userId}:`,
+      `Error al guardar/actualizar la integración ${data.provider} para el usuario ${userId}:`,
       error.message
     );
     throw new Error(
