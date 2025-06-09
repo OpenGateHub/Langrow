@@ -13,6 +13,11 @@ export interface MentoringSession {
   cost: string
   status: string
   confirmed: boolean
+  professorName?: string
+  professorReview?: string
+  professorRate?: number
+  studentReview?: string
+  studentRate?: number
 }
 
 type SlotStatus = 'none' | 'reserved' | 'available'
@@ -41,7 +46,7 @@ export function useGetMentoring(params: GetMentoringParams) {
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const fetchSessions = async () => {
     const query = new URLSearchParams()
     if (params.id)        query.set('id', params.id.toString())
     query.set('userId',   params.userId)
@@ -55,22 +60,24 @@ export function useGetMentoring(params: GetMentoringParams) {
     setLoading(true)
     setError(null)
 
-    fetch(url)
-      .then(async res => {
-        const json = await res.json()
-        if (!res.ok) throw new Error(json.message || 'Error fetching mentoring')
-        return json as FetchResponse<MentoringSession[]>
-      })
-      .then(body => {
-        setSessions(body.data)
-        setCount(body.count)
-      })
-      .catch(err => {
-        setError(err.message)
-        setSessions([])
-        setCount(0)
-      })
-      .finally(() => setLoading(false))
+    try {
+      const res = await fetch(url)
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.message || 'Error fetching mentoring')
+      const body = json as FetchResponse<MentoringSession[]>
+      setSessions(body.data)
+      setCount(body.count)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido')
+      setSessions([])
+      setCount(0)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchSessions()
   }, [params.id, params.userId, params.status, params.dateFrom, params.dateTo, params.page])
 
   /**
@@ -87,7 +94,14 @@ export function useGetMentoring(params: GetMentoringParams) {
     return map
   }, [sessions])
 
-  return { sessions, count, loading, error, reservedSlots }
+  return { 
+    sessions, 
+    count, 
+    loading, 
+    error, 
+    reservedSlots,
+    refetch: fetchSessions 
+  }
 }
 
 /**

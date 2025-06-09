@@ -154,6 +154,44 @@ export type Database = {
         }
         Relationships: []
       }
+      MentorshipUserScheduleConfiguration: {
+        Row: {
+          category: number | null
+          configuration: Json | null
+          created_at: string
+          id: number
+          isActive: boolean | null
+          updated_at: string | null
+          userId: number | null
+        }
+        Insert: {
+          category?: number | null
+          configuration?: Json | null
+          created_at?: string
+          id?: number
+          isActive?: boolean | null
+          updated_at?: string | null
+          userId?: number | null
+        }
+        Update: {
+          category?: number | null
+          configuration?: Json | null
+          created_at?: string
+          id?: number
+          isActive?: boolean | null
+          updated_at?: string | null
+          userId?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "MentorshipUserScheduleConfiguration_userId_fkey"
+            columns: ["userId"]
+            isOneToOne: false
+            referencedRelation: "UserProfile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Notifications: {
         Row: {
           createdAt: string
