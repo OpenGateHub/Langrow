@@ -10,7 +10,7 @@ import BlockUi from "@/app/components/BlockUi";
 export default function LoginPage() {
   const router = useRouter();
   const clerk = useClerk();
-  const { isSignedIn, isLoaded: userLoaded } = useUser();
+  const { isSignedIn, isLoaded: userLoaded, user } = useUser();
   const { signIn, isLoaded: signInLoaded } = useSignIn();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -19,16 +19,14 @@ export default function LoginPage() {
   // Redirige cuando Clerk ya cargó y el usuario está autenticado
   useEffect(() => {
     if (userLoaded && isSignedIn) {
-      window.location.replace("/home");
+      // Si el usuario no tiene rol, redirigir a completar perfil
+      if (!user?.publicMetadata?.role) {
+        router.push("/auth/complete-profile");
+      } else {
+        router.push("/home");
+      }
     }
-  }, [userLoaded, isSignedIn]);
-
-  useEffect(() => {
-    if (clerk?.session) {
-    
-      router.push("/home");
-    }
-  }, [clerk?.session]);
+  }, [userLoaded, isSignedIn, user, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -47,8 +45,13 @@ export default function LoginPage() {
       if (result.status === "complete") {
         // Activa la sesión en el cliente usando useClerk
         await clerk.setActive({ session: result.createdSessionId });
-        // Redirige y forzamos recarga completa
-        window.location.replace("/home");
+        // Redirige según si tiene rol o no
+        const user = clerk.user;
+        if (!user?.publicMetadata?.role) {
+          router.push("/auth/complete-profile");
+        } else {
+          router.push("/home");
+        }
       } else {
         console.log(result);
       }
@@ -81,7 +84,7 @@ export default function LoginPage() {
 
         {/* Heading */}
         <h2 className="text-2xl font-semibold mb-6 text-center">
-          ¡Bienvenido de vuelta!
+          ¡Bienvenido a Langrow!
         </h2>
 
         {/* Form */}

@@ -176,10 +176,11 @@ export default function HomePage() {
     window.location.href = `https://zoom.us/oauth/authorize?${params.toString()}`;
   };
 
-  if (profile && !profile.isZoomEnabled) {
-    handleZoomRedirect();
-    return <p>Redirigiendo a Zoom...</p>;
-  }
+  // Comentado temporalmente - la integración con Zoom no debería ser obligatoria
+  // if (profile && !profile.isZoomEnabled) {
+  //   handleZoomRedirect();
+  //   return <p>Redirigiendo a Zoom...</p>;
+  // }
 
   return (
     <HomeTemplate {...(userRole === "org:profesor" ? tutorProps : studentProps)} />
