@@ -32,3 +32,8 @@ export enum SUPABASE_FUNCTIONS {
     GET_STUDENT_PROFILE_ID = "get_user_profile_by_student_id",
     PROFESSOR_REVIEWS = "get_professor_reviews",
 }
+
+export enum ACCEPTED_PROVIDERS {
+    GOOGLE = "GOOGLE_CALENDAR",
+    ZOOM = "ZOOM",
+};

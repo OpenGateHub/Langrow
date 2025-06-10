@@ -12,7 +12,8 @@ import {
 } from "./classRoom";
 import {
     getStudentProfileByUserId,
-    getProfileByUserId 
+    getProfileByUserId ,
+    getStudentProfileById
 } from "../profile/profile";
 
 const createMentoringSchema = zod.object({
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
         }
         const { data } = validation;
         const studentProfile = await getStudentProfileByUserId(data.studentId);
+        console.log("Student Profile: ", studentProfile);
         if (!studentProfile) {
             return NextResponse.json(
                 { result: false, message: "Perfil de estudiante no encontrado" },

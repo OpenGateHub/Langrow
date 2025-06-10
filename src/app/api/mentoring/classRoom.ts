@@ -3,6 +3,12 @@ import { SUPABASE_TABLES } from "@/app/config";
 import { GetMentoringFilter } from "./route";
 import { getStudentProfileByUserId } from "../profile/profile";
 import { ClassRoomStatus } from "@/types/classRoom";
+import { getUserProvider } from "@/lib/providers";
+import {
+  getStudentProfileById,
+  getEmailbyUserProfileId
+} from "../profile/profile";
+import { MeetingEventDetails } from "@/interfaces/MeetingProvider";
 
 export interface CreateClassRoomParams {
   studentId: number;
@@ -92,6 +98,8 @@ export const createClassRoom = async (
     throw new Error(`Formato de tiempo inválido: ${params.time}, expected : 'HH:mm - HH:mm'`);
   }
 
+  console.log("params", params);
+
   const [startTime, endTime] = params.time.split(" - ");
   const beginsAt = mergeDateTime(params.date, startTime);
   const endsAt = mergeDateTime(params.date, endTime);
@@ -105,6 +113,34 @@ export const createClassRoom = async (
     if (isNaN(duration)) {
       console.error(`Duración inválida ${params.duration}, expected: number`);
       throw new Error(`Duración inválida ${params.duration}, expected: number`);
+    }
+    const studentUserProfile = await getStudentProfileById(params.studentId);
+    const proffesorEmail = await getEmailbyUserProfileId(params.professorId);
+    if (!studentUserProfile || !proffesorEmail) {
+      console.error("Perfil de estudiante o email del profesor no encontrado.");
+      throw new Error("Perfil de estudiante o email del profesor no encontrado.");
+    }
+    console.log("studentUserProfile", studentUserProfile);
+    console.log("proffesorEmail", proffesorEmail);
+
+    const provider = await getUserProvider(studentUserProfile.id);
+    if (!provider) {
+      console.error("Proveedor de usuario no encontrado.");
+      throw new Error("Proveedor de usuario no encontrado.");
+    }
+
+    const details: MeetingEventDetails = {
+      summary: "Langrow Class",
+      description: params.requestDescription,
+      startDateTime: beginsAt,
+      endDateTime: endsAt,
+      timeZone: "GMT-3", // Asegúrate de que el proveedor soporte este timezone
+      attendees: [proffesorEmail, studentUserProfile.email],
+    }
+
+    const meeting = await provider.createMeeting(details);
+    if (!meeting || !meeting.joinUrl) {
+      console.error("Error al crear la reunión con el proveedor.");
     }
 
     const { data, error } = await supabaseClient
@@ -120,6 +156,7 @@ export const createClassRoom = async (
         beginsAt,
         endsAt,
         confirmed: false,
+        classRoomUrl: meeting.joinUrl, // URL de la reunión creada
       })
       .select();
 
