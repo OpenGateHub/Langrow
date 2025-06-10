@@ -3,9 +3,6 @@ import React from "react";
 import HomeTemplate, { HomeTemplateProps } from "../components/homePage/HomePage";
 import { useProfileContext } from "@/context/ProfileContext";
 
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-const GOOGLE_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
-
 export default function HomePage() {
   const { role, clerkUser, profile, loading, error } = useProfileContext();
 
@@ -172,17 +169,18 @@ export default function HomePage() {
   const handleZoomRedirect = () => {
     const params = new URLSearchParams({
       response_type: 'code',
-      client_id: process.env.NEXT_ZOOM_CLIENT_ID!,
-      redirect_uri: process.env.NEXT_ZOOM_REDIRECT_URI!,
+      client_id: process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID!,
+      redirect_uri: process.env.NEXT_PUBLIC_ZOOM_REDIRECT_URI!,
     });
 
     window.location.href = `https://zoom.us/oauth/authorize?${params.toString()}`;
   };
 
-  if (profile && !profile.isZoomEnabled) {
-    handleZoomRedirect();
-    return <p>Redirigiendo a Zoom...</p>;
-  }
+  // Comentado temporalmente - la integración con Zoom no debería ser obligatoria
+  // if (profile && !profile.isZoomEnabled) {
+  //   handleZoomRedirect();
+  //   return <p>Redirigiendo a Zoom...</p>;
+  // }
 
   return (
     <HomeTemplate {...(userRole === "org:profesor" ? tutorProps : studentProps)} />

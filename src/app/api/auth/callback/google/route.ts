@@ -48,37 +48,43 @@ export async function GET(req: NextRequest) {
         // Si el usuario ya había autorizado tu app antes y no le pediste prompt='consent',
         // o si ya tienes un refresh token almacenado, no se enviará uno nuevo.
         // Maneja este caso si esperas un refresh_token y no lo recibes.
-        // Podrías buscar si ya existe un refresh token para este userId en tu DB.
         console.warn(`No se recibió un refresh token para el userId: ${userId}. Posiblemente ya existía una autorización previa.`);
     }
 
     const { access_token, refresh_token, expiry_date, scope } = tokens;
+    
+    // Guardar la integración usando la estructura correcta para Google Calendar
     const { data, error } = await supabaseClient
         .from(SUPABASE_TABLES.PROFILES_SECRETS)
         .upsert({
             userId: profile.id,
             token: access_token,
             refresh_token: refresh_token || undefined, // Guarda el refresh token si existe,
-            expires_at: new Date(Date.now() + (expiry_date! - Date.now())).toISOString(), // Convert Date to ISO string
-            provider: 'GOOGLE_CALENDAR',
+            expires_at: expiry_date ? new Date(expiry_date).toISOString() : null, // Convert to ISO string
+            provider: 'GOOGLE_CALENDAR', // Usar el nombre correcto del proveedor
             scope,
         }
     );
     
     if (error) {
+        console.error('Error al guardar la integración de Google:', error);
         throw error;
     }
 
+    // Actualizar el perfil para indicar que Google Calendar está habilitado
     const { data: updatedProfile, error: profileError } = await supabaseClient
         .from(SUPABASE_TABLES.PROFILES)
-        .update({ isZoomEnabled: true })
+        .update({ isZoomEnabled: true }) // Mantenemos este campo por compatibilidad, pero representa "integración de reuniones habilitada"
         .eq('id', profile.id)
         .select()
         .single();
+        
     if (profileError) {
         console.error(`Error al actualizar el perfil del usuario: ${profileError.message}`);
         return NextResponse.json({ message: `Error al actualizar el perfil del usuario: ${profileError.message}` }, { status: 500 });
     }
+    
+    console.log('Integración con Google Calendar completada exitosamente para userId:', userId);
     return NextResponse.redirect(new URL('/home', req.url));
   } catch (error: any) {
     console.error('Error al intercambiar el código por tokens de Google:', error.message);
