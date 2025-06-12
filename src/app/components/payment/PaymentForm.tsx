@@ -19,6 +19,16 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
       setProcessing(true);
       setError(null);
 
+      // Imprimir todos los datos recibidos para depuración
+      console.log('Datos recibidos:', {
+        clases,
+        precioClase,
+        total,
+        alumnoId,
+        profesorId,
+        purchaseId
+      });
+
       // Validar datos antes de enviar
       if (!clases || !precioClase || !total || !alumnoId || !profesorId || !purchaseId) {
         throw new Error("Faltan datos requeridos para procesar el pago. Por favor, recarga la página e intenta nuevamente.");
@@ -42,6 +52,11 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
 
       console.log('Enviando datos de pago:', paymentData);
 
+      // Asegurarse de que los valores numéricos sean correctos
+      if (isNaN(precioClase) || precioClase <= 0 || isNaN(clases) || clases <= 0) {
+        throw new Error(`Error en los datos: precio por clase (${precioClase}) o cantidad (${clases}) inválidos.`);
+      }
+
       const response = await fetch("/api/create-preference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -59,7 +74,7 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
         if (errorData.error) {
           errorMsg = errorData.error;
         } else if (errorData.details) {
-          errorMsg = errorData.details;
+          errorMsg = `${errorData.error || 'Error de datos'}: ${errorData.details}`;
         } else {
           errorMsg = `Error del servidor (${response.status}): No se pudo crear la preferencia de pago. Intente nuevamente.`;
         }
