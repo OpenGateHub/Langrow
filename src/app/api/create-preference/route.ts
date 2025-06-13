@@ -7,9 +7,9 @@ const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
 });
 
-// URLs hardcodeadas para pruebas
-const SUCCESS_URL = 'https://langrowdev.loca.lt/payment/success';
-const FAILURE_URL = 'https://langrowdev.loca.lt/payment/failure';
+// URLs para desarrollo local
+const SUCCESS_URL = 'https://langrow-opengatehubs-projects.vercel.app/payment/success';
+const FAILURE_URL = 'https://langrow-opengatehubs-projects.vercel.app/payment/failure';
 
 export async function POST(request: Request) {
   try {
@@ -77,7 +77,10 @@ export async function POST(request: Request) {
           { id: "ticket" }
         ],
         installments: 1
-      }
+      },
+      expires: true,
+      expiration_date_from: new Date().toISOString(),
+      expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas
     };
 
     console.log('Preference data completa:', JSON.stringify(preferenceData, null, 2));

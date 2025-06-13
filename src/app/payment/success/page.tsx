@@ -72,7 +72,7 @@ export default function PaymentSuccessPage() {
         
         if (classResponse.ok) {
           const classResult = await classResponse.json();
-          setClassId(classResult.data?.id);
+          setClassId(classResult.data?.id || null);
           console.log('Clase creada con éxito:', classResult);
         } else {
           console.error('Error al crear la clase');
@@ -105,8 +105,8 @@ export default function PaymentSuccessPage() {
           setCountdown((prev) => {
             if (prev <= 1) {
               clearInterval(timer);
-              if (classResult?.data?.id) {
-                router.push(`/class/${classResult.data.id}`);
+              if (classId) {
+                router.push(`/class/${classId}`);
               } else {
                 router.push('/mis-clases');
               }

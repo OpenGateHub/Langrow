@@ -19,16 +19,6 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
       setProcessing(true);
       setError(null);
 
-      // Imprimir todos los datos recibidos para depuración
-      console.log('Datos recibidos:', {
-        clases,
-        precioClase,
-        total,
-        alumnoId,
-        profesorId,
-        purchaseId
-      });
-
       // Validar datos antes de enviar
       if (!clases || !precioClase || !total || !alumnoId || !profesorId || !purchaseId) {
         throw new Error("Faltan datos requeridos para procesar el pago. Por favor, recarga la página e intenta nuevamente.");
@@ -50,8 +40,6 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
         },
       };
 
-      console.log('Enviando datos de pago:', paymentData);
-
       // Asegurarse de que los valores numéricos sean correctos
       if (isNaN(precioClase) || precioClase <= 0 || isNaN(clases) || clases <= 0) {
         throw new Error(`Error en los datos: precio por clase (${precioClase}) o cantidad (${clases}) inválidos.`);
@@ -63,11 +51,8 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
         body: JSON.stringify(paymentData),
       });
 
-      console.log('Response status:', response.status);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error response:', errorData);
         
         // Mostrar el error específico del servidor
         let errorMsg = 'Error al procesar el pago';
@@ -83,7 +68,6 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
       }
 
       const preference = await response.json();
-      console.log('Preference response:', preference);
 
       if (!preference.init_point) {
         throw new Error("No se recibió la URL de pago. Por favor, intente nuevamente o contacte al soporte.");
@@ -92,8 +76,6 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
       // Redirige al checkout de MercadoPago
       window.location.href = preference.init_point;
     } catch (err) {
-      console.error('Error en handlePayment:', err);
-      
       let errorMessage = "Error desconocido al procesar el pago. Por favor, intente nuevamente.";
       if (err instanceof Error) {
         errorMessage = err.message;
@@ -112,22 +94,7 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
       </h1>
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-          <p className="text-red-700 font-medium">❌ Error al procesar el pago</p>
-          <p className="text-red-600 text-sm mt-2">{error}</p>
-          <div className="mt-3 flex gap-2">
-            <button 
-              onClick={() => setError(null)}
-              className="text-red-500 text-xs underline hover:text-red-700"
-            >
-              Cerrar
-            </button>
-            <button 
-              onClick={handlePayment}
-              className="text-blue-500 text-xs underline hover:text-blue-700"
-            >
-              Reintentar
-            </button>
-          </div>
+          <p className="text-red-600 text-sm">{error}</p>
         </div>
       )}
       <div className="mb-8">
@@ -150,30 +117,22 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
         </div>
       </div>
       <button
-        className="w-full bg-orange hover:bg-orange/90 text-white font-bold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+        className="w-full bg-orange hover:bg-orange/90 text-white font-bold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
         onClick={handlePayment}
         disabled={processing}
       >
         {processing ? (
-          <span className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-            Procesando pago...
-          </span>
+          <>
+            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+            <span>Procesando pago...</span>
+          </>
         ) : (
-          "💳 Pagar con MercadoPago"
+          <>
+            <span>Pagar ahora</span>
+            <span className="text-sm">${total.toLocaleString("es-AR")}</span>
+          </>
         )}
       </button>
-      
-      {/* Debug info en desarrollo */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-4 p-3 bg-gray-100 rounded text-xs">
-          <p><strong>Info de debug:</strong></p>
-          <p>Clases: {clases}, Precio: ${precioClase.toLocaleString()}, Total: ${total.toLocaleString()}</p>
-          <p>AlumnoId: {alumnoId}</p>
-          <p>ProfesorId: {profesorId}</p>
-          <p>PurchaseId: {purchaseId}</p>
-        </div>
-      )}
     </div>
   );
 };
