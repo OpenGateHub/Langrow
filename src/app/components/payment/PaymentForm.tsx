@@ -18,36 +18,70 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
     try {
       setProcessing(true);
       setError(null);
+
+      // Validar datos antes de enviar
+      if (!clases || !precioClase || !total || !alumnoId || !profesorId || !purchaseId) {
+        throw new Error("Faltan datos requeridos para procesar el pago. Por favor, recarga la página e intenta nuevamente.");
+      }
+
+      const paymentData = {
+        items: [
+          {
+            title: "Clase de inglés",
+            quantity: clases,
+            unit_price: precioClase,
+          },
+        ],
+        external_reference: `reserva-${purchaseId}-${alumnoId}`,
+        metadata: {
+          alumnoId: alumnoId,
+          profesorId: profesorId,
+          purchaseId: purchaseId,
+        },
+      };
+
+      // Asegurarse de que los valores numéricos sean correctos
+      if (isNaN(precioClase) || precioClase <= 0 || isNaN(clases) || clases <= 0) {
+        throw new Error(`Error en los datos: precio por clase (${precioClase}) o cantidad (${clases}) inválidos.`);
+      }
+
       const response = await fetch("/api/create-preference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: [
-            {
-              title: "Clase de inglés",
-              quantity: clases,
-              unit_price: precioClase,
-            },
-          ],
-          external_reference: `reserva-${purchaseId}-${alumnoId}`,
-          metadata: {
-            alumnoId: alumnoId,
-            profesorId: profesorId,
-            purchaseId: purchaseId,
-          },
-        }),
+        body: JSON.stringify(paymentData),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create payment preference");
+        const errorData = await response.json();
+        
+        // Mostrar el error específico del servidor
+        let errorMsg = 'Error al procesar el pago';
+        if (errorData.error) {
+          errorMsg = errorData.error;
+        } else if (errorData.details) {
+          errorMsg = `${errorData.error || 'Error de datos'}: ${errorData.details}`;
+        } else {
+          errorMsg = `Error del servidor (${response.status}): No se pudo crear la preferencia de pago. Intente nuevamente.`;
+        }
+        
+        throw new Error(errorMsg);
       }
+
       const preference = await response.json();
+
+      if (!preference.init_point) {
+        throw new Error("No se recibió la URL de pago. Por favor, intente nuevamente o contacte al soporte.");
+      }
+
       // Redirige al checkout de MercadoPago
       window.location.href = preference.init_point;
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to process payment"
-      );
+      let errorMessage = "Error desconocido al procesar el pago. Por favor, intente nuevamente.";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setProcessing(false);
     }
@@ -60,7 +94,7 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
       </h1>
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-          <p className="text-red-700">{error}</p>
+          <p className="text-red-600 text-sm">{error}</p>
         </div>
       )}
       <div className="mb-8">
@@ -83,17 +117,20 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
         </div>
       </div>
       <button
-        className="w-full bg-orange hover:bg-orange/90 text-white font-bold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+        className="w-full bg-orange hover:bg-orange/90 text-white font-bold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
         onClick={handlePayment}
         disabled={processing}
       >
         {processing ? (
-          <span className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-            Procesando...
-          </span>
+          <>
+            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+            <span>Procesando pago...</span>
+          </>
         ) : (
-          "Pagar"
+          <>
+            <span>Pagar ahora</span>
+            <span className="text-sm">${total.toLocaleString("es-AR")}</span>
+          </>
         )}
       </button>
     </div>
