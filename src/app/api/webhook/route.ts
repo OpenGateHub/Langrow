@@ -72,26 +72,29 @@ export async function POST(request: Request) {
     const purchaseId = metadata.purchaseId || '';
 
     if (!alumnoId || !profesorId || !purchaseId) {
+      console.error('Faltan datos en metadata para crear la clase', { alumnoId, profesorId, purchaseId, metadata });
       throw new Error('Faltan datos en metadata para crear la clase');
     }
 
     // Obtener el perfil del alumno
     const { data: studentProfile, error: studentError } = await supabaseClient
-      .from(SUPABASE_TABLES.USER_PROFILES)
+      .from(SUPABASE_TABLES.PROFILES)
       .select('*')
       .eq('userId', alumnoId)
       .single();
     if (studentError || !studentProfile) {
+      console.error('No se pudo obtener el perfil del alumno', { alumnoId, studentError });
       throw new Error('No se pudo obtener el perfil del alumno');
     }
 
     // Obtener el perfil del profesor
     const { data: professorProfile, error: professorError } = await supabaseClient
-      .from(SUPABASE_TABLES.USER_PROFILES)
+      .from(SUPABASE_TABLES.PROFILES)
       .select('*')
       .eq('userId', profesorId)
       .single();
     if (professorError || !professorProfile) {
+      console.error('No se pudo obtener el perfil del profesor', { profesorId, professorError });
       throw new Error('No se pudo obtener el perfil del profesor');
     }
 
@@ -103,18 +106,27 @@ export async function POST(request: Request) {
     const endHour = end.getHours().toString().padStart(2, '0') + ':' + end.getMinutes().toString().padStart(2, '0');
     const time = `${startHour} - ${endHour}`;
 
-    await createClassRoom({
-      studentId: studentProfile.id,
-      professorId: professorProfile.id,
-      category: 1, // Puedes ajustar esto si tienes categorías dinámicas
-      date,
-      time,
-      duration: '60',
-      cost: '1000',
-      title: 'Clase de Inglés',
-      requestDescription: 'Clase creada después de pago en MercadoPago',
-      status: 'CONFIRMED',
-    });
+    try {
+      const result = await createClassRoom({
+        studentId: studentProfile.id,
+        professorId: professorProfile.id,
+        category: 1, // Puedes ajustar esto si tienes categorías dinámicas
+        date,
+        time,
+        duration: '60',
+        cost: '1000',
+        title: 'Clase de Inglés',
+        requestDescription: 'Clase creada después de pago en MercadoPago',
+        status: 'CONFIRMED',
+      });
+      console.log('Resultado de createClassRoom:', result);
+      if (!result) {
+        throw new Error('No se pudo crear la clase (createClassRoom retornó false)');
+      }
+    } catch (err) {
+      console.error('Error al crear la clase con createClassRoom:', err);
+      throw err;
+    }
 
     return NextResponse.json({
       message: "Pago procesado y clase creada exitosamente",
@@ -122,6 +134,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error en webhook:", error);
-    return NextResponse.json({ error: "Error processing webhook" }, { status: 500 });
+    return NextResponse.json({ error: "Error processing webhook", details: error instanceof Error ? error.message : error }, { status: 500 });
   }
 }
