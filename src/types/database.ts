@@ -58,6 +58,7 @@ export type Database = {
           duration: number | null
           endsAt: string | null
           id: number
+          meetingExternalId: string | null
           professorRate: number | null
           professorReview: string | null
           requestDescription: string | null
@@ -77,6 +78,7 @@ export type Database = {
           duration?: number | null
           endsAt?: string | null
           id?: number
+          meetingExternalId?: string | null
           professorRate?: number | null
           professorReview?: string | null
           requestDescription?: string | null
@@ -96,6 +98,7 @@ export type Database = {
           duration?: number | null
           endsAt?: string | null
           id?: number
+          meetingExternalId?: string | null
           professorRate?: number | null
           professorReview?: string | null
           requestDescription?: string | null
@@ -442,7 +445,7 @@ export type Database = {
           {
             foreignKeyName: "UserProfileSecrets_userId_fkey"
             columns: ["userId"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "UserProfile"
             referencedColumns: ["id"]
           },
