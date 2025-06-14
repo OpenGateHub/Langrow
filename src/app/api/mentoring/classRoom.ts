@@ -31,10 +31,8 @@ export const getClassRoomByStudent = async (filter: GetMentoringFilter) => {
     }
     let query = supabaseClient.from(SUPABASE_TABLES.MENTORSHIP_VIEW).select().eq("studentId", student.id);
     if (filter.id) {
-        console.log("Filter by ID")
         query = query.eq('id', filter.id);
     } else {
-        console.log("Filter by status among others");
         
         if (filter.status) {
             query = query.eq('status', filter.status);
@@ -60,10 +58,8 @@ export const getClassRoomByStudent = async (filter: GetMentoringFilter) => {
 export const getClassRoomByProfessor = async (professorId: number, filter: GetMentoringFilter) => {
     let query = supabaseClient.from(SUPABASE_TABLES.MENTORSHIP_VIEW).select().eq("userId", professorId);
     if (filter.id) {
-        console.log("Filter by ID")
         query = query.eq('id', filter.id);
     } else {
-        console.log("Filter by status among others");
         
         if (filter.status) {
             query = query.eq('status', filter.status);
@@ -98,7 +94,6 @@ export const createClassRoom = async (
     throw new Error(`Formato de tiempo inválido: ${params.time}, expected : 'HH:mm - HH:mm'`);
   }
 
-  console.log("params", params);
 
   const [startTime, endTime] = params.time.split(" - ");
   const beginsAt = mergeDateTime(params.date, startTime);
@@ -120,8 +115,6 @@ export const createClassRoom = async (
       console.error("Perfil de estudiante o email del profesor no encontrado.");
       throw new Error("Perfil de estudiante o email del profesor no encontrado.");
     }
-    console.log("studentUserProfile", studentUserProfile);
-    console.log("proffesorEmail", proffesorEmail);
 
     const provider = await getUserProvider(studentUserProfile.id);
     if (!provider) {
@@ -157,6 +150,7 @@ export const createClassRoom = async (
         endsAt,
         confirmed: false,
         classRoomUrl: meeting.joinUrl, // URL de la reunión creada
+        meetingExternalId: meeting.id
       })
       .select();
 
