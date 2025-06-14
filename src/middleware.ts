@@ -35,7 +35,7 @@ export default clerkMiddleware(async (auth, req) => {
       return new Response('Unauthorized', { status: 401 });
     }
   }
-  
+
   // Si no es una ruta pública y no es una ruta de API, protegerla
   if (!isPublicRoute(req) && !req.nextUrl.pathname.startsWith('/api/')) {
     const authObj = await auth();

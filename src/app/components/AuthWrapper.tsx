@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 import { useProfileContext } from "@/context/ProfileContext";
+import LoadingScreen from './LoadingScreen';
 
 export default function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -94,14 +95,7 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
   }, [redirectionInProgress, initialCheckDone]);
 
   if (!isLoaded || (isSignedIn && profileLoading && !initialCheckDone)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Verificando tu sesión..." />;
   }
 
   return <>{children}</>;
