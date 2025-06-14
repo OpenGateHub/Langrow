@@ -1,15 +1,37 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { PaymentItem } from '@/types/payment';
+import {
+  getStudentProfileByUserId,
+  getStudentProfileById
+} from '../profile/profile';
+import { z as zod } from "zod";
 
 // Configurar MercadoPago
-const client = new MercadoPagoConfig({ 
+const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
 });
 
 // URLs para desarrollo local
-const SUCCESS_URL = 'https://langrow-opengatehubs-projects.vercel.app/payment/success';
-const FAILURE_URL = 'https://langrow-opengatehubs-projects.vercel.app/payment/failure';
+const SUCCESS_URL = process.env.PAYMENT_SUCCESS_URL ? process.env.PAYMENT_SUCCESS_URL : 'https://langrow.vercel.app/payment/success';
+const FAILURE_URL = process.env.PAYMENT_FAILURE_URL ? process.env.PAYMENT_FAILURE_URL : 'https://langrow.vercel.app/payment/failure';
+
+
+const createPaymentPreferenceSchema = zod.object({
+  items: zod.array(
+    zod.object({
+      title: zod.string().min(1, 'El título del producto es requerido'),
+      unit_price: zod.number().positive('El precio unitario debe ser un número positivo'),
+      quantity: zod.number().int().positive('La cantidad debe ser un número entero positivo'),
+    })
+  ),
+  external_reference: zod.string(),
+  metadata: zod.object({
+    alumnoId: zod.string(),
+    profesorId: zod.string(),
+    purchaseId: zod.string(),
+  }),
+});
 
 export async function POST(request: Request) {
   try {
@@ -25,16 +47,46 @@ export async function POST(request: Request) {
     const body = await request.json();
     console.log('Request body:', body);
 
+    const validatedData = createPaymentPreferenceSchema.safeParse(body);
+    if (!validatedData.success) {
+      return NextResponse.json(
+        { result: false, message: "Error en la validación", error: validatedData.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { data } = validatedData;
+    const { alumnoId, profesorId, purchaseId } = data.metadata;
+
+    const studentProfile = await getStudentProfileByUserId(alumnoId);
+    if (!studentProfile) {
+      console.error('Perfil de estudiante no encontrado:', alumnoId);
+      return NextResponse.json(
+        { error: 'Perfil de estudiante no encontrado' },
+        { status: 404 }
+      );
+    }
+
+    const studentUserProfile = await getStudentProfileById(studentProfile.id);
+    if (!studentUserProfile) { 
+      console.error('Perfil de usuario del estudiante no encontrado:', studentProfile.id);
+      return NextResponse.json(
+        { error: 'Perfil de usuario del estudiante no encontrado' },
+        { status: 404 }
+      );
+    }
+
+
     // Validar que items exista y no esté vacío
-    if (!body.items || !Array.isArray(body.items) || body.items.length === 0) {
-      console.error('Error: No se encontraron productos en el body:', body);
+    if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
+      console.error('Error: No se encontraron productos en el body:', data);
       return NextResponse.json(
         { error: 'Error de datos: No se encontraron productos para procesar el pago.' },
         { status: 400 }
       );
     }
 
-    const items: PaymentItem[] = body.items;
+    const items: PaymentItem[] = data.items;
 
     // Validar cada item
     for (const item of items) {
@@ -57,10 +109,10 @@ export async function POST(request: Request) {
         quantity: Number(item.quantity),
         description: `Reserva de ${item.quantity} clase(s) de inglés`,
       })),
+      // Obtener el perfil del alumno
       payer: {
-        name: "Alumno",
-        surname: "Langrow",
-        email: "alumno@test.com",
+        name: studentUserProfile.name,
+        email: studentUserProfile.email,
       },
       back_urls: {
         success: SUCCESS_URL,
@@ -70,7 +122,7 @@ export async function POST(request: Request) {
       auto_return: "approved",
       external_reference: body.external_reference || `reserva-${Date.now()}`,
       metadata: body.metadata || {},
-      notification_url: "https://langrow.vercel.app/api/webhook",
+      notification_url: process.env.MERCADO_PAGO_REDIRECT_WEBHOOK || "https://langrow.vercel.app/api/webhook",
       binary_mode: true,
       payment_methods: {
         excluded_payment_types: [
@@ -84,18 +136,18 @@ export async function POST(request: Request) {
     };
 
     console.log('Preference data completa:', JSON.stringify(preferenceData, null, 2));
-    
+
     console.log('Intentando crear preferencia con MercadoPago...');
     const response = await preference.create({ body: preferenceData });
     console.log('Respuesta de MercadoPago exitosa:', response);
-    
+
     return NextResponse.json({
       id: response.id,
       init_point: response.init_point,
     });
   } catch (mpError: any) {
     console.error('Error en la API de MercadoPago:', mpError);
-    
+
     // Intentar extraer detalles específicos del error de MercadoPago
     let mpErrorDetails = 'Error desconocido';
     if (mpError.response && mpError.response.data) {
@@ -104,10 +156,10 @@ export async function POST(request: Request) {
     } else if (mpError.message) {
       mpErrorDetails = mpError.message;
     }
-    
+
     return NextResponse.json(
-      { 
-        error: 'Error en la API de MercadoPago', 
+      {
+        error: 'Error en la API de MercadoPago',
         details: mpErrorDetails,
         timestamp: new Date().toISOString()
       },

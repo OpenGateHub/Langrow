@@ -5,23 +5,24 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/auth/login',
   '/auth/register',
+  '/api/auth/callback(.*)',
   '/auth/complete-profile',
   '/terms-of-service',
   '/privacy-policy',
   '/contact-us',
   '/api/webhook(.*)', // Webhooks generalmente no requieren autenticación de usuario
   '/api/health', // Ruta de salud si la tienes
+  
+  '/api/mentoring(.*)',
 ]);
 
 // Define las rutas de API que requieren autenticación
 const isProtectedApiRoute = createRouteMatcher([
   '/api/profile(.*)',
-  '/api/auth/callback(.*)',
   '/api/zoom-meetings(.*)',
   '/api/class(.*)',
   '/api/notification(.*)',
   '/api/payments(.*)',
-  '/api/mentoring(.*)',
   '/api/send-email(.*)',
   '/api/create-preference(.*)',
   '/api/administrator(.*)',
