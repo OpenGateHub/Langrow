@@ -3,6 +3,9 @@ import React from "react";
 import HomeTemplate, { HomeTemplateProps } from "../components/homePage/HomePage";
 import { useProfileContext } from "@/context/ProfileContext";
 
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+const GOOGLE_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
+
 export default function HomePage() {
   const { role, clerkUser, profile, loading, error } = useProfileContext();
 
@@ -169,18 +172,41 @@ export default function HomePage() {
   const handleZoomRedirect = () => {
     const params = new URLSearchParams({
       response_type: 'code',
-      client_id: process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID!,
-      redirect_uri: process.env.NEXT_PUBLIC_ZOOM_REDIRECT_URI!,
+      client_id: process.env.NEXT_ZOOM_CLIENT_ID!,
+      redirect_uri: process.env.NEXT_ZOOM_REDIRECT_URI!,
     });
 
     window.location.href = `https://zoom.us/oauth/authorize?${params.toString()}`;
   };
 
-  // Comentado temporalmente - la integración con Zoom no debería ser obligatoria
-  // if (profile && !profile.isZoomEnabled) {
-  //   handleZoomRedirect();
-  //   return <p>Redirigiendo a Zoom...</p>;
-  // }
+  const handleGoogleRedirect = () => {
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: GOOGLE_CLIENT_ID!,
+      redirect_uri: GOOGLE_REDIRECT_URI!,
+      // Modifica esta línea para incluir el scope de Calendar
+      scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid',
+      access_type: 'offline', // Para obtener un refresh token
+      prompt: 'consent', // Para mostrar siempre la pantalla de consentimiento
+    });
+  
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  };
+  
+  // Renombrar el isZoomEnabled A algo mas generico para videollamadas 
+  if (profile && !profile.isZoomEnabled) {
+    if (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID != undefined) {
+      handleGoogleRedirect();
+    } else {
+      console.error("Google client ID is not defined in environment variables.");
+      console.error("Please set NEXT_GOOGLE_CLIENT_ID in your .env file.");
+      console.log({
+        id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        redirect: process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI,
+      });
+    }
+    return <p>Redirigiendo...</p>;
+  }
 
   return (
     <HomeTemplate {...(userRole === "org:profesor" ? tutorProps : studentProps)} />

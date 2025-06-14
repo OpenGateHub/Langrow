@@ -15,6 +15,8 @@ export async function GET(req: NextRequest) {
   const code = searchParams.get('code');
   const { userId } = await auth();
 
+  console.log('Código de autorización recibido:', code);
+
   if (!code || !userId) {
     return NextResponse.json({ message: 'Faltan el código de autorización o el ID de usuario.' }, { status: 500 });
   }
