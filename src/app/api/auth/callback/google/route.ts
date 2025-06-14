@@ -1,8 +1,8 @@
-import { auth, currentUser } from '@clerk/nextjs/server'
 import { SUPABASE_TABLES } from '@/app/config';
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis'; // Necesitarás instalar 'googleapis'
 import { supabaseClient } from '@/app/api/supabaseClient';
+import jwt from 'jsonwebtoken';
 import { getProfileByUserId } from '@/app/api/profile/profile';
 
 // Asegúrate de que estas variables de entorno estén configuradas en tu .env.local
@@ -13,9 +13,11 @@ const GOOGLE_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI; // Debe
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get('code');
-  const { userId } = await auth();
+  const state = searchParams.get('state'); // Este es el token JWT que contiene el userId
+  const payload = state ? jwt.verify(state, process.env.OAUTH_STATE_SECRET || '') : null;
+  const userId = payload?.userId; // Extraemos el userId del payload del JWT
 
-  console.log('Código de autorización recibido:', code);
+  console.log('Código de autorización recibido:', userId);
 
   if (!code || !userId) {
     return NextResponse.json({ message: 'Faltan el código de autorización o el ID de usuario.' }, { status: 500 });

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useProfileContext } from "@/context/ProfileContext";
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function ZoomCallbackPage() {
   const [result, setResult] = useState<null | { success: boolean; message: string }>({
@@ -44,13 +45,17 @@ export default function ZoomCallbackPage() {
     }
   }, [loading, error, profile]);
 
-  if (loading) return <p>Cargando perfil...</p>;
+  if (loading) return <LoadingScreen message="Conectando con Zoom..." />;
   if (error) return <p>Error cargando perfil: {error}</p>;
 
   return (
-    <div>
-      <h2>Resultado de autenticación con Zoom</h2>
-      <p>{result?.message}</p>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+        <h2 className="text-2xl font-semibold mb-4">Resultado de autenticación con Zoom</h2>
+        <p className={`text-lg ${result?.success ? 'text-green-600' : 'text-red-600'}`}>
+          {result?.message}
+        </p>
+      </div>
     </div>
   );
 }

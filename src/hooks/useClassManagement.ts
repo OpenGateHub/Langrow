@@ -105,7 +105,10 @@ export function useClassManagement(userId: string): UseClassManagementReturn {
           grouped["Necesita Atención"].push(c);
           break;
         case "CONFIRMED":
+          grouped.Revisadas.push(c);
+          break;
         default:
+          // Si no coincide con ningún estado, lo ponemos en Revisadas
           grouped.Revisadas.push(c);
       }
     });
