@@ -42,6 +42,9 @@ export async function getUserIntegration(
   } as UserIntegrationData;
 }
 
+// TODO:: la función saveUserIntegration debe ser capaz de actualizar los datos de integración de un usuario específico en Supabase,
+// incluyendo el token de acceso, el token de actualización, la fecha de expiración y el alcance.
+// si hay un conflicto, debe actualizar el registro existente en lugar de crear uno nuevo.
 export async function saveUserIntegration(
   userId: number,
   data: Partial<UserIntegrationData>

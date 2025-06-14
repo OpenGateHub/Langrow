@@ -141,6 +141,7 @@ const SolicitudClase: React.FC = () => {
     if (!valid) return;
 
     // Genera un id único para la clase
+    // TODO: Aquí podrías integrar una lógica más robusta para generar un ID único utilizando el id del usuario, fecha, etc.
     setpurchaseId(`clase-${Date.now()}`);
     setIsPaymentStep(true);
   };

@@ -1,10 +1,10 @@
 import { supabaseClient } from "@/app/api/supabaseClient";
 import { SUPABASE_TABLES } from "@/app/config";
 import { GetMentoringFilter } from "./route";
-import { getStudentProfileByUserId } from "../profile/profile";
 import { ClassRoomStatus } from "@/types/classRoom";
 import { getUserProvider } from "@/lib/providers";
 import {
+  getStudentProfileByUserId,
   getStudentProfileById,
   getEmailbyUserProfileId
 } from "../profile/profile";
