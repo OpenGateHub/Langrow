@@ -3,7 +3,6 @@ import React, { useEffect } from "react";
 import HomeTemplate, { HomeTemplateProps } from "../components/homePage/HomePage";
 import { useProfileContext } from "@/context/ProfileContext";
 import { useOauthToken } from "@/hooks/useOauthToken";
-import { set } from "date-fns";
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
 const GOOGLE_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI!;

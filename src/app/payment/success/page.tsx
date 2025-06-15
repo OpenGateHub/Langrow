@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { useCreateMentoring } from "@/hooks/useMentoring";
+import { useProfileContext } from "@/context/ProfileContext";
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
@@ -10,18 +12,28 @@ export default function PaymentSuccessPage() {
   const [countdown, setCountdown] = useState(5);
   const [isLoading, setIsLoading] = useState(true);
   const [classId, setClassId] = useState<string | null>(null);
+  const { create, loading: createLoading, error: createError } = useCreateMentoring();
+  const { clerkUser } = useProfileContext();
   
   const paymentId = searchParams.get('payment_id');
   const status = searchParams.get('status');
   const externalReference = searchParams.get('external_reference');
 
   useEffect(() => {
-    if (!paymentId || !externalReference) return;
+    if (!paymentId || !externalReference || !clerkUser?.id) {
+      console.error('Faltan datos requeridos:', { paymentId, externalReference, clerkUser });
+      setIsLoading(false);
+      return;
+    }
 
     // Extraer información del externalReference
     // Formato: 'reserva-{purchaseId}-{alumnoId}'
     const parts = externalReference.split('-');
-    if (parts.length < 3) return;
+    if (parts.length < 3) {
+      console.error('Formato de external_reference inválido:', externalReference);
+      setIsLoading(false);
+      return;
+    }
     
     const purchaseId = parts[1];
     const alumnoId = parts[2];
@@ -47,60 +59,45 @@ export default function PaymentSuccessPage() {
           setIsLoading(false);
           return;
         }
-        
-        // 2. Crear el enlace de Google Meet
-        const meetingLink = `https://meet.google.com/random-meeting-${Math.floor(Math.random() * 1000)}`;
-        
-        // 3. Crear la clase en la base de datos
+
+        // 2. Crear la clase usando el hook useCreateMentoring
         const classData = {
-          alumnoId: profileId,
-          profesorId: parseInt(parts[3] || '1'), // Usar el profesorId si está disponible, o default a 1
-          purchaseId: purchaseId,
-          paymentId: paymentId,
-          status: 'confirmed',
-          meetingLink: meetingLink,
-          meetingDate: new Date().toISOString(),
+          studentId: profileId.toString(), // Convertir a string para el hook
+          professorId: parseInt(parts[3] || '1'), // Usar el profesorId si está disponible, o default a 1
+          category: 1, // Categoría por defecto
+          date: new Date().toISOString().split('T')[0], // Fecha actual
+          time: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) + 
+                " - " + 
+                new Date(Date.now() + 60 * 60 * 1000).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }), // Hora actual + 1 hora
+          duration: "60", // Duración por defecto en minutos
+          cost: "0", // El costo ya fue pagado
+          title: `Clase reservada - ${purchaseId}`,
+          requestDescription: `Clase reservada mediante pago ${paymentId}`
         };
+
+        console.log('Creando clase con datos:', classData);
+        const result = await create(classData);
         
-        const classResponse = await fetch('/api/class', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(classData),
-        });
-        
-        if (classResponse.ok) {
-          const classResult = await classResponse.json();
-          setClassId(classResult.data?.id || null);
-          console.log('Clase creada con éxito:', classResult);
+        if (result && result.result) {
+          console.log('Clase creada con éxito:', result);
+          // La clase se creó exitosamente, pero necesitamos obtener su ID
+          // Hacemos una consulta para obtener la clase recién creada
+          const classResponse = await fetch(`/api/mentoring?userId=${clerkUser?.id}&status=REQUESTED`);
+          if (classResponse.ok) {
+            const classData = await classResponse.json();
+            if (classData.data && classData.data.length > 0) {
+              // Tomamos la clase más reciente
+              const latestClass = classData.data[0];
+              setClassId(latestClass.id.toString());
+            }
+          }
         } else {
-          console.error('Error al crear la clase');
-        }
-        
-        // 4. Crear notificación con la URL de la reunión
-        const notificationResponse = await fetch('/api/notification', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            profileId: profileId,
-            message: `¡Tu clase ha sido confirmada! Haz clic aquí para acceder al enlace de la reunión: ${meetingLink}`,
-            url: meetingLink,
-            isStaff: false
-          }),
-        });
-        
-        if (notificationResponse.ok) {
-          console.log('Notificación creada con éxito');
-        } else {
-          console.error('Error al crear la notificación');
+          console.error('Error al crear la clase:', createError);
         }
 
         setIsLoading(false);
         
-        // 5. Redirección automática a la página de la clase específica
+        // 3. Redirección automática a la página de la clase específica
         const timer = setInterval(() => {
           setCountdown((prev) => {
             if (prev <= 1) {
@@ -124,7 +121,7 @@ export default function PaymentSuccessPage() {
     }
     
     processSuccessfulPayment();
-  }, [paymentId, status, externalReference, router]);
+  }, [paymentId, status, externalReference, router, create, clerkUser?.id, classId]);
 
   return (
     <main className="min-h-screen flex items-center justify-center relative">
@@ -150,7 +147,7 @@ export default function PaymentSuccessPage() {
         </h2>
         
         <p className="text-gray-600 mb-6">
-          Tu pago ha sido procesado correctamente. Se ha creado tu clase con el enlace de la reunión.
+          Tu pago ha sido procesado correctamente. Se ha creado tu clase.
         </p>
 
         {paymentId && (
@@ -160,22 +157,30 @@ export default function PaymentSuccessPage() {
           </div>
         )}
 
+        {createError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-600 text-sm">{createError}</p>
+          </div>
+        )}
+
         <div className="space-y-3">
           <button
             onClick={() => classId ? router.push(`/class/${classId}`) : router.push('/mis-clases')}
             className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200"
+            disabled={isLoading || createLoading}
           >
-            Ver mi clase
+            {isLoading || createLoading ? 'Procesando...' : 'Ver mi clase'}
           </button>
           
           <button
             onClick={() => router.push('/mis-clases')}
             className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition duration-200"
+            disabled={isLoading || createLoading}
           >
             Ver todas mis clases
           </button>
 
-          {!isLoading && (
+          {!isLoading && !createLoading && (
             <p className="text-sm text-gray-500 mt-4">
               Redireccionando automáticamente en {countdown} segundos...
             </p>
