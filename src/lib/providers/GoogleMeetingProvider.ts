@@ -70,7 +70,7 @@ export class GoogleMeetingProvider extends MeetingProvider {
   public async refreshToken(): Promise<void> {
     try {
       const userIntegration: UserIntegrationData | null = await getUserIntegration(this.userId);
-
+      
       if (!userIntegration || !userIntegration.refreshToken) {
         throw new Error('Refresh token de Google no encontrado. El usuario debe volver a autenticar su cuenta de Google.');
       }
@@ -113,11 +113,11 @@ export class GoogleMeetingProvider extends MeetingProvider {
         description: details.description,
         start: {
           dateTime: details.startDateTime,
-          timeZone: details.timeZone || 'America/Bogota', // Zona horaria predeterminada
+          timeZone: details.timeZone || 'America/Argentina/Buenos_Aires', // Zona horaria predeterminada
         },
         end: {
           dateTime: details.endDateTime,
-          timeZone: details.timeZone || 'America/Bogota', // Zona horaria predeterminada
+          timeZone: details.timeZone || 'America/Argentina/Buenos_Aires', // Zona horaria predeterminada
         },
         attendees: details.attendees?.map(email => ({ email: email })),
         conferenceData: {
