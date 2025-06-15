@@ -20,8 +20,9 @@ export default function PaymentSuccessPage() {
   const externalReference = searchParams.get('external_reference');
 
   useEffect(() => {
+    console.log('[PaymentSuccess] useEffect triggered', { paymentId, status, externalReference, clerkUser });
     if (!paymentId || !externalReference || !clerkUser?.id) {
-      console.error('Faltan datos requeridos:', { paymentId, externalReference, clerkUser });
+      console.error('[PaymentSuccess] Faltan datos requeridos', { paymentId, externalReference, clerkUser });
       setIsLoading(false);
       return;
     }
@@ -30,7 +31,7 @@ export default function PaymentSuccessPage() {
     // Formato: 'reserva-{purchaseId}-{alumnoId}'
     const parts = externalReference.split('-');
     if (parts.length < 3) {
-      console.error('Formato de external_reference inválido:', externalReference);
+      console.error('[PaymentSuccess] Formato de external_reference inválido', externalReference);
       setIsLoading(false);
       return;
     }
@@ -40,13 +41,12 @@ export default function PaymentSuccessPage() {
     
     async function processSuccessfulPayment() {
       try {
-        // 1. Registrar el pago exitoso
-        console.log('Registrando pago exitoso:', { paymentId, status, purchaseId, alumnoId });
+        console.log('[PaymentSuccess] Registrando pago exitoso', { paymentId, status, purchaseId, alumnoId });
         
         // 1.5 Obtener el profileId desde el alumnoId (Clerk ID)
         const profileResponse = await fetch(`/api/profile/${alumnoId}`);
         if (!profileResponse.ok) {
-          console.error('Error al obtener el perfil del usuario');
+          console.error('[PaymentSuccess] Error al obtener el perfil del usuario');
           setIsLoading(false);
           return;
         }
@@ -55,7 +55,7 @@ export default function PaymentSuccessPage() {
         const profileId = profileData.data?.id;
         
         if (!profileId) {
-          console.error('No se pudo obtener el ID del perfil');
+          console.error('[PaymentSuccess] No se pudo obtener el ID del perfil');
           setIsLoading(false);
           return;
         }
@@ -75,11 +75,11 @@ export default function PaymentSuccessPage() {
           requestDescription: `Clase reservada mediante pago ${paymentId}`
         };
 
-        console.log('Creando clase con datos:', classData);
+        console.log('[PaymentSuccess] Creando clase con datos', classData);
         const result = await create(classData);
         
         if (result && result.result) {
-          console.log('Clase creada con éxito:', result);
+          console.log('[PaymentSuccess] Clase creada con éxito', result);
           // La clase se creó exitosamente, pero necesitamos obtener su ID
           // Hacemos una consulta para obtener la clase recién creada
           const classResponse = await fetch(`/api/mentoring?userId=${clerkUser?.id}&status=REQUESTED`);
@@ -89,10 +89,11 @@ export default function PaymentSuccessPage() {
               // Tomamos la clase más reciente
               const latestClass = classData.data[0];
               setClassId(latestClass.id.toString());
+              console.log('[PaymentSuccess] Clase encontrada y seteada', latestClass);
             }
           }
         } else {
-          console.error('Error al crear la clase:', createError);
+          console.error('[PaymentSuccess] Error al crear la clase', createError);
         }
 
         setIsLoading(false);
@@ -115,7 +116,7 @@ export default function PaymentSuccessPage() {
         
         return () => clearInterval(timer);
       } catch (error) {
-        console.error('Error procesando el pago exitoso:', error);
+        console.error('[PaymentSuccess] Error procesando el pago exitoso', error);
         setIsLoading(false);
       }
     }

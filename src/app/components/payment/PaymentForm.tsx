@@ -18,9 +18,11 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
     try {
       setProcessing(true);
       setError(null);
+      console.log('[PaymentForm] Iniciando pago', { clases, precioClase, total, alumnoId, profesorId, purchaseId });
 
       // Validar datos antes de enviar
       if (!clases || !precioClase || !total || !alumnoId || !profesorId || !purchaseId) {
+        console.error('[PaymentForm] Faltan datos requeridos');
         throw new Error("Faltan datos requeridos para procesar el pago. Por favor, recarga la página e intenta nuevamente.");
       }
 
@@ -40,8 +42,10 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
         },
       };
 
-      // Asegurarse de que los valores numéricos sean correctos
+      console.log('[PaymentForm] Enviando datos a /api/create-preference', paymentData);
+
       if (isNaN(precioClase) || precioClase <= 0 || isNaN(clases) || clases <= 0) {
+        console.error('[PaymentForm] Error en los datos: precio o cantidad inválidos', { precioClase, clases });
         throw new Error(`Error en los datos: precio por clase (${precioClase}) o cantidad (${clases}) inválidos.`);
       }
 
@@ -51,9 +55,11 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
         body: JSON.stringify(paymentData),
       });
 
+      console.log('[PaymentForm] Respuesta de /api/create-preference', response);
+
       if (!response.ok) {
         const errorData = await response.json();
-        
+        console.error('[PaymentForm] Error en respuesta de /api/create-preference', errorData);
         // Mostrar el error específico del servidor
         let errorMsg = 'Error al procesar el pago';
         if (errorData.error) {
@@ -63,13 +69,14 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
         } else {
           errorMsg = `Error del servidor (${response.status}): No se pudo crear la preferencia de pago. Intente nuevamente.`;
         }
-        
         throw new Error(errorMsg);
       }
 
       const preference = await response.json();
+      console.log('[PaymentForm] Preferencia recibida', preference);
 
       if (!preference.init_point) {
+        console.error('[PaymentForm] No se recibió la URL de pago');
         throw new Error("No se recibió la URL de pago. Por favor, intente nuevamente o contacte al soporte.");
       }
 
@@ -79,8 +86,8 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
       let errorMessage = "Error desconocido al procesar el pago. Por favor, intente nuevamente.";
       if (err instanceof Error) {
         errorMessage = err.message;
+        console.error('[PaymentForm] Error en handlePayment', err);
       }
-      
       setError(errorMessage);
     } finally {
       setProcessing(false);

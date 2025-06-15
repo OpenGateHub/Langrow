@@ -35,9 +35,9 @@ const createPaymentPreferenceSchema = zod.object({
 
 export async function POST(request: Request) {
   try {
-    // Verificar que tenemos el token de acceso
+    console.log('[API] POST /api/create-preference llamado');
     if (!process.env.MERCADO_PAGO_ACCESS_TOKEN) {
-      console.error('MERCADO_PAGO_ACCESS_TOKEN no está configurado');
+      console.error('[API] MERCADO_PAGO_ACCESS_TOKEN no está configurado');
       return NextResponse.json(
         { error: 'Error en la configuración del servidor' },
         { status: 500 }
@@ -45,10 +45,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    console.log('Request body:', body);
+    console.log('[API] Body recibido:', body);
 
     const validatedData = createPaymentPreferenceSchema.safeParse(body);
     if (!validatedData.success) {
+      console.error('[API] Error en la validación del body', validatedData.error.errors);
       return NextResponse.json(
         { result: false, message: "Error en la validación", error: validatedData.error.errors },
         { status: 400 }
@@ -57,10 +58,11 @@ export async function POST(request: Request) {
 
     const { data } = validatedData;
     const { alumnoId, profesorId, purchaseId } = data.metadata;
+    console.log('[API] Metadata:', { alumnoId, profesorId, purchaseId });
 
     const studentProfile = await getStudentProfileByUserId(alumnoId);
     if (!studentProfile) {
-      console.error('Perfil de estudiante no encontrado:', alumnoId);
+      console.error('[API] Perfil de estudiante no encontrado:', alumnoId);
       return NextResponse.json(
         { error: 'Perfil de estudiante no encontrado' },
         { status: 404 }
@@ -69,17 +71,15 @@ export async function POST(request: Request) {
 
     const studentUserProfile = await getStudentProfileById(studentProfile.id);
     if (!studentUserProfile) { 
-      console.error('Perfil de usuario del estudiante no encontrado:', studentProfile.id);
+      console.error('[API] Perfil de usuario del estudiante no encontrado:', studentProfile.id);
       return NextResponse.json(
         { error: 'Perfil de usuario del estudiante no encontrado' },
         { status: 404 }
       );
     }
 
-
-    // Validar que items exista y no esté vacío
     if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
-      console.error('Error: No se encontraron productos en el body:', data);
+      console.error('[API] No se encontraron productos en el body:', data);
       return NextResponse.json(
         { error: 'Error de datos: No se encontraron productos para procesar el pago.' },
         { status: 400 }
@@ -87,11 +87,9 @@ export async function POST(request: Request) {
     }
 
     const items: PaymentItem[] = data.items;
-
-    // Validar cada item
     for (const item of items) {
       if (!item.title || typeof item.unit_price !== 'number' || typeof item.quantity !== 'number' || isNaN(item.unit_price) || isNaN(item.quantity) || item.unit_price <= 0 || item.quantity <= 0) {
-        console.error('Datos de item inválidos:', item);
+        console.error('[API] Datos de item inválidos:', item);
         return NextResponse.json(
           { error: 'Error de datos: Información de productos inválida. Verifique el precio y cantidad.', details: JSON.stringify(item) },
           { status: 400 }
@@ -109,7 +107,6 @@ export async function POST(request: Request) {
         quantity: Number(item.quantity),
         description: `Reserva de ${item.quantity} clase(s) de inglés`,
       })),
-      // Obtener el perfil del alumno
       payer: {
         name: studentUserProfile.name,
         email: studentUserProfile.email,
@@ -132,31 +129,27 @@ export async function POST(request: Request) {
       },
       expires: true,
       expiration_date_from: new Date().toISOString(),
-      expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas
+      expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     };
 
-    console.log('Preference data completa:', JSON.stringify(preferenceData, null, 2));
-
-    console.log('Intentando crear preferencia con MercadoPago...');
+    console.log('[API] Preference data completa:', JSON.stringify(preferenceData, null, 2));
+    console.log('[API] Intentando crear preferencia con MercadoPago...');
     const response = await preference.create({ body: preferenceData });
-    console.log('Respuesta de MercadoPago exitosa:', response);
+    console.log('[API] Respuesta de MercadoPago exitosa:', response);
 
     return NextResponse.json({
       id: response.id,
       init_point: response.init_point,
     });
   } catch (mpError: any) {
-    console.error('Error en la API de MercadoPago:', mpError);
-
-    // Intentar extraer detalles específicos del error de MercadoPago
+    console.error('[API] Error en la API de MercadoPago:', mpError);
     let mpErrorDetails = 'Error desconocido';
     if (mpError.response && mpError.response.data) {
-      console.error('Detalles del error de MercadoPago:', mpError.response.data);
+      console.error('[API] Detalles del error de MercadoPago:', mpError.response.data);
       mpErrorDetails = JSON.stringify(mpError.response.data);
     } else if (mpError.message) {
       mpErrorDetails = mpError.message;
     }
-
     return NextResponse.json(
       {
         error: 'Error en la API de MercadoPago',

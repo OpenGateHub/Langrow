@@ -6,13 +6,14 @@ import { createClassRoom } from '@/app/api/mentoring/classRoom';
 
 export async function POST(request: Request) {
   try {
-    // Leer y mostrar el evento recibido
+    console.log('[WEBHOOK] Recibido evento de MercadoPago');
     const event = await request.json();
-    console.log("Evento recibido:", JSON.stringify(event, null, 2));
+    console.log('[WEBHOOK] Evento recibido:', JSON.stringify(event, null, 2));
 
     // Extraer el payment_id del evento
     const paymentId = event?.data?.id;
     if (!paymentId) {
+      console.error('[WEBHOOK] No se encontró payment_id en el evento');
       return NextResponse.json({ message: "No se encontró payment_id" });
     }
 
@@ -25,14 +26,15 @@ export async function POST(request: Request) {
       }
     });
     if (!paymentRes.ok) {
+      console.error('[WEBHOOK] Error al obtener detalles del pago:', paymentRes.statusText);
       throw new Error(`Error fetching payment details: ${paymentRes.statusText}`);
     }
     const paymentDetails = await paymentRes.json();
-    console.log("Detalles completos del pago:", JSON.stringify(paymentDetails, null, 2));
+    console.log('[WEBHOOK] Detalles completos del pago:', JSON.stringify(paymentDetails, null, 2));
 
     // Verificar que el pago fue exitoso
     if (paymentDetails.status !== 'approved') {
-      console.log('Pago no aprobado:', paymentDetails.status);
+      console.warn('[WEBHOOK] Pago no aprobado:', paymentDetails.status);
       return NextResponse.json({ message: "Pago no aprobado" });
     }
 
@@ -51,11 +53,11 @@ export async function POST(request: Request) {
       });
       if (prefRes.ok) {
         const preferenceDetails = await prefRes.json();
+        console.log('[WEBHOOK] Detalles de la preferencia:', JSON.stringify(preferenceDetails, null, 2));
         externalReference = preferenceDetails.external_reference;
         metadata = preferenceDetails.metadata || {};
-        console.log("Detalles de la preferencia:", JSON.stringify(preferenceDetails, null, 2));
       } else {
-        console.warn("No se pudieron obtener los detalles de la preferencia:", prefRes.statusText);
+        console.warn('[WEBHOOK] No se pudieron obtener los detalles de la preferencia:', prefRes.statusText);
       }
     }
 
@@ -65,6 +67,7 @@ export async function POST(request: Request) {
       external_reference: externalReference,
       payment_details: paymentDetails,
     });
+    console.log('[WEBHOOK] Pago guardado en la base de datos');
 
     // Extraer datos necesarios del metadata
     const alumnoId = metadata.alumnoId || '';
@@ -72,7 +75,7 @@ export async function POST(request: Request) {
     const purchaseId = metadata.purchaseId || '';
 
     if (!alumnoId || !profesorId || !purchaseId) {
-      console.error('Faltan datos en metadata para crear la clase', { alumnoId, profesorId, purchaseId, metadata });
+      console.error('[WEBHOOK] Faltan datos en metadata para crear la clase', { alumnoId, profesorId, purchaseId, metadata });
       throw new Error('Faltan datos en metadata para crear la clase');
     }
 
@@ -83,7 +86,7 @@ export async function POST(request: Request) {
       .eq('userId', alumnoId)
       .single();
     if (studentError || !studentProfile) {
-      console.error('No se pudo obtener el perfil del alumno', { alumnoId, studentError });
+      console.error('[WEBHOOK] No se pudo obtener el perfil del alumno', { alumnoId, studentError });
       throw new Error('No se pudo obtener el perfil del alumno');
     }
 
@@ -94,7 +97,7 @@ export async function POST(request: Request) {
       .eq('userId', profesorId)
       .single();
     if (professorError || !professorProfile) {
-      console.error('No se pudo obtener el perfil del profesor', { profesorId, professorError });
+      console.error('[WEBHOOK] No se pudo obtener el perfil del profesor', { profesorId, professorError });
       throw new Error('No se pudo obtener el perfil del profesor');
     }
 
@@ -119,12 +122,13 @@ export async function POST(request: Request) {
         requestDescription: 'Clase creada después de pago en MercadoPago',
         status: 'CONFIRMED',
       });
-      console.log('Resultado de createClassRoom:', result);
+      console.log('[WEBHOOK] Resultado de createClassRoom:', result);
       if (!result) {
+        console.error('[WEBHOOK] No se pudo crear la clase (createClassRoom retornó false)');
         throw new Error('No se pudo crear la clase (createClassRoom retornó false)');
       }
     } catch (err) {
-      console.error('Error al crear la clase con createClassRoom:', err);
+      console.error('[WEBHOOK] Error al crear la clase con createClassRoom:', err);
       throw err;
     }
 
@@ -133,7 +137,7 @@ export async function POST(request: Request) {
       payment: paymentDetails
     });
   } catch (error) {
-    console.error("Error en webhook:", error);
+    console.error('[WEBHOOK] Error en webhook:', error);
     return NextResponse.json({ error: "Error processing webhook", details: error instanceof Error ? error.message : error }, { status: 500 });
   }
 }
