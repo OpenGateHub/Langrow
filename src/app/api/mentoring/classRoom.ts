@@ -170,25 +170,46 @@ export const cancelClassRoom = async (id: number) => {
     return { success: false, error: "ID inválido" };
   }
 
-  const { data, error } = await supabaseClient
-    .from(SUPABASE_TABLES.MENTORSHIP)
-    .update({ status: ClassRoomStatus.CANCELLED })
-    .eq("id", id)
-    .select(); // Retorna los datos actualizados
+  try {
+      const { data: mentoringData, error } = await supabaseClient
+          .from(SUPABASE_TABLES.MENTORSHIP)
+          .update({ status: ClassRoomStatus.CANCELLED })
+          .eq("id", id)
+          .select()
+          .single(); // Retorna los datos actualizados
 
-  if (error) {
-    console.error("Error al cancelar la clase:", error);
-    return { success: false, error: error.message };
+      if (error) {
+          console.error("Error al cancelar la clase:", error);
+          return { success: false, error: error.message };
+      }
+
+      // TODO:: Cancelar la meeting en el proveedor si es necesario
+      const studentId: number | null = mentoringData.studentId;
+      if (studentId === null || studentId === undefined) {
+          console.error("El ID del estudiante resulto NulL en la mentoring");
+          return { success: false, error: "Student ID is invalid." };
+      }
+      const studentProfile = await getStudentProfileById(studentId);
+
+      if (studentProfile === null || studentProfile === undefined || mentoringData.meetingExternalId === null) {
+          console.error("Perfil de estudiante no encontrado. La videollamada no se pudo cancelar.");
+          return { success: false, error: "Ha ocurrido un error, la videollamada no se pudo cancelar." };
+      }
+      const provider = await getUserProvider(studentProfile.id)
+      await provider.cancelMeeting(mentoringData.meetingExternalId);
+
+      if (!mentoringData) {
+          return {
+              success: false,
+              error: "Clase no encontrada o no pudo ser cancelada.",
+          };
+      }
+
+      return { success: true, mentoringData };
+  } catch (error: any) {
+      console.error("Error en el servidor:", error);
+      return { success: false, error: error.message || "Error interno del servidor" };
   }
-
-  if (!data || data.length === 0) {
-    return {
-      success: false,
-      error: "Clase no encontrada o no pudo ser cancelada.",
-    };
-  }
-
-  return { success: true, data };
 };
 
 export const confirmClassRoom = async (id: number) => {
