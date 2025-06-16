@@ -14,16 +14,14 @@ const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
 });
 
-// URLs para desarrollo local
 // URLs para desarrollo local y producción
-const SUCCESS_URL = process.env.PAYMENT_SUCCESS_URL
-  ? `${process.env.PAYMENT_SUCCESS_URL}?collection_id={collection_id}&preference_id={preference_id}`
-  : 'https://langrow.vercel.app/payment/success?collection_id={collection_id}&preference_id={preference_id}';
-
+const SUCCESS_URL_BASE = process.env.PAYMENT_SUCCESS_URL
+  || 'https://langrow.vercel.app/payment/success';
 const FAILURE_URL = process.env.PAYMENT_FAILURE_URL
-  ? process.env.PAYMENT_FAILURE_URL
-  : 'https://langrow.vercel.app/payment/failure';
+  || 'https://langrow.vercel.app/payment/failure';
 
+// Construcción final de success URL con placeholders
+const SUCCESS_URL = `${SUCCESS_URL_BASE}?collection_id={collection_id}&preference_id={preference_id}`;
 
 const createPaymentPreferenceSchema = zod.object({
   items: zod.array(
@@ -86,7 +84,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
+    if (!data.items || data.items.length === 0) {
       console.error('[API] No se encontraron productos en el body:', data);
       return NextResponse.json(
         { error: 'Error de datos: No se encontraron productos para procesar el pago.' },
@@ -96,7 +94,15 @@ export async function POST(request: Request) {
 
     const items: PaymentItem[] = data.items;
     for (const item of items) {
-      if (!item.title || typeof item.unit_price !== 'number' || typeof item.quantity !== 'number' || isNaN(item.unit_price) || isNaN(item.quantity) || item.unit_price <= 0 || item.quantity <= 0) {
+      if (
+        !item.title ||
+        typeof item.unit_price !== 'number' ||
+        typeof item.quantity !== 'number' ||
+        isNaN(item.unit_price) ||
+        isNaN(item.quantity) ||
+        item.unit_price <= 0 ||
+        item.quantity <= 0
+      ) {
         console.error('[API] Datos de item inválidos:', item);
         return NextResponse.json(
           { error: 'Error de datos: Información de productos inválida. Verifique el precio y cantidad.', details: JSON.stringify(item) },
@@ -125,14 +131,13 @@ export async function POST(request: Request) {
         pending: SUCCESS_URL,
       },
       auto_return: "approved",
-      external_reference: body.external_reference || `reserva-${Date.now()}`,
-      metadata: body.metadata || {},
-      notification_url: process.env.MERCADO_PAGO_REDIRECT_WEBHOOK || "https://langrow.vercel.app/api/webhook",
+      external_reference: data.external_reference || `reserva-${Date.now()}`,
+      metadata: data.metadata,
+      notification_url: process.env.MERCADO_PAGO_REDIRECT_WEBHOOK
+        || "https://langrow.vercel.app/api/webhook",
       binary_mode: true,
       payment_methods: {
-        excluded_payment_types: [
-          { id: "ticket" }
-        ],
+        excluded_payment_types: [{ id: "ticket" }],
         installments: 1
       },
       expires: true,
