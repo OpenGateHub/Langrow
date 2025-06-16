@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { PaymentItem } from '@/types/payment';
@@ -13,8 +15,14 @@ const client = new MercadoPagoConfig({
 });
 
 // URLs para desarrollo local
-const SUCCESS_URL = process.env.PAYMENT_SUCCESS_URL ? process.env.PAYMENT_SUCCESS_URL : 'https://langrow.vercel.app/payment/success';
-const FAILURE_URL = process.env.PAYMENT_FAILURE_URL ? process.env.PAYMENT_FAILURE_URL : 'https://langrow.vercel.app/payment/failure';
+// URLs para desarrollo local y producción
+const SUCCESS_URL = process.env.PAYMENT_SUCCESS_URL
+  ? `${process.env.PAYMENT_SUCCESS_URL}?collection_id={collection_id}&preference_id={preference_id}`
+  : 'https://langrow.vercel.app/payment/success?collection_id={collection_id}&preference_id={preference_id}';
+
+const FAILURE_URL = process.env.PAYMENT_FAILURE_URL
+  ? process.env.PAYMENT_FAILURE_URL
+  : 'https://langrow.vercel.app/payment/failure';
 
 
 const createPaymentPreferenceSchema = zod.object({
