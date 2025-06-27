@@ -9,10 +9,13 @@ export const storePayment = async (payment: SupabasePayment) => {
       .insert([
         {
           payment_id: payment.payment_id,
-          external_reference: payment.external_reference,
+          external_ref: payment.external_reference,
           payment_details: payment.payment_details,
+          preference_id: payment.preference_id,
+          status: payment.status,
+          payment_type: payment.payment_type,
         },
-      ]);
+      ]).select();
 
     if (error) {
       console.error("Error storing payment:", error);
@@ -24,3 +27,21 @@ export const storePayment = async (payment: SupabasePayment) => {
     return null;
   }
 };
+
+export const updatepaymentStatus = async (preference_id: string, status: string) => {
+  try {
+    const { data, error } = await supabaseClient
+      .from(SUPABASE_TABLES.PAYMENTS)
+      .update({ status })
+      .eq("preference_id", preference_id);
+
+    if (error) {
+      console.error("Error updating payment status:", error);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error updating payment status:", error);
+    return null;
+  }
+}

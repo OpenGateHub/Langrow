@@ -20,7 +20,8 @@ export interface CreateClassRoomParams {
   cost: string;
   status: string;
   title: string;
-  requestDescription: string;
+  requestDescription: string | undefined;
+  payment_id?: string | number | undefined; // Optional, used for payment tracking
 }
 
 export const getClassRoomByStudent = async (filter: GetMentoringFilter) => {
@@ -301,6 +302,50 @@ export const updateClassRoomStatus = async (id: number, status: string) => {
       }
     
       return { success: true, data };
+};
+
+export const createMultipleClassRooms = async (classRooms: CreateClassRoomParams[]) => {
+  if (!Array.isArray(classRooms) || classRooms.length === 0) {
+    throw new Error("Debe proporcionar un array de clases.");
+  } 
+
+  // Map input to match DB schema: convert duration to number, merge date/time, remove/rename fields as needed
+  const mappedClassRooms = classRooms.map((params) => {
+    if (!params.time.includes(" - ")) {
+      throw new Error(`Formato de tiempo inválido: ${params.time}, expected : 'HH:mm - HH:mm'`);
+    }
+    const [startTime, endTime] = params.time.split(" - ");
+    const beginsAt = mergeDateTime(params.date, startTime);
+    const endsAt = mergeDateTime(params.date, endTime);
+
+    return {
+      userId: params.professorId,
+      studentId: params.studentId,
+      category: params.category,
+      requestDescription: params.requestDescription,
+      status: params.status,
+      title: params.title,
+      duration: parseInt(params.duration, 10),
+      beginsAt,
+      endsAt,
+      confirmed: false,
+      classRoomUrl: null,
+      meetingExternalId: null,
+      paymentId: params.payment_id as string
+    };
+  });
+
+  const { data, error } = await supabaseClient
+    .from(SUPABASE_TABLES.MENTORSHIP)
+    .insert(mappedClassRooms)
+    .select(); // Retorna los datos insertados  
+
+  if (error) {
+    console.error("Error al crear las clases:", error);
+    throw error;
+  }
+
+  return data;
 };
 
 const mergeDateTime = (dateStr: string, timeStr: string) => {

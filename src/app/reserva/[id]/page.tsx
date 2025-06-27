@@ -2,7 +2,7 @@
 import React, { useState, useContext } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import WeeklyAgendaModal, { SelectedSlotType, DaySchedule } from "../../components/ModalClassRequest";
-import PaymentForm from "../../components/payment/PaymentForm";
+import PaymentForm, { ClassDetails } from "../../components/payment/PaymentForm";
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 // Se asume que tienes un AuthContext configurado para obtener el usuario autenticado
 import { useProfileContext } from "@/context/ProfileContext";
@@ -18,6 +18,13 @@ type Package = {
   hoverBg: string;
 };
 
+/**
+ * TODO:: Los paquetes y categorías deberían ser obtenidos desde una API o base de datos.
+ * Actualmente están hardcodeados para simplificar el ejemplo.
+ * En una aplicación real, deberías hacer una llamada a la API para obtener estos datos.
+ * También se debería manejar el estado de carga y errores al obtener estos datos.
+ * Esperado un custom hook
+ */
 const packages: Package[] = [
   {
     nombre: "Única Clase",
@@ -58,13 +65,38 @@ const packages: Package[] = [
 ];
 
 const categories = [
-  "Escritura",
-  "Conversación",
-  "Vocabulario",
-  "Vocabulario Profesional",
-  "Integral",
-  "Pronunciación",
+  {
+    id: 1,
+    name: "Conversación",
+    code: "conversation_class",
+  },
+  {
+    id: 2,
+    name: "Escritura",
+    code: "writing_class", // corregido el typo en "writting"
+  },
+  {
+    id: 3,
+    name: "Vocabulario",
+    code: "vocabulary_class",
+  },
+  {
+    id: 4,
+    name: "Vocabulario Profesional",
+    code: "professional_vocabulary_class",
+  },
+  {
+    id: 5,
+    name: "Integral",
+    code: "integral_class",
+  },
+  {
+    id: 6,
+    name: "Pronunciación",
+    code: "pronunciation_class",
+  },
 ];
+
 
 const professorSchedule: DaySchedule[] = [
   { day: "Lunes", slots: ["10:00", "14:00"] },
@@ -145,6 +177,14 @@ const SolicitudClase: React.FC = () => {
     setpurchaseId(`clase-${Date.now()}`);
     setIsPaymentStep(true);
   };
+
+  const handleClassDetails = (): ClassDetails => {
+    return {
+      classTitle: motivo,
+      classType: category,
+      classSlots: selectedSlots,
+    };
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-6 bg-gray-100 py-6 my-6 rounded-xl min-h-screen">
@@ -248,8 +288,8 @@ const SolicitudClase: React.FC = () => {
           >
             <option value="">-- Selecciona una categoría --</option>
             {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
+              <option key={cat.code} value={cat.code}>
+                {cat.name}
               </option>
             ))}
           </select>
@@ -314,6 +354,7 @@ const SolicitudClase: React.FC = () => {
               alumnoId={alumnoId || ""}
               profesorId={profesorId}
               purchaseId={purchaseId}
+              classDetails={handleClassDetails()}
             />
           </div>
         </AnimateOnScroll>

@@ -14,6 +14,7 @@ export interface ClassRoom {
 }
 
 export enum ClassRoomStatus {
+    CREATED = 'created',
     REQUESTED = 'requested',
     NEXT = 'pending',
     NOTCONFIRMED = 'not-confirmed',
