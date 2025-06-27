@@ -363,3 +363,33 @@ const mergeDateTime = (dateStr: string, timeStr: string) => {
 
   return date.toISOString(); // Devuelve la fecha combinada en formato ISO
 };
+
+
+export const updateClassRoomByPaymentId = async (
+  paymentId: string | undefined,
+  status: ClassRoomStatus
+) => {
+  if (!paymentId || (typeof paymentId !== "string" && typeof paymentId !== "number")) {
+    return { success: false, error: "ID de pago inválido" };
+  }
+
+  const { data, error } = await supabaseClient
+    .from(SUPABASE_TABLES.MENTORSHIP)
+    .update({ status: status })
+    .eq("paymentId", paymentId)
+    .select();
+
+  if (error) {
+    console.error("Error al actualizar la clase por ID de pago:", error);
+    return { success: false, error: error.message };
+  }
+
+  if (!data || data.length === 0) {
+    return {
+      success: false,
+      error: "Clase no encontrada o no pudo ser actualizada.",
+    };
+  }
+
+  return { success: true, data };
+}

@@ -15,7 +15,8 @@ export const storePayment = async (payment: SupabasePayment) => {
           status: payment.status,
           payment_type: payment.payment_type,
         },
-      ]).select();
+      ])
+      .select();
 
     if (error) {
       console.error("Error storing payment:", error);
@@ -28,12 +29,23 @@ export const storePayment = async (payment: SupabasePayment) => {
   }
 };
 
-export const updatepaymentStatus = async (preference_id: string, status: string) => {
+export const updatePaymentStatus = async (
+  preference_id: string,
+  status: string,
+  details?: any
+) => {
   try {
+    // Construir el payload de actualización
+    const updateData: Record<string, any> = { status };
+
+    if (details !== undefined && details !== null) {
+      updateData.details = details;
+    }
+
     const { data, error } = await supabaseClient
       .from(SUPABASE_TABLES.PAYMENTS)
-      .update({ status })
-      .eq("preference_id", preference_id);
+      .update(updateData)
+      .eq("preference_id", preference_id).select().single();
 
     if (error) {
       console.error("Error updating payment status:", error);
@@ -44,4 +56,4 @@ export const updatepaymentStatus = async (preference_id: string, status: string)
     console.error("Error updating payment status:", error);
     return null;
   }
-}
+};
