@@ -39,8 +39,10 @@ export const updatePaymentStatus = async (
     const updateData: Record<string, any> = { status };
 
     if (details !== undefined && details !== null) {
-      updateData.details = details;
+      updateData.payment_details = details;
     }
+
+    updateData.updated_at = new Date().toISOString();
 
     const { data, error } = await supabaseClient
       .from(SUPABASE_TABLES.PAYMENTS)

@@ -375,7 +375,7 @@ export const updateClassRoomByPaymentId = async (
 
   const { data, error } = await supabaseClient
     .from(SUPABASE_TABLES.MENTORSHIP)
-    .update({ status: status })
+    .update({ status: status, updatedAt: new Date().toISOString() })
     .eq("paymentId", paymentId)
     .select();
 
