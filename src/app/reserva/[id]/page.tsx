@@ -98,16 +98,6 @@ const categories = [
 ];
 
 
-const professorSchedule: DaySchedule[] = [
-  { day: "Lunes", slots: ["10:00", "14:00"] },
-  { day: "Martes", slots: ["11:00", "15:00"] },
-  { day: "Miércoles", slots: ["09:00", "13:00"] },
-  { day: "Jueves", slots: ["10:30", "16:00"] },
-  { day: "Viernes", slots: ["12:00"] },
-  { day: "Sábado", slots: [] },
-  { day: "Domingo", slots: [] },
-];
-
 const SolicitudClase: React.FC = () => {
   const { clerkUser } = useProfileContext();
   const alumnoId = clerkUser?.id || "";
@@ -321,7 +311,7 @@ const SolicitudClase: React.FC = () => {
           isOpen={isScheduleModalOpen}
           onClose={() => setIsScheduleModalOpen(false)}
           requiredClasses={selectedPackage.clases}
-          availableSchedule={professorSchedule}
+          professorId={profesorId}
           professor="Profesor X"
           onSubmit={handleScheduleSubmit}
         />

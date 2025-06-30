@@ -52,15 +52,15 @@ const MisClases: React.FC = () => {
       {error && <p className="text-center text-red-500">{error}</p>}
 
       {!loading && !error && (
-        <div className="mt-6">
+      <div className="mt-6">
           {classesData[activeTab]?.length ? (
             classesData[activeTab].map(c => (
               <ClassCard key={c.id} classData={c} activeTab={activeTab} onConfirm={openModal} />
-            ))
-          ) : (
-            <p className="text-gray-500 text-center">No hay clases en esta categoría.</p>
-          )}
-        </div>
+          ))
+        ) : (
+          <p className="text-gray-500 text-center">No hay clases en esta categoría.</p>
+        )}
+      </div>
       )}
 
       <ReviewModal isOpen={isReviewModalOpen} onClose={closeModal} onSubmit={handleReviewSubmitAdapter} />
@@ -70,19 +70,19 @@ const MisClases: React.FC = () => {
           isOpen
           onClose={closeModal}
           requiredClasses={1}
-          availableSchedule={[{ day: "Lunes", slots: ["10:00", "11:00"] }]}
+          professorId={selectedClass.professorId}
           professor={selectedClass.instructor}
           onSubmit={handleScheduleSubmit}
         />
       )}
       {isScheduleModalOpen && selectedClass && role === "org:profesor" && (
-        <RescheduleModal
+            <RescheduleModal
           isOpen
-          onClose={closeModal}
+              onClose={closeModal}
           onConfirm={() =>
             handleScheduleSubmit([{ date: new Date(), dayName: selectedClass.category, time: selectedClass.time }])
           }
-        />
+            />
       )}
     </div>
   );
