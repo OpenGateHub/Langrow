@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import useWindowSize from "../../hooks/useWindowSize";
+import { useMentoringConfiguration } from "../../hooks/useMentoringConfiguration";
 
 export type SelectedSlotType = {
   date: Date;
@@ -19,7 +20,7 @@ export type WeeklyAgendaModalProps = {
   isOpen: boolean;
   onClose: () => void;
   requiredClasses: number;
-  availableSchedule: DaySchedule[];
+  professorId: string | number;
   professor: string;
   onSubmit: (selectedSlots: SelectedSlotType[]) => void;
 };
@@ -40,7 +41,7 @@ export default function WeeklyAgendaModal({
   isOpen,
   onClose,
   requiredClasses,
-  availableSchedule,
+  professorId,
   professor,
   onSubmit,
 }: WeeklyAgendaModalProps) {
@@ -59,6 +60,12 @@ export default function WeeklyAgendaModal({
   // Estados para animación de entrada/salida
   const [visible, setVisible] = useState(false);
   const [showContent, setShowContent] = useState(false);
+
+  // Hook para obtener la configuración del profesor
+  const { configuration, loading: loadingConfiguration, error: configurationError } = useMentoringConfiguration(professorId);
+
+  // Obtener el horario disponible del profesor desde la configuración
+  const availableSchedule: DaySchedule[] = configuration?.configuration?.schedule || [];
 
   useEffect(() => {
     if (isOpen) {
@@ -141,96 +148,114 @@ export default function WeeklyAgendaModal({
         <div className="mb-4 text-center">
           <h2 className="text-xl font-bold">Agenda Semanal - {professor}</h2>
         </div>
-        <div className="flex justify-between mb-4">
-          <button
-            onClick={() => {
-              if (daysToShow < 7) {
-                if (startIndex > 0) setStartIndex(startIndex - 1);
-              } else {
-                setCurrentWeekStart((prev) => {
-                  const newDate = new Date(prev);
-                  newDate.setDate(prev.getDate() - 7);
-                  return newDate;
-                });
-              }
-            }}
-            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-          >
-            <FaArrowLeft />
-          </button>
-          <button
-            onClick={() => {
-              if (daysToShow < 7) {
-                if (startIndex + daysToShow < 7) setStartIndex(startIndex + 1);
-              } else {
-                setCurrentWeekStart((prev) => {
-                  const newDate = new Date(prev);
-                  newDate.setDate(prev.getDate() + 7);
-                  return newDate;
-                });
-              }
-            }}
-            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-          >
-            <FaArrowRight />
-          </button>
-        </div>
-        <div
-          className="gap-2 text-center"
-          style={{ display: "grid", gridTemplateColumns: `repeat(${daysToShow}, minmax(0, 1fr))` }}
-        >
-          {visibleDays.map((date, idx) => {
-            const dayAbbr = WEEK_DAYS[date.getDay()];
-            const fullDayName = WEEK_DAYS_MAP[dayAbbr];
-            return (
-              <div
-                key={idx}
-                className="border p-2 rounded-xl bg-gray-100 hover:bg-gray-300 transition-all duration-200 ease-in-out"
-              >
-                <div className="text-sm font-semibold">{dayAbbr}</div>
-                <div className="text-xs mb-2">{date.getDate()}</div>
-                <div className="flex flex-col gap-1">
-                  {availableSchedule.find((s) => s.day === fullDayName)?.slots.map((time, i) => {
-                    const isSelected = selectedSlots.some(
-                      (slot) =>
-                        slot.date.toDateString() === date.toDateString() && slot.time === time
-                    );
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => toggleSlotSelection(date, fullDayName, time)}
-                        className={`transition-all duration-200 ease-in-out px-3 py-1 hover:scale-105 rounded ${
-                          isSelected
-                            ? "bg-secondary text-white"
-                            : "bg-white text-gray-800 border"
-                        }`}
-                      >
-                        {time}
-                      </button>
-                    );
-                  }) || <p className="text-xs text-gray-500">Sin horarios</p>}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        {errorMessage && (
-          <p className="text-red-500 text-center mt-2">{errorMessage}</p>
+        
+        {/* Mostrar loading o error de configuración */}
+        {loadingConfiguration && (
+          <div className="text-center py-4">
+            <p>Cargando horarios disponibles...</p>
+          </div>
         )}
-        <div className="flex justify-end space-x-4 mt-4">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all duration-200 ease-in-out"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 rounded bg-secondary text-white hover:bg-secondary-hover transition-all duration-200 ease-in-out"
-          >
-            Confirmar Selección
-          </button>
-        </div>
+        
+        {configurationError && (
+          <div className="text-center py-4">
+            <p className="text-red-500">Error al cargar horarios: {configurationError}</p>
+          </div>
+        )}
+
+        {!loadingConfiguration && !configurationError && (
+          <>
+            <div className="flex justify-between mb-4">
+              <button
+                onClick={() => {
+                  if (daysToShow < 7) {
+                    if (startIndex > 0) setStartIndex(startIndex - 1);
+                  } else {
+                    setCurrentWeekStart((prev) => {
+                      const newDate = new Date(prev);
+                      newDate.setDate(prev.getDate() - 7);
+                      return newDate;
+                    });
+                  }
+                }}
+                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+              >
+                <FaArrowLeft />
+              </button>
+              <button
+                onClick={() => {
+                  if (daysToShow < 7) {
+                    if (startIndex + daysToShow < 7) setStartIndex(startIndex + 1);
+                  } else {
+                    setCurrentWeekStart((prev) => {
+                      const newDate = new Date(prev);
+                      newDate.setDate(prev.getDate() + 7);
+                      return newDate;
+                    });
+                  }
+                }}
+                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+              >
+                <FaArrowRight />
+              </button>
+            </div>
+            <div
+              className="gap-2 text-center"
+              style={{ display: "grid", gridTemplateColumns: `repeat(${daysToShow}, minmax(0, 1fr))` }}
+            >
+              {visibleDays.map((date, idx) => {
+                const dayAbbr = WEEK_DAYS[date.getDay()];
+                const fullDayName = WEEK_DAYS_MAP[dayAbbr];
+                return (
+                  <div
+                    key={idx}
+                    className="border p-2 rounded-xl bg-gray-100 hover:bg-gray-300 transition-all duration-200 ease-in-out"
+                  >
+                    <div className="text-sm font-semibold">{dayAbbr}</div>
+                    <div className="text-xs mb-2">{date.getDate()}</div>
+                    <div className="flex flex-col gap-1">
+                      {availableSchedule.find((s) => s.day === fullDayName)?.slots.map((time, i) => {
+                        const isSelected = selectedSlots.some(
+                          (slot) =>
+                            slot.date.toDateString() === date.toDateString() && slot.time === time
+                        );
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => toggleSlotSelection(date, fullDayName, time)}
+                            className={`transition-all duration-200 ease-in-out px-3 py-1 hover:scale-105 rounded ${
+                              isSelected
+                                ? "bg-secondary text-white"
+                                : "bg-white text-gray-800 border"
+                            }`}
+                          >
+                            {time}
+                          </button>
+                        );
+                      }) || <p className="text-xs text-gray-500">Sin horarios</p>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {errorMessage && (
+              <p className="text-red-500 text-center mt-2">{errorMessage}</p>
+            )}
+            <div className="flex justify-end space-x-4 mt-4">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all duration-200 ease-in-out"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSubmit}
+                className="px-4 py-2 rounded bg-secondary text-white hover:bg-secondary-hover transition-all duration-200 ease-in-out"
+              >
+                Confirmar Selección
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
