@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
         const mentoring = {
             ...data,
             studentId: studentProfile.id,
-            status: ClassRoomStatus.REQUESTED
+            status: ClassRoomStatus.CREATED
         };
         const result = await createClassRoom(mentoring);
         if (!result) {
@@ -153,6 +153,10 @@ const putMentoringSchema = zod.object({
 export type PutMentoringPayload = zod.infer<typeof putMentoringSchema>; 
 
 const VALID_STATE_TRANSITIONS: Record<ClassRoomStatus, ClassRoomStatus[]> = {
+    [ClassRoomStatus.CREATED]: [
+        ClassRoomStatus.REQUESTED,
+        ClassRoomStatus.CANCELLED
+    ], // Solo puede ir a REQUESTED
     [ClassRoomStatus.REQUESTED]: [ClassRoomStatus.NEXT, ClassRoomStatus.CANCELLED], // Solo puede ir a NEXT
     [ClassRoomStatus.NEXT]: [
         ClassRoomStatus.CONFIRMED,

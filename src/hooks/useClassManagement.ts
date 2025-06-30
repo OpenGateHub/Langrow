@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useGetMentoring, MentoringSession, useUpdateMentoringStatus } from "./useMentoring";
 import { ClassData } from "@/types/class";
 import { SelectedSlotType } from "@/app/components/ModalClassRequest";
+import { ClassRoomStatus } from "@/types/classRoom";
 
 interface UseClassManagementReturn {
   classesData: Record<string, ClassData[]>;
@@ -94,17 +95,18 @@ export function useClassManagement(userId: string): UseClassManagementReturn {
     };
     sessions.forEach(c => {
       switch (c.status) {
-        case "REQUESTED":
+        case ClassRoomStatus.REQUESTED:
+        case ClassRoomStatus.CREATED:
           grouped.Solicitudes.push(c);
           break;
-        case "NEXT":
+        case ClassRoomStatus.NEXT:
           grouped["Próximas"].push(c);
           break;
-        case "NOTCONFIRMED":
-        case "CANCELLED":
+        case ClassRoomStatus.NOTCONFIRMED:
+        case ClassRoomStatus.CANCELLED:
           grouped["Necesita Atención"].push(c);
           break;
-        case "CONFIRMED":
+        case ClassRoomStatus.CONFIRMED:
           grouped.Revisadas.push(c);
           break;
         default:

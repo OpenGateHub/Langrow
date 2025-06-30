@@ -59,6 +59,7 @@ export type Database = {
           endsAt: string | null
           id: number
           meetingExternalId: string | null
+          paymentId: string | null
           professorRate: number | null
           professorReview: string | null
           requestDescription: string | null
@@ -79,6 +80,7 @@ export type Database = {
           endsAt?: string | null
           id?: number
           meetingExternalId?: string | null
+          paymentId?: string | null
           professorRate?: number | null
           professorReview?: string | null
           requestDescription?: string | null
@@ -99,6 +101,7 @@ export type Database = {
           endsAt?: string | null
           id?: number
           meetingExternalId?: string | null
+          paymentId?: string | null
           professorRate?: number | null
           professorReview?: string | null
           requestDescription?: string | null
@@ -235,6 +238,10 @@ export type Database = {
           id: number
           payment_details: Json | null
           payment_id: string | null
+          payment_type: string | null
+          preference_id: string | null
+          status: string | null
+          updated_at: string | null
         }
         Insert: {
           created_at?: string
@@ -242,6 +249,10 @@ export type Database = {
           id?: number
           payment_details?: Json | null
           payment_id?: string | null
+          payment_type?: string | null
+          preference_id?: string | null
+          status?: string | null
+          updated_at?: string | null
         }
         Update: {
           created_at?: string
@@ -249,6 +260,10 @@ export type Database = {
           id?: number
           payment_details?: Json | null
           payment_id?: string | null
+          payment_type?: string | null
+          preference_id?: string | null
+          status?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }

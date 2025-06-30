@@ -71,4 +71,7 @@ export interface SupabasePayment {
     payment_details: any;
     external_reference: string;
     created_at?: Date;
+    preference_id?: string;
+    status?: string;
+    payment_type?: string;
 }
