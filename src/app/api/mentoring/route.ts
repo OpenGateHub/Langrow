@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z as zod } from "zod";
-import { ClassRoomStatus } from "@/types/classRoom";
+import { ClassRoom, ClassRoomStatus } from "@/types/classRoom";
 import {
     createClassRoom,
     getClassRoomByStudent,
@@ -8,7 +8,9 @@ import {
     getClassRoomById,
     confirmClassRoom,
     cancelClassRoom,
-    updateClassRoomStatus
+    updateClassRoomStatus,
+    createClassRoomMeeting,
+    updateClassRoomById
 } from "./classRoom";
 import {
     getStudentProfileByUserId,
@@ -27,8 +29,14 @@ const createMentoringSchema = zod.object({
     title: zod.string(),
     requestDescription: zod.string()        
 }); 
-
-export async function POST(req: NextRequest) {
+/**
+ * This endpoint is deprecated and will be removed in future versions.
+ * Use the new endpoint for creating mentoring sessions.
+ * @param req 
+ * @returns 
+ * @deprecated
+ */
+export async function POST_DEPRECATED(req: NextRequest) {
     try {
         const reqBody = await req.json();
         const validation = createMentoringSchema.safeParse(reqBody);
@@ -179,7 +187,7 @@ export async function PUT(req: NextRequest) {
             );
         }
         const { id, status } = validation.data;
-        const mentoring = await getClassRoomById(id);
+        const mentoring: ClassRoom | null = await getClassRoomById(id);
 
         if (!mentoring) {
             return NextResponse.json(
@@ -200,6 +208,7 @@ export async function PUT(req: NextRequest) {
         }
 
         let result: boolean;
+        let meeting = null;
 
         switch (status) {
             case ClassRoomStatus.CONFIRMED:
@@ -212,7 +221,22 @@ export async function PUT(req: NextRequest) {
                 break;
             case ClassRoomStatus.NOTCONFIRMED:
             case ClassRoomStatus.NEXT:
-                const updateResult = await updateClassRoomStatus(id, status);
+                if (status === ClassRoomStatus.NEXT) {
+                    // create meet process 
+                    meeting = await createClassRoomMeeting(mentoring)
+                }
+                if (!meeting) {
+                    return NextResponse.json(
+                        { message: 'Error al crear la reunión', success: false },
+                        { status: 500 }
+                    );
+                }
+                // Update the class room status
+                const updateResult = await updateClassRoomById(id, { 
+                    status,
+                    classRoomUrl: meeting.meetingUrl,
+                    meetingExternalId: meeting.meetingExternalId
+                });
                 result = updateResult.success;
                 break;
             default:
