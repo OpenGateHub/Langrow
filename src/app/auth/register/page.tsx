@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { SignInButton, useSignUp } from "@clerk/nextjs";
+import { SignInButton, useSignUp, useUser } from "@clerk/nextjs";
 import { useClerk } from "@clerk/nextjs";
 import { useProfile } from "@/hooks/useProfile";
 import { useNotifications } from "@/hooks/useNotifications"; // Importamos el hook de notificaciones
@@ -29,6 +29,7 @@ export default function RegisterPage() {
   const { createNotification } = useNotifications(); // Obtenemos la función para crear notificaciones
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
   const { captchaValue, captchaError, validateCaptcha, RecaptchaComponent } = useRecaptcha(siteKey);
+  const { isLoaded: clerkLoaded, isSignedIn, user } = useUser();
 
   // Estados de los campos
   const [firstName, setFirstName] = useState("");
@@ -143,6 +144,16 @@ export default function RegisterPage() {
     }
   }, [clerk?.session, router]);
 
+  // Polling para esperar a que Clerk esté listo antes de redirigir
+  const waitForClerkSessionAndRedirect = () => {
+    const interval = setInterval(() => {
+      if (clerkLoaded && isSignedIn) {
+        clearInterval(interval);
+        router.push("/");
+      }
+    }, 300);
+  };
+
   // Función para enviar el formulario de registro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,9 +248,9 @@ export default function RegisterPage() {
         const response = await createProfile(newUserProfile);
         if (response && response.data && response.data.length > 0) {
           setIsVerificating(false);
-          window.location.replace("/home");
+          // Recargar la página para que Clerk detecte la sesión correctamente
+          window.location.reload();
         }
-
       }
     } catch (e: any) {
       console.error(e);
@@ -248,6 +259,18 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
+  // Redirige cuando Clerk ya cargó y el usuario está autenticado (inicio de sesión)
+  useEffect(() => {
+    if (clerkLoaded && isSignedIn) {
+      // Si el usuario no tiene rol, redirigir a completar perfil
+      if (!user?.publicMetadata?.role) {
+        router.push("/auth/complete-profile");
+      } else {
+        router.push("/");
+      }
+    }
+  }, [clerkLoaded, isSignedIn, user, router]);
 
   return (
     <main className="min-h-screen flex items-center justify-center relative">
@@ -414,6 +437,8 @@ export default function RegisterPage() {
               </div>
               {/* CAPTCHA */}
               <div>
+                {/* Elemento oculto que Clerk espera para el CAPTCHA */}
+                <div id="clerk-captcha" style={{ display: 'none' }}></div>
                 {RecaptchaComponent()}
                 {captchaError && (
                   <p className="text-sm text-red-600 mt-2">{captchaError}</p>

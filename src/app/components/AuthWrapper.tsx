@@ -5,6 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 import { useProfileContext } from "@/context/ProfileContext";
 import LoadingScreen from './LoadingScreen';
+import BlockUi from './BlockUi';
 
 export default function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -31,6 +32,7 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
     '/terms-of-service',
     '/privacy-policy',
     '/contact-us',
+    '/home',
   ];
 
   // Rutas específicas donde no deberíamos redirigir a complete-profile
@@ -40,6 +42,8 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
     '/api/auth/callback/google',
     '/class',
     '/google/auth',
+    '/auth/register',
+    '/home',
   ];
 
   const isPublicRoute = publicRoutes.includes(pathname);
@@ -64,10 +68,13 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
       
       // Si hay un error al cargar el perfil o no hay perfil y no hay registro en localStorage
       if ((error || !profile) && !hasStoredProfile && pathname !== '/auth/complete-profile') {
-        setRedirectionInProgress(true);
-        router.push('/auth/complete-profile');
-        setInitialCheckDone(true);
-        return;
+        // Solo redirigir si no estamos en el proceso de registro o en home
+        if (pathname !== '/auth/register' && pathname !== '/home') {
+          setRedirectionInProgress(true);
+          router.push('/auth/complete-profile');
+          setInitialCheckDone(true);
+          return;
+        }
       }
 
       // Si tiene perfil pero está en complete-profile, redirigir al home
@@ -94,8 +101,22 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
     }
   }, [redirectionInProgress, initialCheckDone]);
 
-  if (!isLoaded || (isSignedIn && profileLoading && !initialCheckDone)) {
-    return <LoadingScreen message="Verificando tu sesión..." />;
+  // Permitir acceso al home para usuarios recién registrados
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <BlockUi isActive={true} />
+      </div>
+    );
+  }
+  
+  // Solo mostrar loading si no estamos en home y el perfil está cargando
+  if (isSignedIn && profileLoading && !initialCheckDone && pathname !== '/home') {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <BlockUi isActive={true} />
+      </div>
+    );
   }
 
   return <>{children}</>;
