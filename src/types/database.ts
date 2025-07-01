@@ -519,12 +519,15 @@ export type Database = {
       mentorships_with_names: {
         Row: {
           beginsAt: string | null
-          category: number | null
+          category: string | null
+          classRoomUrl: string | null
           confirmed: boolean | null
           createdAt: string | null
           duration: number | null
           endsAt: string | null
           id: number | null
+          meetingExternalId: string | null
+          paymentId: string | null
           professorName: string | null
           professorRate: number | null
           professorReview: string | null
@@ -535,17 +538,9 @@ export type Database = {
           studentName: string | null
           title: string | null
           updatedAt: string | null
-          url: string | null
           userId: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "Mentorship_category_fkey"
-            columns: ["category"]
-            isOneToOne: false
-            referencedRelation: "MentorshipCategory"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "Mentorship_studentId_fkey"
             columns: ["studentId"]

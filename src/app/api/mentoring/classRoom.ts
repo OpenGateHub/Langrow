@@ -1,7 +1,7 @@
 import { supabaseClient } from "@/app/api/supabaseClient";
 import { SUPABASE_TABLES } from "@/app/config";
 import { GetMentoringFilter } from "./route";
-import { ClassRoomStatus } from "@/types/classRoom";
+import { ClassRoom, ClassRoomStatus, ClassRoomUpdate } from "@/types/classRoom";
 import { getUserProvider } from "@/lib/providers";
 import {
   getStudentProfileByUserId,
@@ -87,6 +87,7 @@ export const getClassRoomByProfessor = async (professorId: number, filter: GetMe
  * Async function Creates a classroom for a mentorship session
  * @param params CreateClassRoomParams
  * @returns boolean
+ * @deprecated
  */
 export const createClassRoom = async (
   params: CreateClassRoomParams
@@ -165,6 +166,52 @@ export const createClassRoom = async (
     throw new Error("El profesor ya tiene clases registradas ese horario.");
   }
 };
+
+export const createClassRoomMeeting = async (mentoring: ClassRoom) => {
+  try {
+    if (mentoring.studentId === null || mentoring.studentId === undefined) {
+      throw new Error("El ID del estudiante es inválido.");
+    }
+    if (mentoring.userId === null || mentoring.userId === undefined) {
+      throw new Error("El ID del profesor es inválido.");
+    }
+    
+    const studentUserProfile = await getStudentProfileById(mentoring.studentId);
+    const proffesorEmail = await getEmailbyUserProfileId(mentoring.userId);
+    if (!studentUserProfile || !proffesorEmail) {
+      console.error("Perfil de estudiante o email del profesor no encontrado.");
+      return { success: false, error: "Perfil de estudiante o email del profesor no encontrado." };
+    }
+        const provider = await getUserProvider(studentUserProfile.id);
+    if (!provider) {
+      console.error("Proveedor de usuario no encontrado.");
+      throw new Error("Proveedor de usuario no encontrado.");
+    }
+
+    const details: MeetingEventDetails = {
+      summary: "Langrow Class",
+      description: mentoring.requestDescription || "Clase de mentoría programada",
+      startDateTime: mentoring.beginsAt ?? "",
+      endDateTime: mentoring.endsAt ?? "",
+      timeZone: "GMT-3", // Asegúrate de que el proveedor soporte este timezone
+      attendees: [proffesorEmail, studentUserProfile.email],
+    }
+
+    const meeting = await provider.createMeeting(details);
+    if (!meeting || !meeting.joinUrl) {
+      console.error("Error al crear la reunión con el proveedor.");
+    }
+    return {
+      success: true,
+      meetingUrl: meeting.joinUrl,
+      meetingExternalId: meeting.id
+    };
+
+  } catch (error) {
+    console.error("Error al obtener el perfil del estudiante o el email del profesor:", error);
+    return { success: false, error: "Error al obtener el perfil del estudiante o el email del profesor." };
+  }
+}
 
 export const cancelClassRoom = async (id: number) => {
   if (!id || typeof id !== "number") {
@@ -381,6 +428,35 @@ export const updateClassRoomByPaymentId = async (
 
   if (error) {
     console.error("Error al actualizar la clase por ID de pago:", error);
+    return { success: false, error: error.message };
+  }
+
+  if (!data || data.length === 0) {
+    return {
+      success: false,
+      error: "Clase no encontrada o no pudo ser actualizada.",
+    };
+  }
+
+  return { success: true, data };
+}
+
+export const updateClassRoomById = async (
+  id: number,
+  fieldsToUpdate: Partial<ClassRoomUpdate>
+) => {
+  if (!id || typeof id !== "number") {
+    return { success: false, error: "ID inválido" };
+  }
+
+  const { data, error } = await supabaseClient
+    .from(SUPABASE_TABLES.MENTORSHIP)
+    .update(fieldsToUpdate)
+    .eq("id", id)
+    .select();
+
+  if (error) {
+    console.error("Error al actualizar la clase:", error);
     return { success: false, error: error.message };
   }
 
