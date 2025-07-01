@@ -35,8 +35,7 @@ export async function POST(request: NextRequest) {
     const { data } = validation;
     const result = await updatePaymentStatus(
         data.preference_id,
-        data.status,
-        data
+        data.status
     );
 
     if (!result) {
@@ -48,7 +47,7 @@ export async function POST(request: NextRequest) {
         console.log("Pago actualizado correctamente:");
         const updatedClassRoom = await updateClassRoomByPaymentId(
             String(result.id),
-            (data.status === "approved") ? ClassRoomStatus.NEXT : ClassRoomStatus.CANCELLED
+            (data.status === "approved") ? ClassRoomStatus.REQUESTED : ClassRoomStatus.CANCELLED
         )
         return NextResponse.json(
             { result: true, message: "Pago actualizado correctamente" },
