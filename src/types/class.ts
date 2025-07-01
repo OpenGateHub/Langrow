@@ -9,7 +9,7 @@ export type ClassData = {
   time: string;
   duration: string;
   cost: string;
-  status: string; // "REQUESTED" | "NEXT" | "NOTCONFIRMED" | "CANCELLED" | "CONFIRMED"
+  status: string; // "REQUESTED" | "NEXT" | "NOTCONFIRMED" | "REJECTED" | "CONFIRMED"
   requestDescription: string;
   professorReview?: { text: string; rating: number };
   studentReview?: { text: string; rating: number };

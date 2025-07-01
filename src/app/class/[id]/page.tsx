@@ -73,7 +73,7 @@ const ClassDetailsPage = () => {
         return 'bg-green-100 text-green-800';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled':
+      case 'rejected':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -86,8 +86,8 @@ const ClassDetailsPage = () => {
         return 'Confirmada';
       case 'pending':
         return 'Pendiente';
-      case 'cancelled':
-        return 'Cancelada';
+      case 'rejected':
+        return 'Rechazada';
       default:
         return status;
     }

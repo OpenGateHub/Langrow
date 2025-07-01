@@ -9,10 +9,11 @@ import ReviewModal from "../components/ModalReview";
 import WeeklyAgendaModal from "../components/ModalClassRequest";
 import RescheduleModal from "../components/RescheduleModal";
 import MessageModal from "../components/Modal";
+import BlockUi from "../components/BlockUi";
 
 const MisClases: React.FC = () => {
   const { clerkUser, role } = useProfileContext();
-  const [activeTab, setActiveTab] = useState<string>("Necesita Atención");
+  const [activeTab, setActiveTab] = useState<string>("Clasificar");
 
   const {
     classesData,
@@ -39,6 +40,7 @@ const MisClases: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-6 bg-gray-100 py-6 my-6 rounded-xl min-h-screen">
+      <BlockUi isActive={loading} />
       <MessageModal
         isOpen={isMessageModalOpen}
         onClose={() => setMessageModalOpen(false)}
@@ -48,7 +50,6 @@ const MisClases: React.FC = () => {
 
       <ClassTabs activeTab={activeTab} setActiveTab={setActiveTab} classesData={classesData} />
 
-      {loading && <p className="text-center">Cargando…</p>}
       {error && <p className="text-center text-red-500">{error}</p>}
 
       {!loading && !error && (

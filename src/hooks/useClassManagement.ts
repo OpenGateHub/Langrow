@@ -101,8 +101,9 @@ export function useClassManagement(userId: string): UseClassManagementReturn {
           grouped["Próximas"].push(c);
           break;
         case "NOTCONFIRMED":
-        case "CANCELLED":
-          grouped["Necesita Atención"].push(c);
+          grouped["Calificar"].push(c);
+          break;
+        case "REJECTED":
           break;
         case "CONFIRMED":
           grouped.Revisadas.push(c);
