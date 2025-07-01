@@ -36,7 +36,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classData, activeTab, onCo
         );
       }
     }
-    if (activeTab === "Necesita Atención") {
+    if (activeTab === "Revisar") {
       return (
         <button
           onClick={() => onConfirm(classData, "confirmar")}

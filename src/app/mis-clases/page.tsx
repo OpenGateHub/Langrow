@@ -13,7 +13,7 @@ import BlockUi from "../components/BlockUi";
 
 const MisClases: React.FC = () => {
   const { clerkUser, role } = useProfileContext();
-  const [activeTab, setActiveTab] = useState<string>("Clasificar");
+  const [activeTab, setActiveTab] = useState<string>("Revisar");
 
   const {
     classesData,

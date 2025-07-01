@@ -89,7 +89,7 @@ export function useClassManagement(userId: string): UseClassManagementReturn {
     const grouped: Record<string, ClassData[]> = {
       Solicitudes: [],
       Próximas: [],
-      "Necesita Atención": [],
+      "Revisar": [],
       Revisadas: [],
     };
     sessions.forEach(c => {
