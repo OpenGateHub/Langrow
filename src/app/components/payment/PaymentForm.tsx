@@ -1,6 +1,12 @@
 "use client";
 import { useState } from "react";
 
+export interface ClassDetails {
+  classType: string;
+  classTitle: string;
+  classSlots: Array<any>
+};
+
 interface PaymentFormProps {
   clases: number;
   precioClase: number;
@@ -8,9 +14,12 @@ interface PaymentFormProps {
   alumnoId: string;
   profesorId: string;
   purchaseId: string;
+  classDetails: ClassDetails| null;
 }
 
-const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchaseId }: PaymentFormProps) => {
+const PAYMENT_API = "/api/mentoring/v2"; // URL del endpoint de pago
+
+const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchaseId, classDetails }: PaymentFormProps) => {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,27 +48,28 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
           alumnoId: alumnoId,
           profesorId: profesorId,
           purchaseId: purchaseId,
+          classDetails: classDetails,
         },
       };
 
-      console.log('[PaymentForm] Enviando datos a /api/create-preference', paymentData);
+      console.log('[PaymentForm] Enviando datos:: ', paymentData);
 
       if (isNaN(precioClase) || precioClase <= 0 || isNaN(clases) || clases <= 0) {
         console.error('[PaymentForm] Error en los datos: precio o cantidad inválidos', { precioClase, clases });
         throw new Error(`Error en los datos: precio por clase (${precioClase}) o cantidad (${clases}) inválidos.`);
       }
 
-      const response = await fetch("/api/create-preference", {
+      const response = await fetch(PAYMENT_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(paymentData),
       });
 
-      console.log('[PaymentForm] Respuesta de /api/create-preference', response);
+      console.log('[PaymentForm] Respuesta de:', response);
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('[PaymentForm] Error en respuesta de /api/create-preference', errorData);
+        console.error('[PaymentForm] Error en respuesta de:', errorData);
         // Mostrar el error específico del servidor
         let errorMsg = 'Error al procesar el pago';
         if (errorData.error) {
@@ -72,7 +82,7 @@ const PaymentForm = ({ clases, precioClase, total, alumnoId, profesorId, purchas
         throw new Error(errorMsg);
       }
 
-      const preference = await response.json();
+      const preference = await response.json(); 
       console.log('[PaymentForm] Preferencia recibida', preference);
 
       if (!preference.init_point) {

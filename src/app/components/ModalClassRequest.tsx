@@ -8,7 +8,10 @@ import { useMentoringConfiguration } from "../../hooks/useMentoringConfiguration
 export type SelectedSlotType = {
   date: Date;
   dayName: string;
+  timestamp: string;
   time: string;
+  period?: string; // Agregado para período
+  duration: string; // Agregado para duración
 };
 
 export type DaySchedule = {
@@ -36,6 +39,8 @@ const WEEK_DAYS_MAP: { [key: string]: string } = {
 };
 
 const WEEK_DAYS = Object.keys(WEEK_DAYS_MAP);
+
+const CLASS_DURATION = 60; // Duración fija de las clases en minutos
 
 export default function WeeklyAgendaModal({
   isOpen,
@@ -99,27 +104,55 @@ export default function WeeklyAgendaModal({
     setStartIndex(0);
   }, [daysToShow]);
 
-  const toggleSlotSelection = (date: Date, dayName: string, time: string) => {
-    setErrorMessage("");
-    const exists = selectedSlots.find(
-      (slot) =>
-        slot.date.toDateString() === date.toDateString() && slot.time === time
+const toggleSlotSelection = (date: Date, dayName: string, time: string) => {
+  setErrorMessage("");
+
+  const dateTime = date.getTime();
+
+  const exists = selectedSlots.find(
+    (slot) => slot.date.getTime() === dateTime && slot.time.includes(time)
+  );
+
+  if (exists) {
+    setSelectedSlots(
+      selectedSlots.filter(
+        (slot) => !(slot.date.getTime() === dateTime && slot.time.includes(time))
+      )
     );
-    if (exists) {
-      setSelectedSlots(
-        selectedSlots.filter(
-          (slot) =>
-            !(slot.date.toDateString() === date.toDateString() && slot.time === time)
-        )
-      );
+  } else {
+    if (selectedSlots.length < requiredClasses) {
+      const [hours, minutes] = time.split(":").map(Number);
+      const startDate = new Date(date);
+      startDate.setHours(hours, minutes);
+
+      const endDate = new Date(startDate);
+      endDate.setMinutes(endDate.getMinutes() + CLASS_DURATION); // ← dinámico
+
+      const formatTime = (d: Date) =>
+        d.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
+
+      const formattedTime = `${formatTime(startDate)} - ${formatTime(endDate)}`;
+
+      setSelectedSlots([
+        ...selectedSlots,
+        {
+          date,
+          timestamp: date.toISOString(),
+          dayName,
+          time,
+          period: formattedTime,
+          duration: `${CLASS_DURATION} min`,
+        },
+      ]);
     } else {
-      if (selectedSlots.length < requiredClasses) {
-        setSelectedSlots([...selectedSlots, { date, dayName, time }]);
-      } else {
-        setErrorMessage(`Solo puedes seleccionar ${requiredClasses} clase(s).`);
-      }
+      setErrorMessage(`Solo puedes seleccionar ${requiredClasses} clase(s).`);
     }
-  };
+  }
+};
 
   const handleSubmit = () => {
     if (selectedSlots.length !== requiredClasses) {

@@ -1,7 +1,7 @@
 import { supabaseClient } from "@/app/api/supabaseClient";
 import { SUPABASE_TABLES } from "@/app/config";
 import { GetMentoringFilter } from "./route";
-import { ClassRoomStatus } from "@/types/classRoom";
+import { ClassRoom, ClassRoomStatus, ClassRoomUpdate } from "@/types/classRoom";
 import { getUserProvider } from "@/lib/providers";
 import {
   getStudentProfileByUserId,
@@ -20,7 +20,8 @@ export interface CreateClassRoomParams {
   cost: string;
   status: string;
   title: string;
-  requestDescription: string;
+  requestDescription: string | undefined;
+  payment_id?: string | number | undefined; // Optional, used for payment tracking
 }
 
 export const getClassRoomByStudent = async (filter: GetMentoringFilter) => {
@@ -86,6 +87,7 @@ export const getClassRoomByProfessor = async (professorId: number, filter: GetMe
  * Async function Creates a classroom for a mentorship session
  * @param params CreateClassRoomParams
  * @returns boolean
+ * @deprecated
  */
 export const createClassRoom = async (
   params: CreateClassRoomParams
@@ -164,6 +166,52 @@ export const createClassRoom = async (
     throw new Error("El profesor ya tiene clases registradas ese horario.");
   }
 };
+
+export const createClassRoomMeeting = async (mentoring: ClassRoom) => {
+  try {
+    if (mentoring.studentId === null || mentoring.studentId === undefined) {
+      throw new Error("El ID del estudiante es inválido.");
+    }
+    if (mentoring.userId === null || mentoring.userId === undefined) {
+      throw new Error("El ID del profesor es inválido.");
+    }
+    
+    const studentUserProfile = await getStudentProfileById(mentoring.studentId);
+    const proffesorEmail = await getEmailbyUserProfileId(mentoring.userId);
+    if (!studentUserProfile || !proffesorEmail) {
+      console.error("Perfil de estudiante o email del profesor no encontrado.");
+      return { success: false, error: "Perfil de estudiante o email del profesor no encontrado." };
+    }
+        const provider = await getUserProvider(studentUserProfile.id);
+    if (!provider) {
+      console.error("Proveedor de usuario no encontrado.");
+      throw new Error("Proveedor de usuario no encontrado.");
+    }
+
+    const details: MeetingEventDetails = {
+      summary: "Langrow Class",
+      description: mentoring.requestDescription || "Clase de mentoría programada",
+      startDateTime: mentoring.beginsAt ?? "",
+      endDateTime: mentoring.endsAt ?? "",
+      timeZone: "GMT-3", // Asegúrate de que el proveedor soporte este timezone
+      attendees: [proffesorEmail, studentUserProfile.email],
+    }
+
+    const meeting = await provider.createMeeting(details);
+    if (!meeting || !meeting.joinUrl) {
+      console.error("Error al crear la reunión con el proveedor.");
+    }
+    return {
+      success: true,
+      meetingUrl: meeting.joinUrl,
+      meetingExternalId: meeting.id
+    };
+
+  } catch (error) {
+    console.error("Error al obtener el perfil del estudiante o el email del profesor:", error);
+    return { success: false, error: "Error al obtener el perfil del estudiante o el email del profesor." };
+  }
+}
 
 export const cancelClassRoom = async (id: number) => {
   if (!id || typeof id !== "number") {
@@ -303,6 +351,50 @@ export const updateClassRoomStatus = async (id: number, status: string) => {
       return { success: true, data };
 };
 
+export const createMultipleClassRooms = async (classRooms: CreateClassRoomParams[]) => {
+  if (!Array.isArray(classRooms) || classRooms.length === 0) {
+    throw new Error("Debe proporcionar un array de clases.");
+  } 
+
+  // Map input to match DB schema: convert duration to number, merge date/time, remove/rename fields as needed
+  const mappedClassRooms = classRooms.map((params) => {
+    if (!params.time.includes(" - ")) {
+      throw new Error(`Formato de tiempo inválido: ${params.time}, expected : 'HH:mm - HH:mm'`);
+    }
+    const [startTime, endTime] = params.time.split(" - ");
+    const beginsAt = mergeDateTime(params.date, startTime);
+    const endsAt = mergeDateTime(params.date, endTime);
+
+    return {
+      userId: params.professorId,
+      studentId: params.studentId,
+      category: params.category,
+      requestDescription: params.requestDescription,
+      status: params.status,
+      title: params.title,
+      duration: parseInt(params.duration, 10),
+      beginsAt,
+      endsAt,
+      confirmed: false,
+      classRoomUrl: null,
+      meetingExternalId: null,
+      paymentId: params.payment_id as string
+    };
+  });
+
+  const { data, error } = await supabaseClient
+    .from(SUPABASE_TABLES.MENTORSHIP)
+    .insert(mappedClassRooms)
+    .select(); // Retorna los datos insertados  
+
+  if (error) {
+    console.error("Error al crear las clases:", error);
+    throw error;
+  }
+
+  return data;
+};
+
 const mergeDateTime = (dateStr: string, timeStr: string) => {
   const date = new Date(dateStr); // Convierte la fecha a un objeto Date
   const [time, period] = timeStr.split(" "); // Separa la hora del periodo AM/PM
@@ -318,3 +410,62 @@ const mergeDateTime = (dateStr: string, timeStr: string) => {
 
   return date.toISOString(); // Devuelve la fecha combinada en formato ISO
 };
+
+
+export const updateClassRoomByPaymentId = async (
+  paymentId: string | undefined,
+  status: ClassRoomStatus
+) => {
+  if (!paymentId || (typeof paymentId !== "string" && typeof paymentId !== "number")) {
+    return { success: false, error: "ID de pago inválido" };
+  }
+
+  const { data, error } = await supabaseClient
+    .from(SUPABASE_TABLES.MENTORSHIP)
+    .update({ status: status, updatedAt: new Date().toISOString() })
+    .eq("paymentId", paymentId)
+    .select();
+
+  if (error) {
+    console.error("Error al actualizar la clase por ID de pago:", error);
+    return { success: false, error: error.message };
+  }
+
+  if (!data || data.length === 0) {
+    return {
+      success: false,
+      error: "Clase no encontrada o no pudo ser actualizada.",
+    };
+  }
+
+  return { success: true, data };
+}
+
+export const updateClassRoomById = async (
+  id: number,
+  fieldsToUpdate: Partial<ClassRoomUpdate>
+) => {
+  if (!id || typeof id !== "number") {
+    return { success: false, error: "ID inválido" };
+  }
+
+  const { data, error } = await supabaseClient
+    .from(SUPABASE_TABLES.MENTORSHIP)
+    .update(fieldsToUpdate)
+    .eq("id", id)
+    .select();
+
+  if (error) {
+    console.error("Error al actualizar la clase:", error);
+    return { success: false, error: error.message };
+  }
+
+  if (!data || data.length === 0) {
+    return {
+      success: false,
+      error: "Clase no encontrada o no pudo ser actualizada.",
+    };
+  }
+
+  return { success: true, data };
+}
