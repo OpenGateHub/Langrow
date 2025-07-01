@@ -5,6 +5,7 @@ import {
     getUserConfiguration,
     updateConfiguration
 } from "./configurations";
+import { getProfileByUserId } from "../../profile/profile";
 
 
 const createMentoringConfigurationSchema = zod.object({
@@ -65,7 +66,14 @@ export async function GET(req: NextRequest) {
                 { status: 400 }
             );
         }
-        const configuration = await getUserConfiguration(Number(userId));
+        const profile = await getProfileByUserId(userId);
+        if (!profile) {
+            return NextResponse.json(
+                { message: 'Perfil no encontrado' },
+                { status: 404 }
+            );
+        }
+        const configuration = await getUserConfiguration(profile.id);
         if (configuration) {
             return NextResponse.json(
                 { message: 'Configuración obtenida', configuration },

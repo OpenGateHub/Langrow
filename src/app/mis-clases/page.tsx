@@ -80,7 +80,13 @@ const MisClases: React.FC = () => {
           isOpen
               onClose={closeModal}
           onConfirm={() =>
-            handleScheduleSubmit([{ date: new Date(), dayName: selectedClass.category, time: selectedClass.time }])
+            handleScheduleSubmit([{
+              date: new Date(),
+              dayName: selectedClass.category,
+              time: selectedClass.time,
+              timestamp: new Date().getTime().toString(),
+              duration: String(selectedClass.duration || 60) // Replace 60 with the default or actual duration as needed
+            }])
           }
             />
       )}
