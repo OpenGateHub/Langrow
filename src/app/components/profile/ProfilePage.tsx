@@ -392,28 +392,28 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
               </div>
             </AnimateOnScroll>
           )}
-          {/* Sección de Reseñas */}
-          <AnimateOnScroll delay={1000}>
-            <div className="opacity-0 animate-fade-in mt-6">
-              <h2 className="text-xl font-bold text-secondary text-center md:text-left mb-2">
-                Testimonios
-              </h2>
-              {reviewsLoading && <p>Cargando reseñas...</p>}
-              {reviewsError && <p>Error al cargar reseñas: {reviewsError}</p>}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {reviews.map((review, index) => (
-                  <AnimateOnScroll key={index} delay={1100 + index * 150}>
-                    <ReviewCard
-                      reviewerName={review.reviewer?.fullName || "Anónimo"}
-                      reviewText={review.notes}
-                      stars={review.qualification}
-                      profilePicture={review.reviewer?.profileImg || "/default-profile.png"}
-                    />
-                  </AnimateOnScroll>
-                ))}
+          {/* Sección de Reseñas - Solo mostrar si hay reseñas y no hay errores */}
+          {!reviewsLoading && !reviewsError && reviews.length > 0 && (
+            <AnimateOnScroll delay={1000}>
+              <div className="opacity-0 animate-fade-in mt-6">
+                <h2 className="text-xl font-bold text-secondary text-center md:text-left mb-2">
+                  Testimonios
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {reviews.map((review, index) => (
+                    <AnimateOnScroll key={index} delay={1100 + index * 150}>
+                      <ReviewCard
+                        reviewerName={review.reviewer?.fullName || "Anónimo"}
+                        reviewText={review.notes}
+                        stars={review.qualification}
+                        profilePicture={review.reviewer?.profileImg || "/default-profile.png"}
+                      />
+                    </AnimateOnScroll>
+                  ))}
+                </div>
               </div>
-            </div>
-          </AnimateOnScroll>
+            </AnimateOnScroll>
+          )}
         </div>
       </div>
     </main>
