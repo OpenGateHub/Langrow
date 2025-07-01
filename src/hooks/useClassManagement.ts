@@ -96,7 +96,7 @@ export function useClassManagement(userId: string): UseClassManagementReturn {
     sessions.forEach(c => {
       switch (c.status) {
         case ClassRoomStatus.REQUESTED:
-        case ClassRoomStatus.CREATED:
+        // case ClassRoomStatus.CREATED:
           grouped.Solicitudes.push(c);
           break;
         case ClassRoomStatus.NEXT:
@@ -126,7 +126,7 @@ export function useClassManagement(userId: string): UseClassManagementReturn {
       setIsReviewModalOpen(true);
     } else if (action === "aceptar") {
       try {
-        const result = await updateStatus({ id: c.id, status: "NEXT" });
+        const result = await updateStatus({ id: c.id, status: ClassRoomStatus.NEXT });
         if (result?.success) {
           setModalMessage("¡Clase aceptada con éxito!");
           setModalType("success");
