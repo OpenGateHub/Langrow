@@ -1,8 +1,9 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import HomeTemplate, { HomeTemplateProps } from "../components/homePage/HomePage";
 import { useProfileContext } from "@/context/ProfileContext";
 import { useOauthToken } from "@/hooks/useOauthToken";
+import MessageModal from "../components/Modal";
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
 const GOOGLE_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI!;
@@ -10,6 +11,7 @@ const GOOGLE_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI!;
 export default function HomePage() {
   const { role, profile, loading, error } = useProfileContext();
   const { stateToken, fetchOauthToken, loading: tokenLoading } = useOauthToken();
+  const [showGoogleAuthModal, setShowGoogleAuthModal] = useState(false);
 
   const userRole = role || "guest";
 
@@ -24,22 +26,29 @@ export default function HomePage() {
     }
   }, [profile, fetchOauthToken]);
 
-  // Redirigir a Google con el token cuando esté disponible
+  // Mostrar modal cuando el token esté disponible en lugar de redirigir directamente
   useEffect(() => {
     if (stateToken && !tokenLoading) {
-      const params = new URLSearchParams({
-        response_type: "code",
-        client_id: GOOGLE_CLIENT_ID,
-        redirect_uri: GOOGLE_REDIRECT_URI,
-        scope: "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid",
-        access_type: "offline",
-        prompt: "consent",
-        state: stateToken,
-      });
-
-      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+      setShowGoogleAuthModal(true);
     }
   }, [stateToken, tokenLoading]);
+
+  // Función para manejar la confirmación del modal y redirigir a Google
+  const handleGoogleAuthConfirm = () => {
+    setShowGoogleAuthModal(false);
+    
+    const params = new URLSearchParams({
+      response_type: "code",
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: GOOGLE_REDIRECT_URI,
+      scope: "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid",
+      access_type: "offline",
+      prompt: "consent",
+      state: stateToken || "",
+    });
+
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  };
 
   if (loading || tokenLoading) return <p>Cargando perfil...</p>;
   if (error) return <p>Error: {error}</p>;
@@ -139,6 +148,15 @@ export default function HomePage() {
   };
 
   return (
-    <HomeTemplate {...(userRole === "org:profesor" ? tutorProps : studentProps)} />
+    <>
+      <HomeTemplate {...(userRole === "org:profesor" ? tutorProps : studentProps)} />
+      
+      <MessageModal
+        isOpen={showGoogleAuthModal}
+        onClose={handleGoogleAuthConfirm}
+        type="success"
+        message="Para que funcione la app necesitamos acceder a tu cuenta de Google para crear las reuniones de Google Meet. ¿Quieres continuar?"
+      />
+    </>
   );
 }
