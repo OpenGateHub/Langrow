@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useReviews } from "@/hooks/useReview";
 import { useProfileContext } from "@/context/ProfileContext";
 import { useProfile } from "@/hooks/useProfile";
+import BlockUi from "../BlockUi";
 
 interface ProfilePageProps {
   profileId?: string; // Si se pasa, se carga ese perfil; sino se usa el del contexto
@@ -56,7 +57,13 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
     }
   }, [profile]);
 
-  if (loading) return <p>Cargando...</p>;
+  if (loading) {
+    return (
+      <main className="p-8 bg-gray-100">
+        <BlockUi isActive={true} />
+      </main>
+    );
+  }
   if (error || !profile) return <p>Error: {error || "Perfil no encontrado"}</p>;
 
   const handlePhotoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
