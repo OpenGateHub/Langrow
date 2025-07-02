@@ -101,6 +101,7 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
     }
   }, [redirectionInProgress, initialCheckDone]);
 
+
   // Permitir acceso al home para usuarios recién registrados
   if (!isLoaded) {
     return (
@@ -117,7 +118,11 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
         <BlockUi isActive={true} />
       </div>
     );
+
   }
+
+  // Si el usuario está autenticado pero cargando el perfil, mostrar la página sin pantalla de carga
+  // El perfil se cargará en segundo plano
 
   return <>{children}</>;
 }

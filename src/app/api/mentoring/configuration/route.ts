@@ -3,7 +3,8 @@ import { z as zod } from "zod";
 import {
     createConfiguration,
     getUserConfiguration,
-    updateConfiguration
+    updateConfiguration,
+    cleanDuplicateConfigurations
 } from "./configurations";
 import { getProfileByUserId } from "../../profile/profile";
 
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
             data.category
         );
         if (configuration) {
+            await cleanDuplicateConfigurations(data.userId, data.category);
             return NextResponse.json(
                 { message: 'Configuración creada', configuration },
                 { status: 201 }
@@ -60,21 +62,39 @@ export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
         const userId = searchParams.get('userId');
+        const category = searchParams.get('category');
+        
         if (!userId) {
             return NextResponse.json(
                 { message: 'Error en la validación', error: 'userId es requerido' },
                 { status: 400 }
             );
         }
-        const profile = await getProfileByUserId(userId);
-        if (!profile) {
-            return NextResponse.json(
-                { message: 'Perfil no encontrado' },
-                { status: 404 }
-            );
+        
+        // Si userId es un string (Clerk ID), buscar el perfil primero
+        let profileId: number;
+        if (isNaN(Number(userId))) {
+            // Es un Clerk ID, buscar el perfil
+            const profile = await getProfileByUserId(userId);
+            if (!profile) {
+                return NextResponse.json(
+                    { message: 'Perfil no encontrado' },
+                    { status: 404 }
+                );
+            }
+            profileId = profile.id;
+        } else {
+            // Es un profileId numérico
+            profileId = parseInt(userId);
         }
-        const configuration = await getUserConfiguration(profile.id);
+        
+        // Primero intentar obtener la configuración
+        const configuration = await getUserConfiguration(profileId, category ? parseInt(category) : undefined);
+        
         if (configuration) {
+            // Solo limpiar duplicados si hay configuración
+            await cleanDuplicateConfigurations(profileId, category ? parseInt(category) : undefined);
+            
             return NextResponse.json(
                 { message: 'Configuración obtenida', configuration },
                 { status: 200 }
