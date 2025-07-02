@@ -124,17 +124,18 @@ const convert12HourTo24Hour = (time12h: string): string => {
   console.log('convert12HourTo24Hour - Input:', time12h);
   
   const [time, modifier] = time12h.toLowerCase().split(/(am|pm)/);
-  let [hours, minutes] = time.split(":");
+  const [hours, minutes] = time.split(":");
   
+  let finalHours = hours;
   if (hours === '12') {
-    hours = modifier === 'pm' ? '12' : '00';
+    finalHours = modifier === 'pm' ? '12' : '00';
   } else if (modifier === 'pm') {
-    hours = String(parseInt(hours) + 12);
+    finalHours = String(parseInt(hours) + 12);
   } else {
-    hours = hours.padStart(2, '0');
+    finalHours = hours.padStart(2, '0');
   }
   
-  const result = `${hours}:${minutes || '00'}`;
+  const result = `${finalHours}:${minutes || '00'}`;
   console.log('convert12HourTo24Hour - Output:', result);
   return result;
 };
