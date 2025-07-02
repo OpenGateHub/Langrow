@@ -36,7 +36,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classData, activeTab, onCo
         );
       }
     }
-    if (activeTab === "Necesita Atención") {
+    if (activeTab === "Revisar") {
       return (
         <button
           onClick={() => onConfirm(classData, "confirmar")}
@@ -64,7 +64,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classData, activeTab, onCo
             {classData.date} | {classData.time}
           </p>
           <p className="text-gray-600 text-sm">
-            Duración: {classData.duration} | Costo: {classData.cost}
+            Duración: {classData.duration}
           </p>
         </div>
         <div>{renderActions()}</div>
@@ -78,7 +78,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classData, activeTab, onCo
       {isExpanded && (
         <div className="mt-2">
           {(activeTab === "Solicitudes" ||
-            activeTab === "Necesita Atención" ||
+            activeTab === "Calificar" ||
             activeTab === "Próximas") && (
             <>
               <p className="text-gray-800 font-semibold">

@@ -37,7 +37,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (isLoaded && user) {
       refetch();
     }
-  }, [isLoaded, user]);
+  }, [isLoaded, user?.id]); // Solo depende del ID del usuario, no de todo el objeto user
 
   const value: ProfileContextValue = {
     clerkUser: user || null,

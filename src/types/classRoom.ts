@@ -48,5 +48,5 @@ export enum ClassRoomStatus {
     NEXT = 'pending',
     NOTCONFIRMED = 'not-confirmed',
     CONFIRMED = 'confirmed',
-    CANCELLED = 'cancelled',
+    REJECTED = 'rejected',
 }

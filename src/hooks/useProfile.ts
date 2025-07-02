@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Profile as BaseProfile } from "@/types/profile";
 import { UserProfile as Profile } from "@/types/userProfile";
 
@@ -32,6 +32,14 @@ export function useProfile(profileId?: number | string): UseProfileReturn {
     setLoading(true);
     try {
       const res = await fetch(`/api/profile/${profileId}`);
+      
+      if (res.status === 404) {
+        // Perfil no encontrado - esto es normal para usuarios nuevos
+        setProfile(null);
+        setError(null);
+        return;
+      }
+      
       const json = await res.json();
       if (
         !res.ok ||
@@ -136,6 +144,10 @@ export function useProfile(profileId?: number | string): UseProfileReturn {
     }
   };
 
-  return { profile, loading, error, createProfile, updateProfile, refetch: fetchProfile };
+  const refetch = React.useCallback(() => {
+    fetchProfile();
+  }, [profileId]);
+
+  return { profile, loading, error, createProfile, updateProfile, refetch };
 }
 

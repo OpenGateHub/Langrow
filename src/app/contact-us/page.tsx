@@ -189,6 +189,8 @@ export default function ContactPage() {
 
               <AnimateOnScroll delay={500}>
                 <div>
+                  {/* Elemento oculto que Clerk espera para el CAPTCHA */}
+                  <div id="clerk-captcha" style={{ display: 'none' }}></div>
                   {RecaptchaComponent()}
                   {captchaError && (
                     <p className="text-sm text-red-600 mt-2">{captchaError}</p>
