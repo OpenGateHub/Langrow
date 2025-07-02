@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useReviews } from "@/hooks/useReview";
 import { useProfileContext } from "@/context/ProfileContext";
 import { useProfile } from "@/hooks/useProfile";
+import BlockUi from "../BlockUi";
 
 interface ProfilePageProps {
   profileId?: string; // Si se pasa, se carga ese perfil; sino se usa el del contexto
@@ -56,7 +57,13 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
     }
   }, [profile]);
 
-  if (loading) return <p>Cargando...</p>;
+  if (loading) {
+    return (
+      <main className="p-8 bg-gray-100">
+        <BlockUi isActive={true} />
+      </main>
+    );
+  }
   if (error || !profile) return <p>Error: {error || "Perfil no encontrado"}</p>;
 
   const handlePhotoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -392,28 +399,28 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
               </div>
             </AnimateOnScroll>
           )}
-          {/* Sección de Reseñas */}
-          <AnimateOnScroll delay={1000}>
-            <div className="opacity-0 animate-fade-in mt-6">
-              <h2 className="text-xl font-bold text-secondary text-center md:text-left mb-2">
-                Testimonios
-              </h2>
-              {reviewsLoading && <p>Cargando reseñas...</p>}
-              {reviewsError && <p>Error al cargar reseñas: {reviewsError}</p>}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {reviews.map((review, index) => (
-                  <AnimateOnScroll key={index} delay={1100 + index * 150}>
-                    <ReviewCard
-                      reviewerName={review.reviewer?.fullName || "Anónimo"}
-                      reviewText={review.notes}
-                      stars={review.qualification}
-                      profilePicture={review.reviewer?.profileImg || "/default-profile.png"}
-                    />
-                  </AnimateOnScroll>
-                ))}
+          {/* Sección de Reseñas - Solo mostrar si hay reseñas y no hay errores */}
+          {!reviewsLoading && !reviewsError && reviews.length > 0 && (
+            <AnimateOnScroll delay={1000}>
+              <div className="opacity-0 animate-fade-in mt-6">
+                <h2 className="text-xl font-bold text-secondary text-center md:text-left mb-2">
+                  Testimonios
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {reviews.map((review, index) => (
+                    <AnimateOnScroll key={index} delay={1100 + index * 150}>
+                      <ReviewCard
+                        reviewerName={review.reviewer?.fullName || "Anónimo"}
+                        reviewText={review.notes}
+                        stars={review.qualification}
+                        profilePicture={review.reviewer?.profileImg || "/default-profile.png"}
+                      />
+                    </AnimateOnScroll>
+                  ))}
+                </div>
               </div>
-            </div>
-          </AnimateOnScroll>
+            </AnimateOnScroll>
+          )}
         </div>
       </div>
     </main>

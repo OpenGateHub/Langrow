@@ -221,7 +221,7 @@ export const cancelClassRoom = async (id: number) => {
   try {
       const { data: mentoringData, error } = await supabaseClient
           .from(SUPABASE_TABLES.MENTORSHIP)
-          .update({ status: ClassRoomStatus.CANCELLED })
+          .update({ status: ClassRoomStatus.REJECTED })
           .eq("id", id)
           .select()
           .single(); // Retorna los datos actualizados

@@ -19,7 +19,7 @@ export default function MessageModal({
   const [showContent, setShowContent] = useState(false);
 
   const defaultMessages = {
-    success: "Tu acción fue completada exitosamente.",
+    success: "¡Genial! Tu acción fue completada exitosamente.",
     error: "Ocurrió un error inesperado. Inténtalo de nuevo.",
   };
 
@@ -50,12 +50,12 @@ export default function MessageModal({
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 transition-opacity duration-300 ${
+      className={`fixed inset-0 bg-black/70 flex items-center justify-center z-50 transition-opacity duration-300 ${
         showContent ? "opacity-100" : "opacity-0"
       }`}
     >
       <div
-        className={`bg-white rounded-3xl shadow-lg w-[90%] max-w-md p-6 transform transition-transform duration-300 ${
+        className={`bg-white rounded-3xl shadow-lg w-[90%] max-w-lg p-6 transform transition-transform duration-300 ${
           showContent ? "scale-100" : "scale-75"
         }`}
       >
@@ -66,7 +66,7 @@ export default function MessageModal({
               type === "success" ? "text-secondary" : "text-red-600"
             }`}
           >
-            {type === "success" ? "¡Éxito!" : "¡Error!"}
+            {type === "success" ? "¡Genial!" : "¡Error!"}
           </h2>
         </div>
 

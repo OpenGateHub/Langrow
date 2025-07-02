@@ -14,7 +14,7 @@ export function useClasses(userId: string): UseClassesReturn {
   const [classes, setClasses] = useState<Record<string, ClassData[]>>({
     "Solicitudes": [],
     "Próximas": [],
-    "Necesita Atención": [],
+    "Revisar": [],
     "Revisadas": []
   });
   const [loading, setLoading] = useState(false);
@@ -36,7 +36,7 @@ export function useClasses(userId: string): UseClassesReturn {
       const organizedClasses: Record<string, ClassData[]> = {
         "Solicitudes": [],
         "Próximas": [],
-        "Necesita Atención": [],
+        "Revisar": [],
         "Revisadas": []
       };
 
@@ -79,7 +79,7 @@ export function useClasses(userId: string): UseClassesReturn {
             organizedClasses["Próximas"].push(mappedClass);
             break;
           case ClassRoomStatus.NOTCONFIRMED:
-            organizedClasses["Necesita Atención"].push(mappedClass);
+            organizedClasses["Revisar"].push(mappedClass);
             break;
           case ClassRoomStatus.CONFIRMED:
             organizedClasses["Revisadas"].push(mappedClass);
