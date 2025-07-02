@@ -124,7 +124,7 @@ const convert12HourTo24Hour = (time12h: string): string => {
   console.log('convert12HourTo24Hour - Input:', time12h);
   
   const [time, modifier] = time12h.toLowerCase().split(/(am|pm)/);
-  let [hours, minutes] = time.split(':');
+  let [hours, minutes] = time.split(":");
   
   if (hours === '12') {
     hours = modifier === 'pm' ? '12' : '00';
@@ -343,7 +343,7 @@ const toggleSlotSelection = (date: Date, dayName: string, time: string) => {
         {!loadingConfiguration && !configurationError && availableSchedule.length === 0 && (
           <div className="text-center py-4">
             <p className="text-gray-600 mb-4">No hay horarios configurados para este profesor.</p>
-            <p className="text-sm text-gray-500">El profesor debe configurar su disponibilidad en "Mi Agenda".</p>
+            <p className="text-sm text-gray-500">El profesor debe configurar su disponibilidad en &quot;Mi Agenda&quot;.</p>
           </div>
         )}
 
