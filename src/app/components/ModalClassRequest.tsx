@@ -60,7 +60,7 @@ const convertTimeRangesToSlots = (timeRanges: { start: string; end: string }[]):
       const timeString = currentTime.toTimeString().slice(0, 5); // HH:MM
       console.log('convertTimeRangesToSlots - Adding slot:', timeString);
       slots.push(timeString);
-      currentTime.setMinutes(currentTime.getMinutes() + CLASS_DURATION);
+      currentTime = new Date(currentTime.getTime() + CLASS_DURATION * 60 * 1000);
     }
   });
   
