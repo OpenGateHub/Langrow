@@ -94,9 +94,15 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
     }
   }, [redirectionInProgress, initialCheckDone]);
 
-  if (!isLoaded || (isSignedIn && profileLoading && !initialCheckDone)) {
-    return <LoadingScreen message="Verificando tu sesión..." />;
+  if (!isLoaded) {
+    // Solo mostrar pantalla de carga si Clerk no está cargado Y no es una ruta pública
+    if (!isPublicRoute) {
+      return <LoadingScreen message="Verificando tu sesión..." />;
+    }
   }
+
+  // Si el usuario está autenticado pero cargando el perfil, mostrar la página sin pantalla de carga
+  // El perfil se cargará en segundo plano
 
   return <>{children}</>;
 }

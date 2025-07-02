@@ -5,18 +5,19 @@ import Image from "next/image";
 import { useProfileContext } from "@/context/ProfileContext";
 import useWindowSize from "@/hooks/useWindowSize";
 import MessageModal from "@/app/components/Modal";
-import { useGetMentoring, MentoringSession } from "@/hooks/useMentoring";
+import BlockUi from "@/app/components/BlockUi";
+import { useMentoringConfiguration, ProfessorSchedule, TimeRange } from "@/hooks/useMentoringConfiguration";
 
 const WEEK_DAYS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 type SlotStatus = "none" | "available" | "reserved";
 
 export default function WeeklySchedulePage() {
-  const { clerkUser, role } = useProfileContext();
+  const { clerkUser, role, profile } = useProfileContext();
   const { width } = useWindowSize();
 
   // Modal de notificaciones
-  const [modalOpen, setModalOpen]       = useState(false);
-  const [modalType, setModalType]       = useState<"success"|"error">("success");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<"success"|"error">("success");
   const [modalMessage, setModalMessage] = useState("");
 
   // Estado local de todos los slots
@@ -31,25 +32,17 @@ export default function WeeklySchedulePage() {
   };
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(getMonday(new Date()));
 
-  // Formateo ISO para la API
-  const dateFrom = useMemo(() => currentWeekStart.toISOString().slice(0,10), [currentWeekStart]);
-  const dateTo   = useMemo(
-    () => new Date(currentWeekStart.getTime() + 6*86400000).toISOString().slice(0,10),
-    [currentWeekStart]
-  );
-
-  // Trae sesiones y reservedSlots del hook
+  // Obtener configuración de mentoring
   const {
-    sessions,
-    loading: loadingSessions,
-    error: errorSessions,
-    reservedSlots
-  } = useGetMentoring({
-    userId: clerkUser?.id || "",
-    dateFrom,
-    dateTo,
-    page: 50
-  });
+    configuration,
+    loading: loadingConfiguration,
+    error: errorConfiguration,
+    refetch: refetchConfiguration,
+    saveConfiguration
+  } = useMentoringConfiguration(profile?.id || "");
+
+  // Estado de carga inicial - mostrar spinner hasta que el perfil y la configuración estén listos
+  const isLoading = !profile || loadingConfiguration;
 
   // Días abreviados/completos según ancho
   const DAYS = width<768
@@ -69,27 +62,52 @@ export default function WeeklySchedulePage() {
     });
   }, [currentWeekStart, width]);
 
-  // Inicializa slotStates cada vez que cambian reservedSlots o weekDays
+  // Función para verificar si una hora está dentro de un rango
+  const isHourInRange = (hour: number, timeRanges: TimeRange[]): boolean => {
+    const hourStr = `${hour.toString().padStart(2, '0')}:00`;
+    return timeRanges.some(range => {
+      const startHour = parseInt(range.start.split(':')[0]);
+      const endHour = parseInt(range.end.split(':')[0]);
+      const currentHour = hour;
+      return currentHour >= startHour && currentHour < endHour;
+    });
+  };
+
+  // Inicializa slotStates cada vez que cambia la configuración o weekDays
   useEffect(() => {
     const all: Record<string,SlotStatus> = {};
     weekDays.forEach(({ fullDate }) => {
       const longDay = fullDate.toLocaleDateString("es-ES",{weekday:"long"});
       for (let hr=5; hr<=23; hr++) {
         const key = `${longDay}-${hr}`;
-        all[key] = reservedSlots[key] ?? "none";
+        // Verificar si el slot está en la configuración guardada
+        const daySchedule = configuration?.configuration?.schedule?.find(
+          day => day.day === longDay
+        );
+        const isAvailable = daySchedule ? isHourInRange(hr, daySchedule.timeRanges) : false;
+        all[key] = isAvailable ? "available" : "none";
       }
     });
     setSlotStates(all);
-  }, [reservedSlots, weekDays]);
+  }, [configuration, weekDays]);
 
-  // Alterna none <-> available (no toca reserved)
-  const cycleSlot = (day:string, hour:number) => {
-    const key = `${day}-${hour}`;
-    if (slotStates[key] === "reserved") return;
-    setSlotStates(st => ({
-      ...st,
-      [key]: st[key]==="available" ? "none" : "available"
-    }));
+  // Función para alternar un rango de horas
+  const toggleTimeRange = (day: string, startHour: number, endHour: number) => {
+    const newSlotStates = { ...slotStates };
+    
+    // Verificar si todo el rango está disponible
+    const isRangeAvailable = Array.from({ length: endHour - startHour }, (_, i) => startHour + i)
+      .every(hour => slotStates[`${day}-${hour}`] === "available");
+    
+    // Si todo el rango está disponible, lo marcamos como no disponible
+    // Si no, marcamos todo el rango como disponible
+    const newStatus: SlotStatus = isRangeAvailable ? "none" : "available";
+    
+    for (let hour = startHour; hour < endHour; hour++) {
+      newSlotStates[`${day}-${hour}`] = newStatus;
+    }
+    
+    setSlotStates(newSlotStates);
   };
 
   // Navegación entre semanas
@@ -98,13 +116,80 @@ export default function WeeklySchedulePage() {
   const nextWeek = () =>
     setCurrentWeekStart(d => new Date(d.getTime() + 7*86400000));
 
-  // Guardar (aquí luego integrarás tu hook de POST)
-  const handleSave = useCallback(() => {
-    console.log("Disponibilidad a guardar:", slotStates);
-    setModalType("success");
-    setModalMessage("¡Disponibilidad guardada exitosamente!");
-    setModalOpen(true);
-  }, [slotStates]);
+  // Guardar configuración
+  const handleSave = useCallback(async () => {
+    if (!profile?.id) {
+      setModalType("error");
+      setModalMessage("Error: No se pudo identificar tu perfil");
+      setModalOpen(true);
+      return;
+    }
+
+    try {
+      // Convertir slotStates a formato de configuración con rangos
+      const schedule: ProfessorSchedule[] = [];
+      const daysMap = new Map<string, number[]>();
+
+      // Agrupar horas disponibles por día
+      Object.entries(slotStates).forEach(([key, status]) => {
+        if (status === "available") {
+          const [day, hour] = key.split("-");
+          if (!daysMap.has(day)) {
+            daysMap.set(day, []);
+          }
+          daysMap.get(day)!.push(parseInt(hour));
+        }
+      });
+
+      // Convertir horas agrupadas a rangos de tiempo
+      daysMap.forEach((hours, day) => {
+        if (hours.length > 0) {
+          const sortedHours = hours.sort((a, b) => a - b);
+          const timeRanges: TimeRange[] = [];
+          let currentStart = sortedHours[0];
+          let currentEnd = sortedHours[0];
+
+          for (let i = 1; i < sortedHours.length; i++) {
+            if (sortedHours[i] === currentEnd + 1) {
+              currentEnd = sortedHours[i];
+            } else {
+              // Finalizar rango actual
+              timeRanges.push({
+                start: `${currentStart.toString().padStart(2, '0')}:00`,
+                end: `${(currentEnd + 1).toString().padStart(2, '0')}:00`
+              });
+              currentStart = sortedHours[i];
+              currentEnd = sortedHours[i];
+            }
+          }
+          
+          // Agregar último rango
+          timeRanges.push({
+            start: `${currentStart.toString().padStart(2, '0')}:00`,
+            end: `${(currentEnd + 1).toString().padStart(2, '0')}:00`
+          });
+
+          schedule.push({ day, timeRanges });
+        }
+      });
+
+      const success = await saveConfiguration(schedule);
+      
+      if (success) {
+        setModalType("success");
+        setModalMessage("¡Disponibilidad guardada exitosamente!");
+        setModalOpen(true);
+      } else {
+        setModalType("error");
+        setModalMessage("Error al guardar la configuración");
+        setModalOpen(true);
+      }
+    } catch (error) {
+      setModalType("error");
+      setModalMessage(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      setModalOpen(true);
+    }
+  }, [slotStates, profile?.id, saveConfiguration]);
 
   const hours = Array.from({length:19},(_,i)=>i+5);
 
@@ -131,7 +216,7 @@ export default function WeeklySchedulePage() {
 
       <header className="mb-6 text-center">
         <h1 className="text-3xl md:text-4xl font-bold text-secondary">Mi Agenda</h1>
-        <p className="mt-2 text-lg text-gray-700">Marca tus franjas disponibles para dar clases</p>
+        <p className="mt-2 text-lg text-gray-700">Marca tus rangos de horarios disponibles para dar clases</p>
       </header>
 
       <div className="flex items-center justify-between mb-6">
@@ -144,8 +229,8 @@ export default function WeeklySchedulePage() {
         <button onClick={nextWeek} className="px-4 py-2 bg-white rounded-full shadow">Siguiente →</button>
       </div>
 
-      {loadingSessions && <p className="text-center">Cargando sesiones reservadas…</p>}
-      {errorSessions && <p className="text-center text-red-500">{errorSessions}</p>}
+      <BlockUi isActive={isLoading} />
+      {errorConfiguration && <p className="text-center text-red-500">{errorConfiguration}</p>}
 
       <div className="overflow-auto flex-1">
         <div className="min-w-full bg-white bg-opacity-70 shadow-lg rounded-3xl p-4">
@@ -172,19 +257,16 @@ export default function WeeklySchedulePage() {
                     const key = `${longDay}-${hr}`;
                     const status = slotStates[key] || "none";
                     const base = "h-12 flex items-center justify-center border-b text-sm transition-colors";
-                    if(status==="reserved"){
-                      return <div key={key} className={`${base} bg-blue-300 cursor-default`}>RSV</div>;
-                    }
                     if(status==="available"){
                       return <div
                         key={key}
-                        onClick={()=>cycleSlot(longDay,hr)}
+                        onClick={()=>toggleTimeRange(longDay, hr, hr+1)}
                         className={`${base} bg-[#9dd295] cursor-pointer`}
                       >Disponible</div>;
                     }
                     return <div
                       key={key}
-                      onClick={()=>cycleSlot(longDay,hr)}
+                      onClick={()=>toggleTimeRange(longDay, hr, hr+1)}
                       className={`${base} bg-white cursor-pointer`}
                     >X</div>;
                   })}
@@ -198,12 +280,15 @@ export default function WeeklySchedulePage() {
       <div className="mt-4 flex justify-around text-sm">
         <div><span className="inline-block w-5 h-5 bg-white border mr-1"/>No disponible</div>
         <div><span className="inline-block w-5 h-5 bg-[#9dd295] mr-1"/>Disponible</div>
-        <div><span className="inline-block w-5 h-5 bg-blue-300 mr-1"/>Clase reservada</div>
       </div>
 
       <div className="mt-6 flex justify-center">
-        <button onClick={handleSave} className="px-8 py-3 bg-secondary hover:bg-secondary-hover text-white rounded-full shadow">
-          Guardar Disponibilidad
+        <button
+          onClick={handleSave}
+          disabled={isLoading}
+          className="px-8 py-3 bg-secondary text-white rounded-full font-semibold shadow-lg hover:bg-secondary-hover transition-colors disabled:opacity-50"
+        >
+          {isLoading ? "Guardando..." : "Guardar Disponibilidad"}
         </button>
       </div>
     </main>

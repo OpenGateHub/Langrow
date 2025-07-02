@@ -42,6 +42,103 @@ const WEEK_DAYS = Object.keys(WEEK_DAYS_MAP);
 
 const CLASS_DURATION = 60; // Duración fija de las clases en minutos
 
+// Función para convertir timeRanges a slots individuales
+const convertTimeRangesToSlots = (timeRanges: { start: string; end: string }[]): string[] => {
+  console.log('convertTimeRangesToSlots - Input timeRanges:', timeRanges);
+  const slots: string[] = [];
+  
+  timeRanges.forEach(range => {
+    console.log('convertTimeRangesToSlots - Processing range:', range);
+    const startTime = new Date(`2000-01-01T${range.start}:00`);
+    const endTime = new Date(`2000-01-01T${range.end}:00`);
+    
+    console.log('convertTimeRangesToSlots - startTime:', startTime, 'endTime:', endTime);
+    
+    // Generar slots cada 60 minutos dentro del rango
+    let currentTime = new Date(startTime);
+    while (currentTime < endTime) {
+      const timeString = currentTime.toTimeString().slice(0, 5); // HH:MM
+      console.log('convertTimeRangesToSlots - Adding slot:', timeString);
+      slots.push(timeString);
+      currentTime.setMinutes(currentTime.getMinutes() + CLASS_DURATION);
+    }
+  });
+  
+  console.log('convertTimeRangesToSlots - Final slots:', slots);
+  return slots;
+};
+
+// Función para convertir formato antiguo a nuevo formato
+const convertOldFormatToNew = (oldConfig: any): { schedule: any[] } => {
+  console.log('convertOldFormatToNew - Input:', oldConfig);
+  
+  const dayMapping: { [key: string]: string } = {
+    lunes: 'Lunes',
+    martes: 'Martes',
+    miercoles: 'Miércoles',
+    jueves: 'Jueves',
+    viernes: 'Viernes',
+    sabado: 'Sábado',
+    domingo: 'Domingo'
+  };
+
+  const schedule: any[] = [];
+
+  Object.entries(oldConfig).forEach(([day, timeRange]) => {
+    if (typeof timeRange === 'string' && dayMapping[day]) {
+      console.log('convertOldFormatToNew - Processing day:', day, 'timeRange:', timeRange);
+      
+      // Convertir formato "8am-5pm" a timeRanges
+      const timeRanges = convertTimeStringToRanges(timeRange as string);
+      
+      schedule.push({
+        day: dayMapping[day],
+        timeRanges: timeRanges
+      });
+    }
+  });
+
+  console.log('convertOldFormatToNew - Output schedule:', schedule);
+  return { schedule };
+};
+
+// Función para convertir formato de tiempo "8am-5pm" a timeRanges
+const convertTimeStringToRanges = (timeString: string): { start: string; end: string }[] => {
+  console.log('convertTimeStringToRanges - Input:', timeString);
+  
+  const parts = timeString.split('-');
+  if (parts.length !== 2) {
+    console.log('convertTimeStringToRanges - Invalid format, returning empty array');
+    return [];
+  }
+
+  const startTime = convert12HourTo24Hour(parts[0].trim());
+  const endTime = convert12HourTo24Hour(parts[1].trim());
+  
+  console.log('convertTimeStringToRanges - Converted:', { start: startTime, end: endTime });
+  return [{ start: startTime, end: endTime }];
+};
+
+// Función para convertir formato 12h a 24h
+const convert12HourTo24Hour = (time12h: string): string => {
+  console.log('convert12HourTo24Hour - Input:', time12h);
+  
+  const [time, modifier] = time12h.toLowerCase().split(/(am|pm)/);
+  let [hours, minutes] = time.split(':');
+  
+  if (hours === '12') {
+    hours = modifier === 'pm' ? '12' : '00';
+  } else if (modifier === 'pm') {
+    hours = String(parseInt(hours) + 12);
+  } else {
+    hours = hours.padStart(2, '0');
+  }
+  
+  const result = `${hours}:${minutes || '00'}`;
+  console.log('convert12HourTo24Hour - Output:', result);
+  return result;
+};
+
 export default function WeeklyAgendaModal({
   isOpen,
   onClose,
@@ -50,14 +147,18 @@ export default function WeeklyAgendaModal({
   professor,
   onSubmit,
 }: WeeklyAgendaModalProps) {
-  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
+  // Función para obtener el inicio de la semana actual (lunes)
+  const getCurrentWeekStart = () => {
     const now = new Date();
     const day = now.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
+    const diff = day === 0 ? -6 : 1 - day; // Si es domingo (0), retroceder 6 días; si no, calcular días hasta lunes
     const monday = new Date(now);
     monday.setDate(now.getDate() + diff);
+    monday.setHours(0, 0, 0, 0); // Resetear a inicio del día
     return monday;
-  });
+  };
+
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(getCurrentWeekStart);
 
   const [selectedSlots, setSelectedSlots] = useState<SelectedSlotType[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -69,11 +170,12 @@ export default function WeeklyAgendaModal({
   // Hook para obtener la configuración del profesor
   const { configuration, loading: loadingConfiguration, error: configurationError } = useMentoringConfiguration(professorId);
 
-  // Obtener el horario disponible del profesor desde la configuración
-  const availableSchedule: DaySchedule[] = configuration?.configuration?.schedule || [];
-
+  // Resetear a la semana actual cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
+      setCurrentWeekStart(getCurrentWeekStart());
+      setSelectedSlots([]); // Limpiar selecciones previas
+      setErrorMessage(""); // Limpiar errores previos
       setVisible(true);
       setTimeout(() => setShowContent(true), 10);
     } else {
@@ -82,6 +184,49 @@ export default function WeeklyAgendaModal({
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+
+  // Convertir el nuevo formato de timeRanges al formato esperado por el modal
+  const availableSchedule: DaySchedule[] = React.useMemo(() => {
+    console.log('Modal - Configuration recibida:', configuration);
+    console.log('Modal - Configuration.configuration:', configuration?.configuration);
+    console.log('Modal - Configuration.configuration.schedule:', configuration?.configuration?.schedule);
+    
+    if (!configuration?.configuration) {
+      console.log('Modal - No hay configuración');
+      return [];
+    }
+
+    let processedConfig;
+    
+    // Detectar si es formato antiguo o nuevo
+    if (configuration.configuration.schedule) {
+      // Es formato nuevo
+      console.log('Modal - Detectado formato nuevo');
+      processedConfig = configuration.configuration;
+    } else {
+      // Es formato antiguo, convertir
+      console.log('Modal - Detectado formato antiguo, convirtiendo...');
+      processedConfig = convertOldFormatToNew(configuration.configuration);
+    }
+    
+    if (!processedConfig.schedule) {
+      console.log('Modal - No hay schedule en la configuración procesada');
+      return [];
+    }
+    
+    const converted = processedConfig.schedule.map(daySchedule => {
+      console.log('Modal - Procesando día:', daySchedule);
+      const slots = convertTimeRangesToSlots(daySchedule.timeRanges);
+      console.log('Modal - Slots convertidos:', slots);
+      return {
+        day: daySchedule.day,
+        slots: slots
+      };
+    });
+    
+    console.log('Modal - Schedule final:', converted);
+    return converted;
+  }, [configuration]);
 
   // Genera los 7 días de la semana a partir de currentWeekStart
   const weekDays = Array.from({ length: 7 }).map((_, i) => {
@@ -195,7 +340,14 @@ const toggleSlotSelection = (date: Date, dayName: string, time: string) => {
           </div>
         )}
 
-        {!loadingConfiguration && !configurationError && (
+        {!loadingConfiguration && !configurationError && availableSchedule.length === 0 && (
+          <div className="text-center py-4">
+            <p className="text-gray-600 mb-4">No hay horarios configurados para este profesor.</p>
+            <p className="text-sm text-gray-500">El profesor debe configurar su disponibilidad en "Mi Agenda".</p>
+          </div>
+        )}
+
+        {!loadingConfiguration && !configurationError && availableSchedule.length > 0 && (
           <>
             <div className="flex justify-between mb-4">
               <button
@@ -214,6 +366,14 @@ const toggleSlotSelection = (date: Date, dayName: string, time: string) => {
               >
                 <FaArrowLeft />
               </button>
+              
+              <button
+                onClick={() => setCurrentWeekStart(getCurrentWeekStart())}
+                className="px-4 py-1 bg-secondary text-white rounded hover:bg-secondary-hover text-sm"
+              >
+                Hoy
+              </button>
+              
               <button
                 onClick={() => {
                   if (daysToShow < 7) {
