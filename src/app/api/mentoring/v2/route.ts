@@ -2,25 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { z as zod } from "zod";
 import { ClassRoomStatus } from "@/types/classRoom";
 import { PreferenceMP } from "@/services/preferenceMp";
-
-import {
-  createMultipleClassRooms,
-  getClassRoomByStudent,
-  getClassRoomByProfessor,
-  getClassRoomById,
-  confirmClassRoom,
-  cancelClassRoom,
-  updateClassRoomStatus,
-} from "../classRoom";
+import { CategoryService } from "@/services/CategoryService";
+import { createMultipleClassRooms } from "../classRoom";
 import {
   getStudentProfileByUserId,
   getProfileByUserId,
 } from "../../profile/profile";
-
 import { storePayment } from "../../payments/payments";
-import { CategoryService } from "@/services/CategoryService";
 
-const dev_enabled = true;
 
 const CreatePaymentPreferenceSchema = zod.object({
   items: zod.array(

@@ -3,6 +3,8 @@ import { z as zod } from "zod";
 import { updatePaymentStatus } from "./payments";
 import { updateClassRoomByPaymentId } from "../mentoring/classRoom";
 import { ClassRoomStatus } from "@/types/classRoom";
+import { NotificationService } from "@/services/notificationService";
+import { getStudentProfileById } from "../profile/profile";
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,7 +50,39 @@ export async function POST(request: NextRequest) {
         const updatedClassRoom = await updateClassRoomByPaymentId(
             String(result.id),
             (data.status === "approved") ? ClassRoomStatus.REQUESTED : ClassRoomStatus.CANCELLED
-        )
+        );
+        if (!updatedClassRoom) {
+            return NextResponse.json(
+                { result: false, message: "Error al actualizar la clase asociada al pago" },
+                { status: 500 }
+            );
+        } else {
+          const oneClassRoom = updatedClassRoom.data ? updatedClassRoom.data[0] : undefined; 
+          const studentProfile = oneClassRoom ? await getStudentProfileById(oneClassRoom.studentId as number) : undefined;
+          const proffesorId = oneClassRoom ? oneClassRoom.userId : undefined;
+          if (studentProfile && proffesorId) {
+            if (data.status === "approved") {
+              var message = `Tu clase con el profesor ha sido confirmada`;
+              var proffesorMessage = `Tu clase con el alumno ha sido confirmada`;
+            } else {
+              var message = `Tu clase con el profesor ha sido rechazada.`;
+              var proffesorMessage = `Tu clase con el alumno ha sido rechazada.`;
+            }
+            await NotificationService.create(
+              studentProfile.id,
+              message,
+              `/mis-clases/`,
+              false
+            );
+            await NotificationService.create(
+              proffesorId,
+              proffesorMessage,
+              `/mis-clases/`,
+              false
+            );
+          }
+        }
+
         return NextResponse.json(
             { result: true, message: "Pago actualizado correctamente" },
             { status: 200 }

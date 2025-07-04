@@ -161,7 +161,6 @@ const putMentoringSchema = zod.object({
 export type PutMentoringPayload = zod.infer<typeof putMentoringSchema>; 
 
 const VALID_STATE_TRANSITIONS: Record<ClassRoomStatus, ClassRoomStatus[]> = {
-
     [ClassRoomStatus.CREATED]: [
         ClassRoomStatus.REQUESTED,
         ClassRoomStatus.CANCELLED
@@ -174,7 +173,8 @@ const VALID_STATE_TRANSITIONS: Record<ClassRoomStatus, ClassRoomStatus[]> = {
     ], // Puede ir a cualquiera de estos
     [ClassRoomStatus.CONFIRMED]: [], // No puede cambiar
     [ClassRoomStatus.REJECTED]: [], // No puede cambiar
-    [ClassRoomStatus.NOTCONFIRMED]: [] // No puede cambiar
+    [ClassRoomStatus.NOTCONFIRMED]: [], // No puede cambiar
+    [ClassRoomStatus.CANCELLED]: [] // No puede cambiar
 };
 
 export async function PUT(req: NextRequest) {
