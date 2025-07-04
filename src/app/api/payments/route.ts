@@ -61,12 +61,14 @@ export async function POST(request: NextRequest) {
           const studentProfile = oneClassRoom ? await getStudentProfileById(oneClassRoom.studentId as number) : undefined;
           const proffesorId = oneClassRoom ? oneClassRoom.userId : undefined;
           if (studentProfile && proffesorId) {
+            let message;
+            let proffesorMessage;
             if (data.status === "approved") {
-              var message = `Tu clase con el profesor ha sido confirmada`;
-              var proffesorMessage = `Tu clase con el alumno ha sido confirmada`;
+              message = `Tu clase con el profesor ha sido confirmada`;
+              proffesorMessage = `Tu clase con el alumno ha sido confirmada`;
             } else {
-              var message = `Tu clase con el profesor ha sido rechazada.`;
-              var proffesorMessage = `Tu clase con el alumno ha sido rechazada.`;
+              message = `Tu clase con el profesor ha sido rechazada.`;
+              proffesorMessage = `Tu clase con el alumno ha sido rechazada.`;
             }
             await NotificationService.create(
               studentProfile.id,
