@@ -1,14 +1,16 @@
 import { supabaseClient } from "@/app/api/supabaseClient";
 import { SUPABASE_TABLES } from "@/app/config";
-import { GetMentoringFilter } from "./route";
 import { ClassRoom, ClassRoomStatus, ClassRoomUpdate } from "@/types/classRoom";
 import { getUserProvider } from "@/lib/providers";
+import { MeetingEventDetails } from "@/interfaces/MeetingProvider";
+import { NotificationService } from "@/services/notificationService";
 import {
   getStudentProfileByUserId,
   getStudentProfileById,
   getEmailbyUserProfileId
 } from "../profile/profile";
-import { MeetingEventDetails } from "@/interfaces/MeetingProvider";
+import { GetMentoringFilter } from "./route";
+import { da } from "date-fns/locale";
 
 export interface CreateClassRoomParams {
   studentId: number;
@@ -252,6 +254,17 @@ export const cancelClassRoom = async (id: number) => {
               error: "Clase no encontrada o no pudo ser cancelada.",
           };
       }
+    if (mentoringData) {
+      const studentProfile = await getStudentProfileById(mentoringData.studentId as number);
+      if (studentProfile){
+        await NotificationService.create(
+          studentProfile.id,
+          `Tu clase con el profesor ha sido cancelada para el día ${new Date(mentoringData.beginsAt ?? "").toLocaleDateString()} a las ${new Date(mentoringData.beginsAt ?? "").toLocaleTimeString()}.`,
+          `/mentoring/classRoom/${mentoringData.id}`,
+          false
+        );
+      }
+    }
 
       return { success: true, mentoringData };
   } catch (error: any) {
@@ -269,19 +282,32 @@ export const confirmClassRoom = async (id: number) => {
     .from(SUPABASE_TABLES.MENTORSHIP)
     .update({ confirmed: true, status: ClassRoomStatus.CONFIRMED })
     .eq("id", id)
-    .select();
+    .select().single(); // Retorna los datos actualizados
 
   if (error) {
     console.error("Error al confirmar la clase:", error);
     return { success: false, error: error.message };
   }
 
-  if (!data || data.length === 0) {
+  if (!data) {
     return {
       success: false,
       error: "Clase no encontrada o no pudo ser confirmada.",
     };
   }
+  if (data) {
+    const studentProfile = await getStudentProfileById(data.studentId as number);
+    if (studentProfile){
+      await NotificationService.create(
+        studentProfile.id,
+        `Tu clase con el profesor ha sido confirmada para el día ${new Date(data.beginsAt ?? "").toLocaleDateString()} a las ${new Date(data.beginsAt ?? "").toLocaleTimeString()}.`,
+        `/mentoring/classRoom/${data.id}`,
+        false
+      );
+    }
+  }
+
+
 
   return { success: true, data };
 };
@@ -334,19 +360,32 @@ export const updateClassRoomStatus = async (id: number, status: string) => {
         .from(SUPABASE_TABLES.MENTORSHIP)
         .update({ status: status })
         .eq("id", id)
-        .select(); // Retorna los datos actualizados
+        .select().single(); // Retorna los datos actualizados
     
       if (error) {
         console.error("Error al actualizar la clase:", error);
         return { success: false, error: error.message };
       }
     
-      if (!data || data.length === 0) {
+      if (!data) {
         return {
           success: false,
           error: "Clase no encontrada o no pudo ser actualizada.",
         };
       }
+
+      if (data) {
+        const studentProfile = await getStudentProfileById(data.studentId as number);
+        if (studentProfile){
+          await NotificationService.create(
+            studentProfile.id,
+            `Tu clase con el profesor ha sido actualizada a ${status} para el día ${new Date(data.beginsAt ?? "").toLocaleDateString()} a las ${new Date(data.beginsAt ?? "").toLocaleTimeString()}.`,
+            `/mentoring/classRoom/${data.id}`,
+            false
+          );
+        }
+      }
+
     
       return { success: true, data };
 };

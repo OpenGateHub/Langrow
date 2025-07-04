@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PROFILE_ROLE_STRING, PROFILE_ROLE, ROLE_MAP } from "@/app/config";
 import { z as zod } from "zod";
 import { supabaseClient } from "@/app/api/supabaseClient";
+import { NotificationService } from "@/services/notificationService";
 
 // TODO: include authentication
 export async function GET(req: NextRequest) {
@@ -97,15 +98,12 @@ export async function POST(req: Request) {
         const newProfile = result && result.length > 0 ? result[0] : null;
 
         if (newProfile) {
-            await supabaseClient
-                .from('Notifications')
-                .insert([
-                    {
-                        profileId: newProfile.id,
-                        message: "Te damos la bienvenida! Clickea aquí para completar tu perfil", isStaff: newProfile.isStaff ?? false,
-                        url: `/perfil/${newProfile.userId}?edit=true`
-                    }
-                ]);
+            await NotificationService.create(
+                newProfile.id,
+                "Te damos la bienvenida! Clickea aquí para completar tu perfil",
+                `/perfil/${newProfile.userId}?edit=true`,
+                newProfile.isStaff ?? false
+            );
         }
 
         if (body.data.role === PROFILE_ROLE_STRING.ALUMNO) {
@@ -193,6 +191,12 @@ export async function PUT(req: Request) {
                 { status: 500 }
             );
         }
+        await NotificationService.create(
+            data[0].id,
+            "Tu perfil ha sido actualizado correctamente",
+            `/perfil/${data[0].userId}?edit=true`,
+            data[0].isStaff ?? false
+        );
         return NextResponse.json(
             { message: "Perfil actualizado correctamente", data },
             { status: 200 }
