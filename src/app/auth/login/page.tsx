@@ -15,6 +15,12 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  // Estados para el modal de recuperación de contraseña
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // Redirige cuando Clerk ya cargó y el usuario está autenticado
   useEffect(() => {
@@ -60,6 +66,45 @@ export default function LoginPage() {
       console.error("Error al iniciar sesión:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotPasswordLoading(true);
+    setForgotPasswordMessage(null);
+
+    if (!signInLoaded) {
+      setForgotPasswordMessage({
+        type: 'error',
+        text: "Sistema no disponible en este momento"
+      });
+      setForgotPasswordLoading(false);
+      return;
+    }
+
+    try {
+      const result = await signIn.create({
+        identifier: forgotPasswordEmail,
+        strategy: "reset_password_email_code",
+      });
+
+      if (result.status === "needs_first_factor") {
+        // Redirigir a la página de reset-password con el email
+        router.push(`/auth/reset-password?email=${encodeURIComponent(forgotPasswordEmail)}&sent=true`);
+      } else {
+        setForgotPasswordMessage({
+          type: 'error',
+          text: "Error inesperado en el proceso"
+        });
+      }
+    } catch (err: any) {
+      setForgotPasswordMessage({
+        type: 'error',
+        text: err?.errors?.[0]?.message || "Error al enviar el código de verificación"
+      });
+    } finally {
+      setForgotPasswordLoading(false);
     }
   };
 
@@ -115,6 +160,15 @@ export default function LoginPage() {
               placeholder="********"
               className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
             />
+            <div className="mt-1 text-right">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-secondary hover:text-secondary-hover hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
           </div>
 
           {errorMessage && (
@@ -146,6 +200,70 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+
+      {/* Modal de Olvidaste tu contraseña */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-4/5 max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Recuperar contraseña</h3>
+              <button
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setForgotPasswordEmail("");
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div>
+                <label htmlFor="forgot-email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Correo electrónico
+                </label>
+                <input
+                  type="email"
+                  id="forgot-email"
+                  value={forgotPasswordEmail}
+                  onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                  placeholder="ejemplo@gmail.com"
+                  required
+                  className="w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
+              
+              {forgotPasswordMessage && (
+                <p className={`text-sm ${forgotPasswordMessage.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+                  {forgotPasswordMessage.text}
+                </p>
+              )}
+              
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setForgotPasswordEmail("");
+                    setForgotPasswordMessage(null);
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={forgotPasswordLoading}
+                  className="flex-1 px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-hover disabled:opacity-50"
+                >
+                  {forgotPasswordLoading ? "Enviando..." : "Enviar código"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

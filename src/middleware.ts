@@ -5,6 +5,7 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/auth/login',
   '/auth/register',
+  '/auth/reset-password(.*)', // Agregar ruta de recuperación de contraseña
   '/api/auth/callback(.*)',
   '/auth/complete-profile',
   '/terms-of-service',
