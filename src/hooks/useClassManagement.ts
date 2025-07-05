@@ -90,7 +90,7 @@ export function useClassManagement(userId: string): UseClassManagementReturn {
     const grouped: Record<string, ClassData[]> = {
       Solicitudes: [],
       Próximas: [],
-      "Revisar": [],
+      "Atencion": [],
       Revisadas: [],
     };
     sessions.forEach(c => {
@@ -104,7 +104,7 @@ export function useClassManagement(userId: string): UseClassManagementReturn {
           break;
         case ClassRoomStatus.NOTCONFIRMED:
         case ClassRoomStatus.CANCELLED:
-          grouped["Calificar"].push(c);
+          grouped["Atencion"].push(c);
           break;
         case ClassRoomStatus.CONFIRMED:
           grouped.Revisadas.push(c);
