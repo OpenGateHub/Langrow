@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useProfileContext } from "@/context/ProfileContext";
 import { useClassManagement } from "@/hooks/useClassManagement";
 import { ClassCard } from "../components/ClassCard";
@@ -10,10 +10,20 @@ import WeeklyAgendaModal from "../components/ModalClassRequest";
 import RescheduleModal from "../components/RescheduleModal";
 import MessageModal from "../components/Modal";
 import BlockUi from "../components/BlockUi";
+import { useSearchParams } from "next/navigation";
 
 const MisClases: React.FC = () => {
   const { clerkUser, role } = useProfileContext();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<string>("Revisar");
+
+  // Manejar el parámetro de URL para dirigir a la pestaña específica
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['Solicitudes', 'Próximas', 'Revisar', 'Revisadas'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   const {
     classesData,

@@ -32,14 +32,14 @@ export function useProfile(profileId?: number | string): UseProfileReturn {
     setLoading(true);
     try {
       const res = await fetch(`/api/profile/${profileId}`);
-      
+
       if (res.status === 404) {
         // Perfil no encontrado - esto es normal para usuarios nuevos
         setProfile(null);
         setError(null);
         return;
       }
-      
+
       const json = await res.json();
       if (
         !res.ok ||
@@ -67,12 +67,12 @@ export function useProfile(profileId?: number | string): UseProfileReturn {
         isZoomEnabled: data.isZoomEnabled,
         achievements: data.UserAchievements
           ? data.UserAchievements.map((ua: any) => ({
-              id: ua.id,
-              title: ua.Achievements.title,
-              description: ua.Achievements.description,
-              iconImg: ua.Achievements.iconImg,
-              isActive: ua.Achievements.isActive,
-            }))
+            id: ua.id,
+            title: ua.Achievements.title,
+            description: ua.Achievements.description,
+            iconImg: ua.Achievements.iconImg,
+            isActive: ua.Achievements.isActive,
+          }))
           : [],
       };
       setProfile(mappedProfile);
@@ -98,7 +98,7 @@ export function useProfile(profileId?: number | string): UseProfileReturn {
     try {
       const { name, ...rest } = updatedData;
       const payload = {
-        code: profile.userId, 
+        code: profile.userId,
         isStaff: false,
         ...(name ? { fullName: name } : {}),
         ...rest,
@@ -134,7 +134,7 @@ export function useProfile(profileId?: number | string): UseProfileReturn {
       const json = await res.json();
       if (!res.ok) {
         throw new Error(json.message || "Error al crear el perfil");
-      }if (json.data && json.data.length > 0) {
+      } if (json.data && json.data.length > 0) {
         setProfile(json.data[0]);
       }
       return json;
@@ -145,7 +145,9 @@ export function useProfile(profileId?: number | string): UseProfileReturn {
   };
 
   const refetch = React.useCallback(() => {
-    fetchProfile();
+    if (profileId) {
+      fetchProfile();
+    }
   }, [profileId]);
 
   return { profile, loading, error, createProfile, updateProfile, refetch };

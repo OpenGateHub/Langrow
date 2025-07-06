@@ -44,6 +44,7 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
     '/google/auth',
     '/auth/register',
     '/home',
+    '/auth/complete-profile',
   ];
 
   const isPublicRoute = publicRoutes.includes(pathname);
@@ -66,12 +67,22 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
       // Verificar si el usuario ya tenía un perfil antes (usando localStorage)
       const hasStoredProfile = localStorage.getItem('hasProfile') === 'true';
       
+      // Verificar si el usuario se registró con Google (tiene externalId)
+      const isGoogleUser = user.externalAccounts && user.externalAccounts.length > 0;
+      
       // Si hay un error al cargar el perfil o no hay perfil y no hay registro en localStorage
       if ((error || !profile) && !hasStoredProfile && pathname !== '/auth/complete-profile') {
-        // Solo redirigir si no estamos en el proceso de registro o en home
-        if (pathname !== '/auth/register' && pathname !== '/home') {
+        // Solo redirigir a complete-profile si es un usuario de Google y no estamos en el proceso de registro
+        if (isGoogleUser && pathname !== '/auth/register' && pathname !== '/home' && pathname !== '/auth/complete-profile') {
           setRedirectionInProgress(true);
           router.push('/auth/complete-profile');
+          setInitialCheckDone(true);
+          return;
+        }
+        // Si no es usuario de Google y no tiene perfil, podría ser un error - redirigir al home
+        else if (!isGoogleUser && pathname !== '/auth/register' && pathname !== '/home') {
+          setRedirectionInProgress(true);
+          router.push('/home');
           setInitialCheckDone(true);
           return;
         }
@@ -118,7 +129,19 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
         <BlockUi isActive={true} />
       </div>
     );
+  }
 
+  // Permitir acceso al home incluso si el perfil está cargando
+  if (isSignedIn && pathname === '/home') {
+    // Si el perfil está cargando, mostrar un loading sutil
+    if (profileLoading && !initialCheckDone) {
+      return (
+        <div className="min-h-screen bg-gray-100">
+          <BlockUi isActive={true} />
+        </div>
+      );
+    }
+    return <>{children}</>;
   }
 
   // Si el usuario está autenticado pero cargando el perfil, mostrar la página sin pantalla de carga
