@@ -22,8 +22,11 @@ export default function WeeklySchedulePage() {
 
   // Estado local de todos los slots
   const [slotStates, setSlotStates] = useState<Record<string,SlotStatus>>({});
+  
+  // Estado global para persistir selecciones por semana (temporales, no guardadas)
+  const [tempSelections, setTempSelections] = useState<Record<string, Record<string,SlotStatus>>>({});
 
-  // Calcula el lunes de la semana
+  // Calcula el lunes de la semana actual (lunes)
   const getMonday = (d: Date) => {
     const date = new Date(d);
     const diff = (date.getDay() + 6) % 7; // lunes = 0
@@ -53,10 +56,10 @@ export default function WeeklySchedulePage() {
   const weekDays = useMemo(() => {
     return DAYS.map((dayName,i) => {
       const date = new Date(currentWeekStart);
-      date.setDate(date.getDate()+i);
+      date.setDate(currentWeekStart.getDate() + i);
       return {
         dayName,
-        dateStr: date.toLocaleDateString("es-ES",{day:"numeric",month:"short"}),
+        dateStr: date.getDate().toString(),
         fullDate: date,
       };
     });
@@ -73,26 +76,41 @@ export default function WeeklySchedulePage() {
     });
   };
 
+  // Función para obtener la clave de la semana actual
+  const getWeekKey = (date: Date) => {
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD del lunes
+  };
+
   // Inicializa slotStates cada vez que cambia la configuración o weekDays
   useEffect(() => {
+    const weekKey = getWeekKey(currentWeekStart);
     const all: Record<string,SlotStatus> = {};
+    
     weekDays.forEach(({ fullDate }) => {
       const longDay = fullDate.toLocaleDateString("es-ES",{weekday:"long"});
       for (let hr=5; hr<=23; hr++) {
         const key = `${longDay}-${hr}`;
-        // Verificar si el slot está en la configuración guardada
-        const daySchedule = configuration?.configuration?.schedule?.find(
-          day => day.day === longDay
-        );
-        const isAvailable = daySchedule ? isHourInRange(hr, daySchedule.timeRanges) : false;
-        all[key] = isAvailable ? "available" : "none";
+        
+        // Primero verificar si hay selecciones temporales para esta semana
+        const tempSelection = tempSelections[weekKey]?.[key];
+        if (tempSelection !== undefined) {
+          all[key] = tempSelection;
+        } else {
+          // Si no hay selección temporal, usar la configuración guardada
+          const daySchedule = configuration?.configuration?.schedule?.find(
+            day => day.day === longDay
+          );
+          const isAvailable = daySchedule ? isHourInRange(hr, daySchedule.timeRanges) : false;
+          all[key] = isAvailable ? "available" : "none";
+        }
       }
     });
     setSlotStates(all);
-  }, [configuration, weekDays]);
+  }, [configuration, weekDays, tempSelections, currentWeekStart]);
 
   // Función para alternar un rango de horas
   const toggleTimeRange = (day: string, startHour: number, endHour: number) => {
+    const weekKey = getWeekKey(currentWeekStart);
     const newSlotStates = { ...slotStates };
     
     // Verificar si todo el rango está disponible
@@ -104,10 +122,24 @@ export default function WeeklySchedulePage() {
     const newStatus: SlotStatus = isRangeAvailable ? "none" : "available";
     
     for (let hour = startHour; hour < endHour; hour++) {
-      newSlotStates[`${day}-${hour}`] = newStatus;
+      const key = `${day}-${hour}`;
+      newSlotStates[key] = newStatus;
     }
     
+    // Actualizar estado local
     setSlotStates(newSlotStates);
+    
+    // Guardar en selecciones temporales por semana
+    setTempSelections(prev => ({
+      ...prev,
+      [weekKey]: {
+        ...prev[weekKey],
+        ...Object.fromEntries(
+          Array.from({ length: endHour - startHour }, (_, i) => startHour + i)
+            .map(hour => [`${day}-${hour}`, newStatus])
+        )
+      }
+    }));
   };
 
   // Navegación entre semanas
@@ -126,12 +158,37 @@ export default function WeeklySchedulePage() {
     }
 
     try {
-      // Convertir slotStates a formato de configuración con rangos
+      // Combinar todas las selecciones temporales de todas las semanas
+      const allSelections: Record<string, SlotStatus> = {};
+      
+      // Agregar todas las selecciones temporales
+      Object.values(tempSelections).forEach(weekSelections => {
+        Object.assign(allSelections, weekSelections);
+      });
+      
+      // Agregar la configuración guardada existente (para días que no tienen selecciones temporales)
+      if (configuration?.configuration?.schedule) {
+        configuration.configuration.schedule.forEach(daySchedule => {
+          daySchedule.timeRanges.forEach(range => {
+            const startHour = parseInt(range.start.split(':')[0]);
+            const endHour = parseInt(range.end.split(':')[0]);
+            
+            for (let hour = startHour; hour < endHour; hour++) {
+              const key = `${daySchedule.day}-${hour}`;
+              if (!allSelections[key]) {
+                allSelections[key] = "available";
+              }
+            }
+          });
+        });
+      }
+
+      // Convertir todas las selecciones a formato de configuración con rangos
       const schedule: ProfessorSchedule[] = [];
       const daysMap = new Map<string, number[]>();
 
       // Agrupar horas disponibles por día
-      Object.entries(slotStates).forEach(([key, status]) => {
+      Object.entries(allSelections).forEach(([key, status]) => {
         if (status === "available") {
           const [day, hour] = key.split("-");
           if (!daysMap.has(day)) {
@@ -176,6 +233,8 @@ export default function WeeklySchedulePage() {
       const success = await saveConfiguration(schedule);
       
       if (success) {
+        // Limpiar selecciones temporales después de guardar exitosamente
+        setTempSelections({});
         setModalType("success");
         setModalMessage("¡Disponibilidad guardada exitosamente!");
         setModalOpen(true);
@@ -189,7 +248,7 @@ export default function WeeklySchedulePage() {
       setModalMessage(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
       setModalOpen(true);
     }
-  }, [slotStates, profile?.id, saveConfiguration]);
+  }, [tempSelections, configuration, profile?.id, saveConfiguration]);
 
   const hours = Array.from({length:19},(_,i)=>i+5);
 
@@ -288,8 +347,15 @@ export default function WeeklySchedulePage() {
           disabled={isLoading}
           className="px-8 py-3 bg-secondary text-white rounded-full font-semibold shadow-lg hover:bg-secondary-hover transition-colors disabled:opacity-50"
         >
-          {isLoading ? "Guardando..." : "Guardar Disponibilidad"}
+          {isLoading ? "Guardando..." : 
+           Object.keys(tempSelections).length > 0 ? "Guardar Cambios" : "Guardar Disponibilidad"}
         </button>
+        {Object.keys(tempSelections).length > 0 && (
+          <div className="ml-4 flex items-center text-orange-600 text-sm">
+            <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+            Tienes cambios sin guardar
+          </div>
+        )}
       </div>
     </main>
   );
