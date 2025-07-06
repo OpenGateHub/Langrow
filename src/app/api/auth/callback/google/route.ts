@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
       .select()
       .eq("userId", profile.id)
       .eq("provider", PROVIDER);
-    if (secretsData && secretsData?.length > 0) {
+    if (secretsData != null && secretsData?.length > 0) {
       const { data, error } = await supabaseClient
         .from(SUPABASE_TABLES.PROFILES_SECRETS)
         .update({
@@ -88,11 +88,7 @@ export async function GET(req: NextRequest) {
           expires_at: expiry_date ? new Date(expiry_date).toISOString() : null, // Convert to ISO string
           provider: PROVIDER,
           scope,
-        });
-      if (error) {
-        console.error("Error al actualizar la integración de Google:", error);
-        throw error;
-      }
+        }).eq('userId', profile.id);
     } else {
       const { data, error } = await supabaseClient
         .from(SUPABASE_TABLES.PROFILES_SECRETS)
@@ -104,10 +100,6 @@ export async function GET(req: NextRequest) {
           provider: PROVIDER,
           scope,
         });
-      if (error) {
-        console.error("Error al guardar la integración de Google:", error);
-        throw error;
-      }
     }
 
     // Actualizar el perfil para indicar que Google Calendar está habilitado
