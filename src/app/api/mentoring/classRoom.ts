@@ -184,7 +184,7 @@ export const createClassRoomMeeting = async (mentoring: ClassRoom) => {
       console.error("Perfil de estudiante o email del profesor no encontrado.");
       return { success: false, error: "Perfil de estudiante o email del profesor no encontrado." };
     }
-        const provider = await getUserProvider(studentUserProfile.id);
+        const provider = await getUserProvider(mentoring.userId);
     if (!provider) {
       console.error("Proveedor de usuario no encontrado.");
       throw new Error("Proveedor de usuario no encontrado.");
