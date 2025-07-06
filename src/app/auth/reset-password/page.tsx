@@ -509,7 +509,7 @@ export default function ResetPasswordPage() {
               <div className="space-y-6">
                               <div className="text-center">
                 <p className="text-gray-600 mb-4">
-                  Para continuar con la recuperación de contraseña, haz clic en "Enviar código"
+                  Para continuar con la recuperación de contraseña, haz clic en &quot;Enviar código&quot;
                 </p>
                 <p className="text-sm text-gray-500">
                   Se enviará un código de verificación a <strong>{email}</strong>
