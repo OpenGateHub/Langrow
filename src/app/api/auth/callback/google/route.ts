@@ -89,7 +89,8 @@ export async function GET(req: NextRequest) {
     }
     
     console.log('Integración con Google Calendar completada exitosamente para userId:', userId);
-    return NextResponse.redirect(new URL('/home', req.url));
+    // Redirigir a la raíz que funciona correctamente
+    return NextResponse.redirect(new URL('/', req.url));
   } catch (error: any) {
     console.error('Error al intercambiar el código por tokens de Google:', error.message);
     // Google puede devolver errores específicos como 'invalid_grant' si el código ya fue usado

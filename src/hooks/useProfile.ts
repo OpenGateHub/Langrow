@@ -145,7 +145,9 @@ export function useProfile(profileId?: number | string): UseProfileReturn {
   };
 
   const refetch = React.useCallback(() => {
-    fetchProfile();
+    if (profileId) {
+      fetchProfile();
+    }
   }, [profileId]);
 
   return { profile, loading, error, createProfile, updateProfile, refetch };
