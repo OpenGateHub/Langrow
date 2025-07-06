@@ -15,6 +15,8 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  
+
 
   // Redirige cuando Clerk ya cargó y el usuario está autenticado
   useEffect(() => {
@@ -62,6 +64,8 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+
 
   return (
     <main className="min-h-screen flex items-center justify-center relative">
@@ -115,6 +119,14 @@ export default function LoginPage() {
               placeholder="********"
               className="bg-[rgba(209,213,219,0.5)] mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-green-500 focus:border-green-500"
             />
+            <div className="mt-1 text-right">
+              <Link
+                href="/auth/reset-password"
+                className="text-sm text-secondary hover:text-secondary-hover hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
           </div>
 
           {errorMessage && (
@@ -146,6 +158,8 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+
+
     </main>
   );
 }
