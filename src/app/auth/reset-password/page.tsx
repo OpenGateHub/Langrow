@@ -46,20 +46,9 @@ export default function ResetPasswordPage() {
     if (!clerkLoaded) return;
     
     const emailParam = searchParams.get('email');
-    const sentParam = searchParams.get('sent');
     
-    if (emailParam && sentParam === 'true') {
-      // Si viene con email y sent=true, significa que ya se envió desde el modal
-      setEmail(emailParam);
-      setStep('code');
-      // Crear un signInAttempt vacío para que muestre el input de código
-      setSignInAttempt({});
-      setMessage({
-        type: 'success',
-        text: 'Código de verificación enviado. Revisa tu correo electrónico.'
-      });
-    } else if (emailParam) {
-      // Si solo viene con email, mostrar el paso de email
+    if (emailParam) {
+      // Si viene con email, mostrar el paso de email
       setEmail(emailParam);
       setEmailSentAutomatically(true);
     }
@@ -227,8 +216,8 @@ export default function ResetPasswordPage() {
     try {
       let currentSignInAttempt = signInAttempt;
       
-      // Si no hay signInAttempt o está vacío (viene del modal), crearlo
-      if (!currentSignInAttempt || Object.keys(currentSignInAttempt).length === 0) {
+      // Si no hay signInAttempt, crearlo
+      if (!currentSignInAttempt) {
         const newAttempt = await signIn.create({
           identifier: email,
           strategy: "reset_password_email_code",
@@ -248,6 +237,7 @@ export default function ResetPasswordPage() {
       });
 
       if (attempt.status === "needs_new_password") {
+        console.log('Código verificado, signInAttempt actualizado:', attempt);
         setSignInAttempt(attempt);
         setStep('password');
       } else if (attempt.status === "complete") {
@@ -315,6 +305,8 @@ export default function ResetPasswordPage() {
       return;
     }
     
+    console.log('signInAttempt en handleResetPassword:', signInAttempt);
+    
     setLoading(true);
     setMessage(null);
 
@@ -331,20 +323,22 @@ export default function ResetPasswordPage() {
 
     try {
       // Usar la API correcta para reset de contraseña
-      const attempt = await signInAttempt.attemptFirstFactor({
-        strategy: "reset_password",
+      const attempt = await signInAttempt.resetPassword({
         password: newPassword,
       });
 
       if (attempt.status === "complete") {
         setMessage({
           type: 'success',
-          text: 'Contraseña actualizada exitosamente. Redirigiendo al login...'
+          text: 'Contraseña actualizada exitosamente. Iniciando sesión...'
         });
         
-        // Redirigir al login después de 2 segundos
+        // Activar la sesión en el cliente usando useClerk
+        await clerk.setActive({ session: attempt.createdSessionId });
+        
+        // Redirigir al home después de 2 segundos
         setTimeout(() => {
-          router.push('/auth/login');
+          router.push('/home');
         }, 2000);
       } else {
         setMessage({
@@ -403,6 +397,8 @@ export default function ResetPasswordPage() {
     if (resendDisabled) {
       return;
     }
+    
+
     
     setLoading(true);
     setMessage(null);
