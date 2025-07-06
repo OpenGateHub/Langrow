@@ -188,7 +188,7 @@ export default function TeachersList() {
                     </h2>
                     <p className="text-sm text-gray-600">{teacher.description}</p>
                     <p className="text-sm text-gray-500 mt-1">
-                      {teacher.rating} ★ ({teacher.reviews} reviews) - ${teacher.price}/hora
+                      {teacher.rating} ★ ({teacher.reviews} reviews) - ${teacher.price || 18000}/hora
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
                       Próxima clase disponible:{" "}

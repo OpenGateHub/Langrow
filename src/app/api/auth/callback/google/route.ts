@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const code = searchParams.get("code");
   const state = searchParams.get("state"); // Este es el token JWT que contiene el userId
   const payload = state
-    ? jwt.verify(state, process.env.OAUTH_STATE_SECRET || "")
+    ? jwt.verify(state, process.env.OAUTH_STATE_SECRET || "") as { userId: string }
     : null;
   const userId = payload?.userId; // Extraemos el userId del payload del JWT
 
