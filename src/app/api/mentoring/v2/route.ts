@@ -73,8 +73,8 @@ export async function POST(req: NextRequest) {
     const studentProfile = await getStudentProfileByUserId(
       data.metadata.alumnoId
     );
-    const professorProfile = await getProfileByUserId(data.metadata.profesorId);
-    if (!studentProfile || !professorProfile) {
+    const professorProfile = parseInt(data.metadata.profesorId);
+    if (!studentProfile) {
       return NextResponse.json(
         {
           result: false,
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
     const classRoomData =
       data.metadata.classDetails?.classSlots?.map((slot) => ({
         studentId: studentProfile.id,
-        professorId: professorProfile.id,
+        professorId: professorProfile,
         category: category.id, // Assuming the first item is the category
         date: slot.date || "",
         time: slot.period || "",
