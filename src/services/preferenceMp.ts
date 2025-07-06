@@ -41,7 +41,7 @@ export class PreferenceMP {
 
     this.client = new MercadoPagoConfig({ accessToken: token });
     const successBase = process.env.PAYMENT_SUCCESS_URL || 'https://langrow.vercel.app/payment/success';
-    this.successUrl = `${successBase}?collection_id={collection_id}&preference_id={preference_id}`;
+    this.successUrl = `${successBase}`; //?collection_id={collection_id}&preference_id={preference_id}`;
     this.failureUrl = process.env.PAYMENT_FAILURE_URL || 'https://langrow.vercel.app/payment/failure';
     this.notificationUrl = process.env.MERCADO_PAGO_REDIRECT_WEBHOOK || 'https://langrow.vercel.app/api/webhook';
   }
