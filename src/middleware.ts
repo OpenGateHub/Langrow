@@ -8,7 +8,8 @@ const isPublicRoute = createRouteMatcher([
   '/auth/register',
   '/auth/reset-password(.*)', // Agregar ruta de recuperación de contraseña
   '/api/auth/callback(.*)',
-  '/auth/complete-profile',
+  '/auth/complete-profile(.*)',
+  '/home', // Permitir acceso al home para usuarios recién registrados
   '/terms-of-service',
   '/privacy-policy',
   '/contact-us',

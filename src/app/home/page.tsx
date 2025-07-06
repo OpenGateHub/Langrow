@@ -10,29 +10,45 @@ const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
 const GOOGLE_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI!;
 
 export default function HomePage() {
-  const { role, profile, loading, error } = useProfileContext();
-  const { stateToken, fetchOauthToken, loading: tokenLoading } = useOauthToken();
+  const { role, profile, loading, error, refetch } = useProfileContext();
+  const { stateToken, fetchOauthToken, loading: tokenLoading, resetState } = useOauthToken();
   const [showGoogleAuthModal, setShowGoogleAuthModal] = useState(false);
+  const [hasRequestedToken, setHasRequestedToken] = useState(false);
 
   const userRole = role || "guest";
 
-  // Si perfil requiere videollamada y no tiene integración, pedimos el token
-  useEffect(() => {
-    if (profile && !profile.isZoomEnabled) {
-      if (profile.userId) {
-        console.log("Perfil encontrado, userId:", profile.userId);
-        fetchOauthToken(profile.userId); // Guardamos el userId en el hook
-      }
-      // TODO:: Si falla la busqueda del perfil, manejar el error adecuadamente, mostrar un mensaje al usuario o redirigir a una página de error.
-    }
-  }, [profile, fetchOauthToken]);
+  // Eliminamos la recarga forzada que puede causar bucles infinitos
 
-  // Mostrar modal cuando el token esté disponible en lugar de redirigir directamente
+  // Si perfil requiere videollamada y no tiene integración, pedimos el token (solo una vez)
   useEffect(() => {
-    if (stateToken && !tokenLoading) {
+    console.log("Home useEffect - profile:", profile, "loading:", loading, "isZoomEnabled:", profile?.isZoomEnabled);
+    
+    // Solo ejecutar la lógica si el perfil está cargado y no está cargando
+    if (!loading && profile) {
+      if (!profile.isZoomEnabled && !hasRequestedToken) {
+        if (profile.userId) {
+          console.log("Perfil encontrado, userId:", profile.userId, "isZoomEnabled:", profile.isZoomEnabled);
+          fetchOauthToken(profile.userId);
+          setHasRequestedToken(true); // Marcar que ya se solicitó el token
+        }
+      } else if (profile.isZoomEnabled) {
+        // Si el perfil ya tiene integración habilitada, resetear el estado
+        console.log("Perfil ya tiene integración habilitada, reseteando estado");
+        setHasRequestedToken(false);
+        if (resetState) {
+          resetState(); // Resetear el estado del hook de OAuth
+        }
+        setShowGoogleAuthModal(false); // Cerrar el modal si está abierto
+      }
+    }
+  }, [profile, loading, fetchOauthToken, hasRequestedToken, resetState]);
+
+  // Mostrar modal cuando el token esté disponible (solo una vez)
+  useEffect(() => {
+    if (stateToken && !tokenLoading && !showGoogleAuthModal) {
       setShowGoogleAuthModal(true);
     }
-  }, [stateToken, tokenLoading]);
+  }, [stateToken, tokenLoading, showGoogleAuthModal]);
 
   // Función para manejar la confirmación del modal y redirigir a Google
   const handleGoogleAuthConfirm = () => {
@@ -84,9 +100,22 @@ export default function HomePage() {
     );
   }
 
+  // Si el perfil está cargando, no mostrar nada hasta que esté listo
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <BlockUi isActive={true} />
+      </div>
+    );
+  }
+
   // Si aún no hay redirección pero tampoco debe redirigir
   if (profile && !profile.isZoomEnabled && !stateToken) {
-    return <p>Preparando redirección a Google...</p>;
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <BlockUi isActive={true} />
+      </div>
+    );
   }
 
   const commonProps = {
