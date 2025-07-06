@@ -104,6 +104,8 @@ export function useClassManagement(userId: string): UseClassManagementReturn {
           grouped[GroupTabs.Proximas].push(c);
           break;
         case ClassRoomStatus.NOTCONFIRMED:
+          grouped[GroupTabs.Atencion].push(c);
+          break;
         case ClassRoomStatus.CANCELLED:
           grouped[GroupTabs.Atencion].push(c);
           break;

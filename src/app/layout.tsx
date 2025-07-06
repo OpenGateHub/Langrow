@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ProfileProvider } from "@/context/ProfileContext";
 import AuthWrapper from "./components/AuthWrapper";
+import { AutoTransitionHandler } from "@/components/AutoTransitionHandler";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -34,6 +35,7 @@ export default function RootLayout({
         <html lang="en">
           <body className={`${archivo.variable} ${poppins.variable} antialiased bg-primary`}>
             <AuthWrapper>
+              <AutoTransitionHandler />
               <Header />
               {children}
               <Footer />
