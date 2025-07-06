@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import WeeklyAgendaModal, { SelectedSlotType, DaySchedule } from "../../components/ModalClassRequest";
 import PaymentForm, { ClassDetails } from "../../components/payment/PaymentForm";
@@ -105,7 +105,37 @@ const SolicitudClase: React.FC = () => {
   // Se obtiene el id del profesor a partir de la URL
   const pathname = usePathname();
   const pathParts = pathname.split("/");
-  const profesorId = pathParts[pathParts.length - 1];
+  const rawProfesorId = pathParts[pathParts.length - 1];
+  const [profesorId, setProfesorId] = useState<string | number>(rawProfesorId);
+  const [loadingProfesorId, setLoadingProfesorId] = useState(false);
+
+  useEffect(() => {
+    console.log('Reserva - rawProfesorId:', rawProfesorId, 'tipo:', typeof rawProfesorId);
+    // Si el id no es numérico, buscar el id numérico
+    if (isNaN(Number(rawProfesorId))) {
+      console.log('Reserva - ID no es numérico, buscando perfil...');
+      setLoadingProfesorId(true);
+      fetch(`/api/profile/user/${rawProfesorId}`)
+        .then(res => res.json())
+        .then(data => {
+          console.log('Reserva - Respuesta API perfil:', data);
+          const profile = data?.profile;
+          if (profile?.id) {
+            console.log('Reserva - ID numérico encontrado:', profile.id);
+            setProfesorId(profile.id);
+          } else {
+            console.error('Reserva - No se encontró el perfil o ID numérico');
+          }
+        })
+        .catch(error => {
+          console.error('Reserva - Error al buscar perfil:', error);
+        })
+        .finally(() => setLoadingProfesorId(false));
+    } else {
+      console.log('Reserva - ID ya es numérico:', Number(rawProfesorId));
+      setProfesorId(Number(rawProfesorId));
+    }
+  }, [rawProfesorId]);
 
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [category, setCategory] = useState<string>("");
@@ -126,6 +156,15 @@ const SolicitudClase: React.FC = () => {
       alert("Debes seleccionar un paquete.");
       return;
     }
+    if (loadingProfesorId) {
+      alert("Espera mientras se cargan los datos del profesor.");
+      return;
+    }
+    if (typeof profesorId !== 'number') {
+      alert("Error: No se pudo obtener la información del profesor.");
+      return;
+    }
+    console.log('Reserva - Abriendo modal con professorId:', profesorId);
     setIsScheduleModalOpen(true);
   };
 
@@ -248,9 +287,10 @@ const SolicitudClase: React.FC = () => {
           </div>
           <button
             onClick={handleOpenScheduleModal}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-secondary text-white hover:bg-secondary-hover transition-all"
+            disabled={loadingProfesorId || typeof profesorId !== 'number'}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-secondary text-white hover:bg-secondary-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Elegir Horarios
+            {loadingProfesorId ? "Cargando..." : "Elegir Horarios"}
           </button>
         </div>
       )}
@@ -306,7 +346,7 @@ const SolicitudClase: React.FC = () => {
       </AnimateOnScroll>
 
       {/* Modal de selección de horarios */}
-      {selectedPackage && (
+      {selectedPackage && !loadingProfesorId && typeof profesorId === 'number' && (
         <WeeklyAgendaModal
           isOpen={isScheduleModalOpen}
           onClose={() => setIsScheduleModalOpen(false)}
@@ -342,7 +382,7 @@ const SolicitudClase: React.FC = () => {
               precioClase={Number(selectedPackage.precioClase.replace(/\./g, ""))}
               total={selectedPackage.total}
               alumnoId={alumnoId || ""}
-              profesorId={profesorId}
+              profesorId={String(profesorId)}
               purchaseId={purchaseId}
               classDetails={handleClassDetails()}
             />

@@ -42,6 +42,34 @@ const WEEK_DAYS = Object.keys(WEEK_DAYS_MAP);
 
 const CLASS_DURATION = 60; // Duración fija de las clases en minutos
 
+// Función para normalizar nombres de días
+const normalizeDayName = (dayName: string): string => {
+  console.log('normalizeDayName - Input:', dayName);
+  
+  const dayMapping: { [key: string]: string } = {
+    // Formato que viene de la agenda (minúsculas)
+    'lunes': 'Lunes',
+    'martes': 'Martes', 
+    'miércoles': 'Miércoles',
+    'jueves': 'Jueves',
+    'viernes': 'Viernes',
+    'sábado': 'Sábado',
+    'domingo': 'Domingo',
+    // Formato que ya viene correcto
+    'Lunes': 'Lunes',
+    'Martes': 'Martes',
+    'Miércoles': 'Miércoles',
+    'Jueves': 'Jueves',
+    'Viernes': 'Viernes',
+    'Sábado': 'Sábado',
+    'Domingo': 'Domingo'
+  };
+  
+  const normalized = dayMapping[dayName.toLowerCase()] || dayName;
+  console.log('normalizeDayName - Output:', normalized);
+  return normalized;
+};
+
 // Función para convertir timeRanges a slots individuales
 const convertTimeRangesToSlots = (timeRanges: { start: string; end: string }[]): string[] => {
   console.log('convertTimeRangesToSlots - Input timeRanges:', timeRanges);
@@ -148,6 +176,8 @@ export default function WeeklyAgendaModal({
   professor,
   onSubmit,
 }: WeeklyAgendaModalProps) {
+  console.log('Modal - professorId recibido:', professorId, 'tipo:', typeof professorId);
+  
   // Función para obtener el inicio de la semana actual (lunes)
   const getCurrentWeekStart = () => {
     const now = new Date();
@@ -216,11 +246,17 @@ export default function WeeklyAgendaModal({
     }
     
     const converted = processedConfig.schedule.map(daySchedule => {
-      console.log('Modal - Procesando día:', daySchedule);
+      console.log('Modal - Procesando día completo:', daySchedule);
+      console.log('Modal - Día original:', daySchedule.day, 'tipo:', typeof daySchedule.day);
       const slots = convertTimeRangesToSlots(daySchedule.timeRanges);
       console.log('Modal - Slots convertidos:', slots);
+      
+      // Normalizar el nombre del día para que coincida con el formato esperado
+      const normalizedDay = normalizeDayName(daySchedule.day);
+      console.log('Modal - Día normalizado:', daySchedule.day, '->', normalizedDay);
+      
       return {
-        day: daySchedule.day,
+        day: normalizedDay,
         slots: slots
       };
     });
@@ -399,6 +435,8 @@ const toggleSlotSelection = (date: Date, dayName: string, time: string) => {
               {visibleDays.map((date, idx) => {
                 const dayAbbr = WEEK_DAYS[date.getDay()];
                 const fullDayName = WEEK_DAYS_MAP[dayAbbr];
+                console.log('Modal - Procesando día:', { dayAbbr, fullDayName, date: date.toDateString() });
+                console.log('Modal - Horarios disponibles para este día:', availableSchedule.find((s) => s.day === fullDayName));
                 return (
                   <div
                     key={idx}
