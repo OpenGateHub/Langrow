@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
         const { data: professorProfile, error: professorError } = await supabaseClient
           .from(SUPABASE_TABLES.PROFILES)
           .select('id, name, userId')
-          .eq('userId', classItem.userId)
+          .eq('userId', classItem.userId?.toString() || '')
           .single();
 
         if (professorError) {
