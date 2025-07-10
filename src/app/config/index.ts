@@ -27,6 +27,7 @@ export enum SUPABASE_TABLES {
     MENTORSHIP_VIEW = "mentorships_with_names",
     NOTIFICATIONS = "Notifications",
     PAYMENTS = "Payments",
+    PAYMENTS_VIEW = "UserPaymentsView",
     PROFESSOR_REVIEWS = "UserReviews",
     PROFILES = "UserProfile",
     PROFILES_SECRETS = "UserProfileSecrets",
