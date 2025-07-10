@@ -318,9 +318,7 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
                     </p>) : (<p className="text-xl font-bold text-secondary ml-[28px] md:ml-0 opacity-0 animate-fade-in delay-300">
                       Título
                     </p>)}
-                    <p className="text-xl font-bold text-secondary ml-[28px] md:ml-0 opacity-0 animate-fade-in delay-300">
-                      {newTitle}
-                    </p>
+ 
                     {computedCanEdit && (
                       <button
                         onClick={() => setIsEditingTitle(true)}
