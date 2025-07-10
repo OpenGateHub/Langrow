@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { currentUser } from '@clerk/nextjs/server';
 import { z as zod } from "zod";
-import { updatePaymentStatus } from "./payments";
+import { updatePaymentStatus, getPaymentByProfessorId } from "./payments";
 import { updateClassRoomByPaymentId } from "../mentoring/classRoom";
 import { ClassRoomStatus } from "@/types/classRoom";
 import { NotificationService } from "@/services/notificationService";
-import { getStudentProfileById } from "../profile/profile";
+import { getStudentProfileById, getProfileByUserId } from "../profile/profile";
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,11 +65,11 @@ export async function POST(request: NextRequest) {
             let message;
             let proffesorMessage;
             if (data.status === "approved") {
-              message = `Tu clase con el profesor ha sido confirmada`;
-              proffesorMessage = `Tu clase con el alumno ha sido confirmada`;
+              message = `Tu clase con el profesor ha sido creada`;
+              proffesorMessage = `Tenemos clases pendientes con el alumno ${studentProfile.name}.`;
             } else {
-              message = `Tu clase con el profesor ha sido rechazada.`;
-              proffesorMessage = `Tu clase con el alumno ha sido rechazada.`;
+              message = `Tu clase con el profesor no ha sido creada.`;
+              proffesorMessage = `Tu clase con el alumno no ha sido creada.`;
             }
             await NotificationService.create(
               studentProfile.id,
@@ -96,6 +97,55 @@ export async function POST(request: NextRequest) {
     console.error("Error processing payment:", error);
     return NextResponse.json(
       { result: false, message: "Error procesando el pago" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json(
+        { result: false, message: "User not authenticated" },
+        { status: 401 }
+      );
+    }
+
+    const profile = await getProfileByUserId(user.id);
+    if (!profile) {
+      return NextResponse.json(
+        { result: false, message: "Profile not found" },
+        { status: 404 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const from = searchParams.get("from") || undefined;
+    const to = searchParams.get("to") || undefined;
+
+    const result = await getPaymentByProfessorId(profile.id, page, limit, from, to);
+
+    if (!result || result.data.length === 0) {
+      return NextResponse.json(
+        { result: false, message: "No payments found for this professor" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        data: result.data,
+        meta: result.meta,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error fetching payments:", error);
+    return NextResponse.json(
+      { result: false, message: "Error fetching payments" },
       { status: 500 }
     );
   }
