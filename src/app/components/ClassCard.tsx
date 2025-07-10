@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { ClassCardProps } from "@/types/class";
 import { useProfileContext } from "@/context/ProfileContext";
+import { GroupTabs } from "@/hooks/useClassManagement";
 
 export const ClassCard: React.FC<ClassCardProps> = ({ classData, activeTab, onConfirm }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { role } = useProfileContext();
 
   const renderActions = () => {
-    if (activeTab === "Solicitudes") {
+    if (activeTab === GroupTabs.Solicitudes) {
       if (role === "org:profesor") {
         return (
           <div className="flex space-x-2">
@@ -36,7 +37,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classData, activeTab, onCo
         );
       }
     }
-    if (activeTab === "Revisar") {
+    if (activeTab === GroupTabs.Atencion) {
       return (
         <button
           onClick={() => onConfirm(classData, "confirmar")}

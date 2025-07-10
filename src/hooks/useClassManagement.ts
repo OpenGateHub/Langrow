@@ -5,7 +5,7 @@ import { SelectedSlotType } from "@/app/components/ModalClassRequest";
 import { ClassRoomStatus } from "@/types/classRoom";
 
 interface UseClassManagementReturn {
-  classesData: Record<string, ClassData[]>;
+  classesData: Record<GroupTabs, ClassData[]>;
   loading: boolean;
   error: string | null;
   selectedClass: ClassData | null;
@@ -21,8 +21,14 @@ interface UseClassManagementReturn {
   setMessageModalOpen: (isOpen: boolean) => void;
 }
 
+export enum GroupTabs {
+  Solicitudes = "Solicitudes",
+  Proximas = "Próximas",
+  Atencion = "Atencion",
+  Revisadas = "Revisadas",
+}
+
 export function useClassManagement(userId: string): UseClassManagementReturn {
-  // Estados
   const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
   const [selectedAction, setSelectedAction] = useState<string>("");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -31,25 +37,21 @@ export function useClassManagement(userId: string): UseClassManagementReturn {
   const [modalMessage, setModalMessage] = useState("");
   const [modalType, setModalType] = useState<"success" | "error">("success");
 
-  // Hooks de la API
   const { sessions: raw, loading, error, refetch } = useGetMentoring({
     userId: userId || "",
     page: 50,
   });
   const { updateStatus } = useUpdateMentoringStatus();
 
-  // Transformación de datos
   const sessions: ClassData[] = useMemo(() => {
     return raw.map((s: MentoringSession) => {
-      const professorReviewData = s.professorReview && s.professorRate ? {
-        text: s.professorReview,
-        rating: s.professorRate
-      } : undefined;
+      const professorReviewData = s.professorReview && s.professorRate
+        ? { text: s.professorReview, rating: s.professorRate }
+        : undefined;
 
-      const studentReviewData = s.studentReview && s.studentRate ? {
-        text: s.studentReview,
-        rating: s.studentRate
-      } : undefined;
+      const studentReviewData = s.studentReview && s.studentRate
+        ? { text: s.studentReview, rating: s.studentRate }
+        : undefined;
 
       return {
         id: s.id,
@@ -80,48 +82,45 @@ export function useClassManagement(userId: string): UseClassManagementReturn {
         status: s.status,
         requestDescription: s.requestDescription,
         professorReview: professorReviewData,
-        studentReview: studentReviewData
+        studentReview: studentReviewData,
       };
     });
   }, [raw]);
 
-  // Agrupación por pestañas
   const classesData = useMemo(() => {
-    const grouped: Record<string, ClassData[]> = {
-      Solicitudes: [],
-      Próximas: [],
-      "Atencion": [],
-      Revisadas: [],
+    const grouped: Record<GroupTabs, ClassData[]> = {
+      [GroupTabs.Solicitudes]: [],
+      [GroupTabs.Proximas]: [],
+      [GroupTabs.Atencion]: [],
+      [GroupTabs.Revisadas]: [],
     };
+
     sessions.forEach(c => {
       switch (c.status) {
         case ClassRoomStatus.REQUESTED:
-        // case ClassRoomStatus.CREATED:
-          grouped.Solicitudes.push(c);
+          grouped[GroupTabs.Solicitudes].push(c);
           break;
         case ClassRoomStatus.NEXT:
-          grouped["Próximas"].push(c);
+          grouped[GroupTabs.Proximas].push(c);
           break;
         case ClassRoomStatus.NOTCONFIRMED:
         case ClassRoomStatus.CANCELLED:
-          grouped["Atencion"].push(c);
+          grouped[GroupTabs.Atencion].push(c);
           break;
         case ClassRoomStatus.CONFIRMED:
-          grouped.Revisadas.push(c);
-          break;
         default:
-          // Si no coincide con ningún estado, lo ponemos en Revisadas
-          grouped.Revisadas.push(c);
+          grouped[GroupTabs.Revisadas].push(c);
+          break;
       }
     });
+
     return grouped;
   }, [sessions]);
 
-  // Handlers
   const openModal = async (c: ClassData, action: string) => {
     setSelectedClass(c);
     setSelectedAction(action);
-    
+
     if (action === "confirmar") {
       setIsReviewModalOpen(true);
     } else if (action === "aceptar") {
@@ -204,6 +203,6 @@ export function useClassManagement(userId: string): UseClassManagementReturn {
     closeModal,
     handleReviewSubmit,
     handleScheduleSubmit,
-    setMessageModalOpen: setIsMessageModalOpen
+    setMessageModalOpen: setIsMessageModalOpen,
   };
-} 
+}
