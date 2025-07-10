@@ -114,10 +114,8 @@ export default function CompleteProfilePage() {
           });
         }
 
-        // Redirigir con un pequeño delay para asegurar que Clerk establezca la sesión
-        setTimeout(() => {
-          router.push("/");
-        }, 1000);
+        // Redirigir directamente al home
+        router.push("/home");
 
       } else {
         throw new Error("No se pudo crear el perfil - respuesta inválida");

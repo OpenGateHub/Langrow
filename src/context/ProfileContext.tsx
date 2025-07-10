@@ -35,6 +35,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Este useEffect se ejecuta cuando el usuario se carga y así refresca el perfil
   useEffect(() => {
     if (isLoaded && user) {
+      console.log('ProfileContext: Recargando perfil para usuario:', user.id);
       refetch();
     }
   }, [isLoaded, user?.id]); // Solo depende del ID del usuario, no de todo el objeto user

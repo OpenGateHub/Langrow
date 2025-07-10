@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ClassCardProps } from "@/types/class";
 import { useProfileContext } from "@/context/ProfileContext";
 import { GroupTabs } from "@/hooks/useClassManagement";
+import { TestTransitionButton } from "@/components/TestTransitionButton";
 
 export const ClassCard: React.FC<ClassCardProps> = ({ classData, activeTab, onConfirm }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -45,6 +46,13 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classData, activeTab, onCo
         >
           ¿Ya tuviste esta clase?
         </button>
+      );
+    }
+    if (activeTab === "Próximas") {
+      return (
+        <div className="flex flex-col gap-2">
+          <TestTransitionButton classId={classData.id} />
+        </div>
       );
     }
     return null;

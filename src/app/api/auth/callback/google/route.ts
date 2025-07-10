@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const code = searchParams.get("code");
   const state = searchParams.get("state"); // Este es el token JWT que contiene el userId
   const payload = state
-    ? jwt.verify(state, process.env.OAUTH_STATE_SECRET || "")
+    ? jwt.verify(state, process.env.OAUTH_STATE_SECRET || "") as { userId: string }
     : null;
   const userId = payload?.userId; // Extraemos el userId del payload del JWT
 
@@ -121,12 +121,11 @@ export async function GET(req: NextRequest) {
         { status: 500 }
       );
     }
+    
+    console.log('Integración con Google Calendar completada exitosamente para userId:', userId);
+    // Redirigir a la raíz que funciona correctamente
+    return NextResponse.redirect(new URL('/', req.url));
 
-    console.log(
-      "Integración con Google Calendar completada exitosamente para userId:",
-      userId
-    );
-    return NextResponse.redirect(new URL("/home", req.url));
   } catch (error: any) {
     console.error(
       "Error al intercambiar el código por tokens de Google:",

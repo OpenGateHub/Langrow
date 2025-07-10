@@ -138,21 +138,7 @@ export default function RegisterPage() {
     }
   };
 
-  useEffect(() => {
-    if (clerk?.session) {
-      router.push("/home");
-    }
-  }, [clerk?.session, router]);
-
-  // Polling para esperar a que Clerk esté listo antes de redirigir
-  const waitForClerkSessionAndRedirect = () => {
-    const interval = setInterval(() => {
-      if (clerkLoaded && isSignedIn) {
-        clearInterval(interval);
-        router.push("/");
-      }
-    }, 300);
-  };
+  // Eliminamos el polling innecesario y simplificamos la lógica
 
   // Función para enviar el formulario de registro
   const handleSubmit = async (e: React.FormEvent) => {
@@ -247,9 +233,11 @@ export default function RegisterPage() {
         };
         const response = await createProfile(newUserProfile);
         if (response && response.data && response.data.length > 0) {
+          // Los metadatos ya se guardaron durante el registro, no necesitamos actualizarlos aquí
+          
           setIsVerificating(false);
-          // Recargar la página para que Clerk detecte la sesión correctamente
-          window.location.reload();
+          // Redirigir directamente al home sin recargar la página
+          router.push("/home");
         }
       }
     } catch (e: any) {
@@ -260,17 +248,7 @@ export default function RegisterPage() {
     }
   };
 
-  // Redirige cuando Clerk ya cargó y el usuario está autenticado (inicio de sesión)
-  useEffect(() => {
-    if (clerkLoaded && isSignedIn) {
-      // Si el usuario no tiene rol, redirigir a completar perfil
-      if (!user?.publicMetadata?.role) {
-        router.push("/auth/complete-profile");
-      } else {
-        router.push("/");
-      }
-    }
-  }, [clerkLoaded, isSignedIn, user, router]);
+  // Eliminamos la lógica de redirección del registro - el AuthWrapper se encarga de esto
 
   return (
     <main className="min-h-screen flex items-center justify-center relative">

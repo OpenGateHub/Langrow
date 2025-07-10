@@ -374,6 +374,14 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
                   </>
                 )}
               </div>
+              {/* Precio del profesor */}
+              {isTutor && (
+                <div className="flex items-center justify-center md:justify-start mt-2">
+                  <p className="text-lg font-semibold text-orange ml-[28px] md:ml-0 opacity-0 animate-fade-in delay-400">
+                    ${profile.price || 18000}/hora
+                  </p>
+                </div>
+              )}
             </div>
           </AnimateOnScroll>
           {/* Sección de Logros (solo para tutores) */}
