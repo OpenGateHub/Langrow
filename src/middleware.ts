@@ -3,6 +3,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 // Define las rutas públicas que no requieren autenticación
 const isPublicRoute = createRouteMatcher([
   '/',
+  '/auth',
   '/auth/login',
   '/auth/register',
   '/auth/reset-password(.*)', // Agregar ruta de recuperación de contraseña

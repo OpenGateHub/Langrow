@@ -282,7 +282,7 @@ const Header = () => {
                         onClick={async () => {
                           try {
                             await signOut();
-                            router.push("/auth/login");
+                            router.push("/auth");
                           } catch (error) {
                             console.error("Error al cerrar sesión:", error);
                           }
@@ -295,7 +295,7 @@ const Header = () => {
                   </div>
                 </>
               ) : (
-                <Link href="/auth/login">
+                <Link href="/auth">
                   <button className="flex items-center border border-primary text-primary hover:bg-primary hover:text-white transition duration-300 ease-in-out px-6 py-2 rounded-full text-sm font-semibold">
                     Iniciar Sesión
                     <FaArrowRight className="ml-2 w-4 h-4" />

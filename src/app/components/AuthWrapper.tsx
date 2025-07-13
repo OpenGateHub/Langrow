@@ -26,6 +26,7 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
 
   const publicRoutes = [
     '/',
+    '/auth',
     '/auth/login',
     '/auth/register',
     '/auth/complete-profile',
@@ -53,10 +54,10 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
     // Si ya estamos en medio de una redirección o la verificación inicial ya se completó, no hacer nada
     if (redirectionInProgress || !isLoaded) return;
 
-    // Si el usuario no está autenticado y no está en una ruta pública, redirigir a login
+    // Si el usuario no está autenticado y no está en una ruta pública, redirigir a auth
     if (!isSignedIn && !isPublicRoute && !initialCheckDone) {
       setRedirectionInProgress(true);
-      router.push('/auth/login');
+      router.push('/auth');
       setInitialCheckDone(true);
       return;
     }
@@ -66,19 +67,22 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
       // Verificar si el usuario ya tenía un perfil antes (usando localStorage)
       const hasStoredProfile = localStorage.getItem('hasProfile') === 'true';
       
-      // Si hay un error al cargar el perfil o no hay perfil y no hay registro en localStorage
-      if ((error || !profile) && !hasStoredProfile && pathname !== '/auth/complete-profile') {
+      // Solo redirigir a complete-profile si el usuario se registró con Google (tiene firstName/lastName pero no rol)
+      const hasGoogleData = user?.firstName && user?.lastName;
+      const hasRole = user?.publicMetadata?.role;
+      
+      if (hasGoogleData && !hasRole && !hasStoredProfile && pathname !== '/auth/complete-profile' && pathname !== '/auth') {
         // Solo redirigir si no estamos en el proceso de registro o en home
         if (pathname !== '/auth/register' && pathname !== '/home') {
           setRedirectionInProgress(true);
-          router.push('/auth/complete-profile');
+          router.push('/auth');
           setInitialCheckDone(true);
           return;
         }
       }
 
-      // Si tiene perfil pero está en complete-profile, redirigir al home
-      if ((profile || hasStoredProfile) && pathname === '/auth/complete-profile') {
+      // Si tiene perfil o rol, redirigir al home si está en complete-profile o auth
+      if ((profile || hasStoredProfile || user?.publicMetadata?.role) && (pathname === '/auth/complete-profile' || pathname === '/auth')) {
         setRedirectionInProgress(true);
         router.push('/home');
         setInitialCheckDone(true);
