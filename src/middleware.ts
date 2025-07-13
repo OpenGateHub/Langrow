@@ -12,6 +12,7 @@ const isPublicRoute = createRouteMatcher([
   '/terms-of-service',
   '/privacy-policy',
   '/contact-us',
+  '/home', // Permitir acceso a home para usuarios recién registrados
   '/api/webhook(.*)', // Webhooks generalmente no requieren autenticación de usuario
   '/api/health', // Ruta de salud si la tienes
   

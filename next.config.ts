@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: false, // Set to true to bypass ESLint errors during build
   },
+  // Disable Turbopack to avoid conflicts with Clerk
+  experimental: {
+    turbo: false,
+  },
 };
 
 export default nextConfig;

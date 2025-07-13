@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useClerk, useSignIn, useSignUp, SignInButton, useUser } from "@clerk/nextjs";
+import { useClerk, useSignIn, useSignUp, SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
 import { useProfile } from "@/hooks/useProfile";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useProfileContext } from "@/context/ProfileContext";
@@ -70,21 +70,22 @@ export default function AuthPage() {
   // Redirigir si el usuario ya está autenticado
   useEffect(() => {
     if (userLoaded && isSignedIn && user) {
-      console.log("Usuario autenticado:", {
+      console.log("AuthPage - Usuario autenticado:", {
         firstName: user.firstName,
         lastName: user.lastName,
         publicMetadata: user.publicMetadata,
-        unsafeMetadata: user.unsafeMetadata
+        unsafeMetadata: user.unsafeMetadata,
+        currentState
       });
       
       // Solo redirigir a complete-profile si el usuario se registró con Google (tiene firstName/lastName pero no rol)
       const hasGoogleData = user.firstName && user.lastName;
       const hasRole = user?.publicMetadata?.role || user?.unsafeMetadata?.formRole;
       
-      console.log("Verificación:", { hasGoogleData, hasRole });
+      console.log("AuthPage - Verificación:", { hasGoogleData, hasRole, currentState });
       
       if (hasGoogleData && !hasRole) {
-        console.log("Redirigiendo a complete-profile");
+        console.log("AuthPage - Redirigiendo a complete-profile");
         setCurrentState('complete-profile');
         // Cargar datos del usuario de Google
         setFormData(prev => ({
@@ -94,13 +95,13 @@ export default function AuthPage() {
           email: user.emailAddresses[0]?.emailAddress || ""
         }));
       } else if (hasRole) {
-        console.log("Redirigiendo a home");
+        console.log("AuthPage - Redirigiendo a home");
         router.push("/home");
       } else {
-        console.log("Usuario normal sin rol, se queda en login");
+        console.log("AuthPage - Usuario normal sin rol, se queda en login");
       }
     }
-  }, [userLoaded, isSignedIn, user, router]);
+  }, [userLoaded, isSignedIn, user, router, currentState]);
 
   // Cargar datos del usuario cuando cambia a complete-profile
   useEffect(() => {
@@ -332,10 +333,8 @@ export default function AuthPage() {
             });
           }
 
-          displayMessage("success", "¡Registro exitoso! Redirigiendo...");
-          setTimeout(() => {
-            router.push("/home");
-          }, 2000);
+          // Redirigir directamente sin mensaje
+          window.location.href = "/home";
         }
       }
     } catch (err: any) {
@@ -1051,8 +1050,15 @@ export default function AuthPage() {
         );
       case 'register':
         return (
-          <div className="text-center mt-6">
-            <p className="text-sm text-gray-600">
+          <div className="flex items-center justify-between mt-6">
+            <SignUpButton mode="redirect">
+              <button className="flex items-center bg-white border border-gray-300 rounded-md px-4 py-2 shadow-sm hover:bg-gray-200 transition duration-200">
+                <img src="/google.png" alt="Google" className="w-5 h-5 mr-2" />
+                Regístrate con Google
+              </button>
+            </SignUpButton>
+
+            <p className="text-sm text-gray-600 ml-3">
               ¿Ya tienes una cuenta?{" "}
               <button
                 onClick={() => setCurrentState('login')}

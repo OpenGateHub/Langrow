@@ -4,6 +4,7 @@ import HomeTemplate, { HomeTemplateProps } from "../components/homePage/HomePage
 import { useProfileContext } from "@/context/ProfileContext";
 import { useOauthToken } from "@/hooks/useOauthToken";
 import MessageModal from "../components/Modal";
+import BlockUi from "../components/BlockUi";
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
 const GOOGLE_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI!;
@@ -50,8 +51,38 @@ export default function HomePage() {
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   };
 
-  if (loading || tokenLoading) return <p>Cargando perfil...</p>;
-  if (error) return <p>Error: {error}</p>;
+  if (loading || tokenLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <BlockUi isActive={true} />
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-red-600">Error: {error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 bg-secondary text-white px-4 py-2 rounded-md hover:bg-primary-hover transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Si el perfil no está cargado aún, mostrar loading
+  if (!profile && !loading) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <BlockUi isActive={true} />
+      </div>
+    );
+  }
 
   // Si aún no hay redirección pero tampoco debe redirigir
   if (profile && !profile.isZoomEnabled && !stateToken) {

@@ -256,6 +256,11 @@ const Header = () => {
                           Perfil
                         </span>
                       </Link>
+                      <Link href="/datos-cuenta">
+                        <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
+                          Datos de la cuenta
+                        </span>
+                      </Link>
                       <Link href="/mis-clases">
                         <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
                           Ver mis Clases

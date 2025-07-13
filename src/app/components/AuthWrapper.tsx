@@ -42,7 +42,6 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
     '/payment/failure',
     '/api/auth/callback/google',
     '/class',
-    '/google/auth',
     '/auth/register',
     '/home',
   ];
@@ -52,27 +51,24 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     // Si ya estamos en medio de una redirección o la verificación inicial ya se completó, no hacer nada
-    if (redirectionInProgress || !isLoaded) return;
+    if (redirectionInProgress || !isLoaded || initialCheckDone) return;
 
     // Si el usuario no está autenticado y no está en una ruta pública, redirigir a auth
-    if (!isSignedIn && !isPublicRoute && !initialCheckDone) {
+    if (!isSignedIn && !isPublicRoute) {
       setRedirectionInProgress(true);
       router.push('/auth');
       setInitialCheckDone(true);
       return;
     }
 
-    // Si el usuario está autenticado y la carga del perfil ha finalizado (éxito o error)
-    if (isSignedIn && user && !profileLoading && !shouldSkipProfileCheck && !initialCheckDone) {
-      // Verificar si el usuario ya tenía un perfil antes (usando localStorage)
-      const hasStoredProfile = localStorage.getItem('hasProfile') === 'true';
-      
+    // Si el usuario está autenticado, verificar redirecciones solo una vez
+    if (isSignedIn && user && !profileLoading) {
       // Solo redirigir a complete-profile si el usuario se registró con Google (tiene firstName/lastName pero no rol)
       const hasGoogleData = user?.firstName && user?.lastName;
-      const hasRole = user?.publicMetadata?.role;
+      const hasRole = user?.publicMetadata?.role || user?.unsafeMetadata?.formRole;
+      const hasStoredProfile = localStorage.getItem('hasProfile') === 'true';
       
       if (hasGoogleData && !hasRole && !hasStoredProfile && pathname !== '/auth/complete-profile' && pathname !== '/auth') {
-        // Solo redirigir si no estamos en el proceso de registro o en home
         if (pathname !== '/auth/register' && pathname !== '/home') {
           setRedirectionInProgress(true);
           router.push('/auth');
@@ -81,8 +77,17 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
         }
       }
 
-      // Si tiene perfil o rol, redirigir al home si está en complete-profile o auth
-      if ((profile || hasStoredProfile || user?.publicMetadata?.role) && (pathname === '/auth/complete-profile' || pathname === '/auth')) {
+      // Si tiene rol completo y está en auth, redirigir al home
+      const hasCompleteRole = user?.publicMetadata?.role || user?.unsafeMetadata?.formRole;
+      if (hasCompleteRole && (pathname === '/auth/complete-profile' || pathname === '/auth')) {
+        setRedirectionInProgress(true);
+        router.push('/home');
+        setInitialCheckDone(true);
+        return;
+      }
+      
+      // Si tiene perfil en BD y está en auth, redirigir al home
+      if (profile && (pathname === '/auth/complete-profile' || pathname === '/auth')) {
         setRedirectionInProgress(true);
         router.push('/home');
         setInitialCheckDone(true);
@@ -92,11 +97,11 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
       setInitialCheckDone(true);
     }
 
-    // Si todas las condiciones anteriores no aplican y la carga ha finalizado, marcar la verificación como completada
-    if (!profileLoading && !initialCheckDone) {
+    // Si la carga ha finalizado, marcar como completada
+    if (!profileLoading) {
       setInitialCheckDone(true);
     }
-  }, [isLoaded, isSignedIn, user, profile, profileLoading, error, pathname, router, isPublicRoute, shouldSkipProfileCheck, initialCheckDone, redirectionInProgress]);
+  }, [isLoaded, isSignedIn, user, profile, profileLoading, pathname, router, isPublicRoute, initialCheckDone, redirectionInProgress]);
 
   // Después de completar una redirección, resetear el estado
   useEffect(() => {
@@ -106,7 +111,7 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
   }, [redirectionInProgress, initialCheckDone]);
 
 
-  // Permitir acceso al home para usuarios recién registrados
+  // Mostrar loading solo si Clerk no está cargado
   if (!isLoaded) {
     return (
       <div className="min-h-screen bg-gray-100">
@@ -114,19 +119,7 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
       </div>
     );
   }
-  
-  // Solo mostrar loading si no estamos en home y el perfil está cargando
-  if (isSignedIn && profileLoading && !initialCheckDone && pathname !== '/home') {
-    return (
-      <div className="min-h-screen bg-gray-100">
-        <BlockUi isActive={true} />
-      </div>
-    );
 
-  }
-
-  // Si el usuario está autenticado pero cargando el perfil, mostrar la página sin pantalla de carga
-  // El perfil se cargará en segundo plano
-
+  // Para el resto de casos, mostrar el contenido y dejar que cada página maneje su propio loading
   return <>{children}</>;
 }
