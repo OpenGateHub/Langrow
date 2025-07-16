@@ -18,6 +18,23 @@ export default function DatosCuentaPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
+  const [passwordMatch, setPasswordMatch] = useState<boolean | null>(null);
+  const [passwordValidation, setPasswordValidation] = useState({
+    length: false,
+    uppercase: false,
+    number: false,
+    special: false
+  });
+  
+  // Estados para información bancaria
+  const [isEditingBank, setIsEditingBank] = useState(false);
+  const [accountHolder, setAccountHolder] = useState("");
+  const [documentNumber, setDocumentNumber] = useState("");
+  const [bankCBU, setBankCBU] = useState("");
+  const [bankAlias, setBankAlias] = useState("");
+  const [bankError, setBankError] = useState("");
+  const [bankSuccess, setBankSuccess] = useState("");
+  
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"error" | "success">("error");
@@ -32,6 +49,16 @@ export default function DatosCuentaPage() {
     setMessage(message);
     setMessageType(type);
     setDisplay(true);
+  };
+
+  // Validación en tiempo real de la contraseña
+  const validatePassword = (password: string) => {
+    setPasswordValidation({
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[^A-Za-z0-9]/.test(password)
+    });
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -90,6 +117,75 @@ export default function DatosCuentaPage() {
     } catch (err: any) {
       const errorMessage = err?.errors?.[0]?.message || "Error al actualizar la contraseña";
       setPasswordError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBankSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setBankError("");
+    setBankSuccess("");
+    
+    // Validaciones básicas
+    if (!accountHolder.trim()) {
+      setBankError("El titular de la cuenta es requerido");
+      setLoading(false);
+      return;
+    }
+    
+    if (!documentNumber.trim()) {
+      setBankError("El DNI del titular es requerido");
+      setLoading(false);
+      return;
+    }
+    
+    if (documentNumber.length !== 8) {
+      setBankError("El DNI debe tener 8 dígitos");
+      setLoading(false);
+      return;
+    }
+    
+    if (!/^\d+$/.test(documentNumber)) {
+      setBankError("El DNI debe contener solo números");
+      setLoading(false);
+      return;
+    }
+    
+    if (!bankCBU.trim()) {
+      setBankError("El CBU es requerido");
+      setLoading(false);
+      return;
+    }
+    
+    if (bankCBU.length !== 22) {
+      setBankError("El CBU debe tener exactamente 22 dígitos");
+      setLoading(false);
+      return;
+    }
+    
+    if (!/^\d+$/.test(bankCBU)) {
+      setBankError("El CBU debe contener solo números");
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      // Aquí iría la llamada a la API para guardar la información bancaria
+      // Por ahora simulamos el guardado
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setBankSuccess("Información bancaria guardada exitosamente");
+      setIsEditingBank(false);
+      
+      // Limpiar mensaje de éxito después de 3 segundos
+      setTimeout(() => {
+        setBankSuccess("");
+      }, 3000);
+      
+    } catch (err: any) {
+      setBankError("Error al guardar la información bancaria");
     } finally {
       setLoading(false);
     }
@@ -190,7 +286,7 @@ export default function DatosCuentaPage() {
 
             {/* Formulario de contraseña */}
             {isEditingPassword && (
-              <div className="mt-4 bg-gray-50 rounded-lg p-4">
+              <div className="bg-gray-50 rounded-lg p-4">
                 <form onSubmit={handlePasswordSubmit} className="space-y-4">
                   {!isGoogleUser && (
                     <div>
@@ -217,11 +313,38 @@ export default function DatosCuentaPage() {
                       type="password"
                       id="newPassword"
                       value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        validatePassword(e.target.value);
+                        // Actualizar validación de coincidencia
+                        if (confirmPassword) {
+                          setPasswordMatch(e.target.value === confirmPassword);
+                        } else {
+                          setPasswordMatch(null);
+                        }
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary"
                       placeholder="Mínimo 8 caracteres"
                       required
                     />
+                    
+                    {/* Validaciones de contraseña */}
+                    {newPassword && (
+                      <div className="mt-2 space-y-1">
+                        <div className={`text-xs flex items-center ${passwordValidation.length ? 'text-green-600' : 'text-red-600'}`}>
+                          {passwordValidation.length ? '✓' : '✗'} Al menos 8 caracteres
+                        </div>
+                        <div className={`text-xs flex items-center ${passwordValidation.uppercase ? 'text-green-600' : 'text-red-600'}`}>
+                          {passwordValidation.uppercase ? '✓' : '✗'} Al menos una letra mayúscula
+                        </div>
+                        <div className={`text-xs flex items-center ${passwordValidation.number ? 'text-green-600' : 'text-red-600'}`}>
+                          {passwordValidation.number ? '✓' : '✗'} Al menos un número
+                        </div>
+                        <div className={`text-xs flex items-center ${passwordValidation.special ? 'text-green-600' : 'text-red-600'}`}>
+                          {passwordValidation.special ? '✓' : '✗'} Al menos un carácter especial
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <div>
@@ -232,11 +355,32 @@ export default function DatosCuentaPage() {
                       type="password"
                       id="confirmPassword"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary"
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        // Validación en tiempo real
+                        if (e.target.value && newPassword) {
+                          setPasswordMatch(e.target.value === newPassword);
+                        } else {
+                          setPasswordMatch(null);
+                        }
+                      }}
+                      className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary ${
+                        passwordMatch === null 
+                          ? 'border-gray-300' 
+                          : passwordMatch 
+                            ? 'border-green-500' 
+                            : 'border-red-500'
+                      }`}
                       placeholder="Repite la contraseña"
                       required
                     />
+                    {passwordMatch !== null && (
+                      <p className={`text-sm mt-1 ${
+                        passwordMatch ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {passwordMatch ? '✓ Las contraseñas coinciden' : '✗ Las contraseñas no coinciden'}
+                      </p>
+                    )}
                   </div>
                   
                   {passwordError && (
@@ -259,6 +403,7 @@ export default function DatosCuentaPage() {
                         setConfirmPassword("");
                         setCurrentPassword("");
                         setPasswordError("");
+                        setPasswordMatch(null);
                       }}
                       className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-400 transition-colors"
                     >
@@ -270,13 +415,162 @@ export default function DatosCuentaPage() {
             )}
           </div>
 
-          {/* Información adicional */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-gray-900 mb-2">Información de la cuenta</h3>
-            <div className="space-y-2 text-sm text-gray-600">
-              <p>• ID de usuario: {user.id}</p>
-              <p>• Miembro desde: {new Date(user.createdAt).toLocaleDateString('es-ES')}</p>
-              <p>• Método de registro: {isGoogleUser ? "Google" : "Email y contraseña"}</p>
+          {/* Información bancaria */}
+          <div className="mb-8">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Información bancaria</h2>
+            
+            {/* Si tiene datos bancarios, mostrarlos */}
+            {accountHolder && documentNumber && bankCBU && !isEditingBank ? (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Datos para recibir pagos</p>
+                    <p className="text-sm text-gray-600">Tu información bancaria está configurada</p>
+                  </div>
+                  <button
+                    onClick={() => setIsEditingBank(true)}
+                    className="text-secondary hover:text-secondary-hover text-sm font-medium"
+                  >
+                    Editar
+                  </button>
+                </div>
+                
+                <div className="bg-white rounded-md p-3 border">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="font-medium text-gray-700">Titular</p>
+                      <p className="text-gray-900">{accountHolder}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-700">DNI</p>
+                      <p className="text-gray-900">{documentNumber}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-700">CBU</p>
+                      <p className="text-gray-900">{bankCBU}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-700">Alias</p>
+                      <p className="text-gray-900">{bankAlias || "No especificado"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Si no tiene datos o está editando, mostrar formulario */
+              <div className="bg-gray-50 rounded-lg ">
+                {!accountHolder && !documentNumber && !bankCBU && !isEditingBank && (
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600">Configura tu información bancaria para recibir los pagos de tus clases</p>
+                  </div>
+                )}
+                
+                <form onSubmit={handleBankSubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="accountHolder" className="block text-sm font-medium text-gray-700 mb-1">
+                      Titular de la cuenta
+                    </label>
+                    <input
+                      type="text"
+                      id="accountHolder"
+                      value={accountHolder}
+                      onChange={(e) => setAccountHolder(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary"
+                      placeholder="Juan Pérez"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="documentNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                      DNI del titular
+                    </label>
+                    <input
+                      type="text"
+                      id="documentNumber"
+                      value={documentNumber}
+                      onChange={(e) => setDocumentNumber(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary"
+                      placeholder="12345678"
+                      maxLength={8}
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="bankCBU" className="block text-sm font-medium text-gray-700 mb-1">
+                      CBU (22 dígitos)
+                    </label>
+                    <input
+                      type="text"
+                      id="bankCBU"
+                      value={bankCBU}
+                      onChange={(e) => setBankCBU(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary"
+                      placeholder="0000007900000000000000"
+                      maxLength={22}
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="bankAlias" className="block text-sm font-medium text-gray-700 mb-1">
+                      Alias (opcional)
+                    </label>
+                    <input
+                      type="text"
+                      id="bankAlias"
+                      value={bankAlias}
+                      onChange={(e) => setBankAlias(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary"
+                      placeholder="juan.perez"
+                    />
+                  </div>
+                  
+                  {bankError && (
+                    <p className="text-sm text-red-600">{bankError}</p>
+                  )}
+                  
+                  {bankSuccess && (
+                    <p className="text-sm text-green-600">{bankSuccess}</p>
+                  )}
+                  
+                  <div className="flex space-x-3">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="bg-secondary text-white px-4 py-2 rounded-md text-sm hover:bg-primary-hover transition-colors disabled:opacity-50"
+                    >
+                      {loading ? "Guardando..." : "Guardar información bancaria"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsEditingBank(false);
+                        setAccountHolder("");
+                        setDocumentNumber("");
+                        setBankCBU("");
+                        setBankAlias("");
+                        setBankError("");
+                        setBankSuccess("");
+                      }}
+                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-400 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+
+          {/* Información de la cuenta */}
+          <div className="mb-8">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Información de la cuenta</h2>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="space-y-2 text-sm text-gray-600">
+                <p>• Miembro desde: {new Date(user.createdAt).toLocaleDateString('es-ES')}</p>
+              </div>
             </div>
           </div>
         </div>
