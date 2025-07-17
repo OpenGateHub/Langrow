@@ -29,6 +29,7 @@ const isProtectedApiRoute = createRouteMatcher([
   '/api/send-email(.*)',
   '/api/create-preference(.*)',
   '/api/administrator(.*)',
+  '/api/change-password(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

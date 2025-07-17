@@ -93,30 +93,33 @@ export default function DatosCuentaPage() {
       setLoading(false);
       return;
     }
-    
+    if (hasPassword && !currentPassword) {
+      setPasswordError("Debes ingresar tu contraseña actual");
+      setLoading(false);
+      return;
+    }
     try {
-      if (isGoogleUser) {
-        // Usuario de Google: agregar contraseña por primera vez
-        await user?.update({
-          password: newPassword
-        });
-        displayMessage("success", "Contraseña agregada exitosamente");
-      } else {
-        // Usuario con contraseña: cambiar contraseña
-        await user?.update({
-          password: newPassword
-        });
-        displayMessage("success", "Contraseña actualizada exitosamente");
+      const response = await fetch('/api/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword: hasPassword ? currentPassword : '',
+          newPassword
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al actualizar la contraseña');
       }
-      
+      displayMessage("success", "Contraseña actualizada exitosamente");
       setIsEditingPassword(false);
       setNewPassword("");
       setConfirmPassword("");
       setCurrentPassword("");
-      
     } catch (err: any) {
-      const errorMessage = err?.errors?.[0]?.message || "Error al actualizar la contraseña";
-      setPasswordError(errorMessage);
+      setPasswordError(err.message || "Error al actualizar la contraseña");
     } finally {
       setLoading(false);
     }
@@ -247,7 +250,6 @@ export default function DatosCuentaPage() {
           {/* Sección de contraseña */}
           <div className="mb-8">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Contraseña</h2>
-            
             {isGoogleUser ? (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -266,29 +268,28 @@ export default function DatosCuentaPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Contraseña</p>
-                    <p className="text-gray-900">••••••••</p>
-                  </div>
-                  {!isEditingPassword && (
+              !isEditingPassword && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Contraseña</p>
+                      <p className="text-gray-900">••••••••</p>
+                    </div>
                     <button
                       onClick={() => setIsEditingPassword(true)}
                       className="text-secondary hover:text-secondary-hover text-sm font-medium"
                     >
-                      Cambiar contraseña
+                      Actualizar contraseña
                     </button>
-                  )}
+                  </div>
                 </div>
-              </div>
+              )
             )}
-
             {/* Formulario de contraseña */}
             {isEditingPassword && (
               <div className="bg-gray-50 rounded-lg p-4">
                 <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                  {!isGoogleUser && (
+                  {hasPassword && (
                     <div>
                       <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
                         Contraseña actual
@@ -304,10 +305,9 @@ export default function DatosCuentaPage() {
                       />
                     </div>
                   )}
-                  
                   <div>
                     <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                      {isGoogleUser ? "Nueva contraseña" : "Nueva contraseña"}
+                      Nueva contraseña
                     </label>
                     <input
                       type="password"
@@ -349,7 +349,7 @@ export default function DatosCuentaPage() {
                   
                   <div>
                     <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                      Confirmar contraseña
+                      Confirmar nueva contraseña
                     </label>
                     <input
                       type="password"
@@ -387,29 +387,27 @@ export default function DatosCuentaPage() {
                     <p className="text-sm text-red-600">{passwordError}</p>
                   )}
                   
-                  <div className="flex space-x-3">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="bg-secondary text-white px-4 py-2 rounded-md text-sm hover:bg-primary-hover transition-colors disabled:opacity-50"
-                    >
-                      {loading ? "Guardando..." : (isGoogleUser ? "Agregar contraseña" : "Cambiar contraseña")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEditingPassword(false);
-                        setNewPassword("");
-                        setConfirmPassword("");
-                        setCurrentPassword("");
-                        setPasswordError("");
-                        setPasswordMatch(null);
-                      }}
-                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-400 transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-secondary text-white px-4 py-2 rounded-md text-sm hover:bg-primary-hover transition-colors disabled:opacity-50"
+                  >
+                    {loading ? "Guardando..." : "Actualizar contraseña"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditingPassword(false);
+                      setNewPassword("");
+                      setConfirmPassword("");
+                      setCurrentPassword("");
+                      setPasswordError("");
+                      setPasswordMatch(null);
+                    }}
+                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-400 transition-colors"
+                  >
+                    Cancelar
+                  </button>
                 </form>
               </div>
             )}
@@ -569,7 +567,7 @@ export default function DatosCuentaPage() {
             <h2 className="text-lg font-medium text-gray-900 mb-4">Información de la cuenta</h2>
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="space-y-2 text-sm text-gray-600">
-                <p>• Miembro desde: {new Date(user.createdAt).toLocaleDateString('es-ES')}</p>
+                <p>• Miembro desde: {user.createdAt ? new Date(user.createdAt).toLocaleDateString('es-ES') : 'N/A'}</p>
               </div>
             </div>
           </div>
