@@ -3,7 +3,7 @@ import { z as zod } from "zod";
 import { updatePaymentStatus } from "./payments";
 import { updateClassRoomByPaymentId } from "../mentoring/classRoom";
 import { ClassRoomStatus } from "@/types/classRoom";
-import { NotificationService } from "@/services/notificationService";
+import { NotificationService } from "@/lib/services/notificationService";
 import { getStudentProfileById } from "../profile/profile";
 
 export async function POST(request: NextRequest) {

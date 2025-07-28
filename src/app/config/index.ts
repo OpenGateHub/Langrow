@@ -18,6 +18,9 @@ export const ROLE_MAP: Record<PROFILE_ROLE_STRING, PROFILE_ROLE> = {
 
 export enum SUPABASE_TABLES {
     ACHIEVEMENT = "Achievements",
+    BANKS = "ConfigurationBanks",
+    BANK_INFORMATION = "UserProfileBankAccounts",
+    BANK_LOGS = "bank_logs",
     CATEGORIES = "MentorshipCategory",
     MENTORSHIP = "Mentorship",
     MENTORSHIP_CONFIGURATION = "MentorshipUserScheduleConfiguration",
