@@ -256,6 +256,11 @@ const Header = () => {
                           Perfil
                         </span>
                       </Link>
+                      <Link href="/datos-cuenta">
+                        <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
+                          Datos de la cuenta
+                        </span>
+                      </Link>
                       <Link href="/mis-clases">
                         <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
                           Ver mis Clases
@@ -282,7 +287,7 @@ const Header = () => {
                         onClick={async () => {
                           try {
                             await signOut();
-                            router.push("/auth/login");
+                            router.push("/auth");
                           } catch (error) {
                             console.error("Error al cerrar sesión:", error);
                           }
@@ -295,7 +300,7 @@ const Header = () => {
                   </div>
                 </>
               ) : (
-                <Link href="/auth/login">
+                <Link href="/auth">
                   <button className="flex items-center border border-primary text-primary hover:bg-primary hover:text-white transition duration-300 ease-in-out px-6 py-2 rounded-full text-sm font-semibold">
                     Iniciar Sesión
                     <FaArrowRight className="ml-2 w-4 h-4" />

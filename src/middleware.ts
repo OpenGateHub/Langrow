@@ -3,6 +3,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 // Define las rutas públicas que no requieren autenticación
 const isPublicRoute = createRouteMatcher([
   '/',
+  '/auth',
   '/auth/login',
   '/auth/register',
   '/auth/reset-password(.*)', // Agregar ruta de recuperación de contraseña
@@ -12,6 +13,7 @@ const isPublicRoute = createRouteMatcher([
   '/terms-of-service',
   '/privacy-policy',
   '/contact-us',
+  '/home', // Permitir acceso a home para usuarios recién registrados
   '/api/webhook(.*)', // Webhooks generalmente no requieren autenticación de usuario
   '/api/health', // Ruta de salud si la tienes
   
@@ -28,6 +30,7 @@ const isProtectedApiRoute = createRouteMatcher([
   '/api/send-email(.*)',
   '/api/create-preference(.*)',
   '/api/administrator(.*)',
+  '/api/change-password(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

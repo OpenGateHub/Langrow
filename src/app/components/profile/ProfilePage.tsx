@@ -405,6 +405,8 @@ const ProfilePage = ({ profileId, isTutor = false, editEnabled = false }: Profil
               </div>
             </AnimateOnScroll>
           )}
+          
+
           {/* Sección de Reseñas - Solo mostrar si hay reseñas y no hay errores */}
           {!reviewsLoading && !reviewsError && reviews.length > 0 && (
             <AnimateOnScroll delay={1000}>

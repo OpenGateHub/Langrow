@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "12.2.12 (cd3cf9e)"
   }
   public: {
     Tables: {
@@ -50,6 +50,60 @@ export type Database = {
           isActive?: boolean | null
           staffOnly?: boolean | null
           title?: string | null
+        }
+        Relationships: []
+      }
+      bank_logs: {
+        Row: {
+          action: string
+          bank_code: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          performed_by: string
+          profile_id: number
+        }
+        Insert: {
+          action: string
+          bank_code: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          performed_by: string
+          profile_id: number
+        }
+        Update: {
+          action?: string
+          bank_code?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          performed_by?: string
+          profile_id?: number
+        }
+        Relationships: []
+      }
+      ConfigurationBanks: {
+        Row: {
+          created_at: string
+          id: number
+          isActive: boolean | null
+          name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          isActive?: boolean | null
+          name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          isActive?: boolean | null
+          name?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -402,6 +456,75 @@ export type Database = {
             columns: ["role"]
             isOneToOne: false
             referencedRelation: "UserProfileRole"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      UserProfileBankAccounts: {
+        Row: {
+          account_number: string | null
+          account_type: string | null
+          alias: string | null
+          bank_id: number | null
+          bank_name: string | null
+          code: string | null
+          created_at: string
+          dni_number: string | null
+          dni_type: string | null
+          id: number
+          isActive: boolean | null
+          isPrimary: boolean | null
+          profile_id: number | null
+          tokenized: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_number?: string | null
+          account_type?: string | null
+          alias?: string | null
+          bank_id?: number | null
+          bank_name?: string | null
+          code?: string | null
+          created_at?: string
+          dni_number?: string | null
+          dni_type?: string | null
+          id?: number
+          isActive?: boolean | null
+          isPrimary?: boolean | null
+          profile_id?: number | null
+          tokenized?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_number?: string | null
+          account_type?: string | null
+          alias?: string | null
+          bank_id?: number | null
+          bank_name?: string | null
+          code?: string | null
+          created_at?: string
+          dni_number?: string | null
+          dni_type?: string | null
+          id?: number
+          isActive?: boolean | null
+          isPrimary?: boolean | null
+          profile_id?: number | null
+          tokenized?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "UserProfileBankAccounts_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "ConfigurationBanks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "UserProfileBankAccounts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "UserProfile"
             referencedColumns: ["id"]
           },
         ]

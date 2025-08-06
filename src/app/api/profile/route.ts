@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PROFILE_ROLE_STRING, PROFILE_ROLE, ROLE_MAP } from "@/app/config";
 import { z as zod } from "zod";
 import { supabaseClient } from "@/app/api/supabaseClient";
-import { NotificationService } from "@/services/notificationService";
+import { NotificationService } from "@/lib/services/notificationService";
 
 // TODO: include authentication
 export async function GET(req: NextRequest) {

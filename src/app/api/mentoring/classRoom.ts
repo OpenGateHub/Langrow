@@ -3,7 +3,7 @@ import { SUPABASE_TABLES } from "@/app/config";
 import { ClassRoom, ClassRoomStatus, ClassRoomUpdate } from "@/types/classRoom";
 import { getUserProvider } from "@/lib/providers";
 import { MeetingEventDetails } from "@/interfaces/MeetingProvider";
-import { NotificationService } from "@/services/notificationService";
+import { NotificationService } from "@/lib/services/notificationService";
 import {
   getStudentProfileByUserId,
   getStudentProfileById,

@@ -1,7 +1,7 @@
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { PaymentItem } from '@/types/payment';
 import { z as zod } from 'zod';
-import { getStudentProfileByUserId, getStudentProfileById } from '../app/api/profile/profile';
+import { getStudentProfileByUserId, getStudentProfileById } from '../../app/api/profile/profile';
 
 const createPaymentPreferenceSchema = zod.object({
   items: zod.array(

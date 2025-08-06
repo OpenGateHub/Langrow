@@ -74,7 +74,40 @@ export default function HomePage() {
       </div>
     );
   }
-  if (error) return <p>Error: {error}</p>;
+  
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-red-600">Error: {error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 bg-secondary text-white px-4 py-2 rounded-md hover:bg-primary-hover transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Si el perfil no está cargado aún, mostrar loading
+  if (!profile && !loading) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <BlockUi isActive={true} />
+      </div>
+    );
+  }
+
+  // Si el perfil está cargando, no mostrar nada hasta que esté listo
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <BlockUi isActive={true} />
+      </div>
+    );
+  }
 
   // Si el perfil está cargando, no mostrar nada hasta que esté listo
   if (loading) {

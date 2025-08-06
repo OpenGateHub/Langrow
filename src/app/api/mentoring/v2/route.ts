@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z as zod } from "zod";
 import { ClassRoomStatus } from "@/types/classRoom";
-import { PreferenceMP } from "@/services/preferenceMp";
-import { CategoryService } from "@/services/CategoryService";
+import { PreferenceMP } from "@/lib/services/preferenceMp";
+import { CategoryService } from "@/lib/services/CategoryService";
 import { createMultipleClassRooms } from "../classRoom";
 import {
   getStudentProfileByUserId,
