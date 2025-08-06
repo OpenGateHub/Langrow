@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseClient } from "@/app/api/supabaseClient";
 import { SUPABASE_TABLES } from "@/app/config";
 import { ClassRoomStatus } from "@/types/classRoom";
-import { NotificationService } from "@/services/notificationService";
+import { NotificationService } from "@/lib/services/notificationService";
 import { getStudentProfileById, getEmailbyUserProfileId } from "../../profile/profile";
 
 export async function POST(req: NextRequest) {
