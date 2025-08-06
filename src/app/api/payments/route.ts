@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from '@clerk/nextjs/server';
-import { currentUser } from '@clerk/nextjs/server';
 import { z as zod } from "zod";
-import { updatePaymentStatus, getPaymentByProfessorId } from "./payments";
 import { updatePaymentStatus, getPaymentByProfessorId } from "./payments";
 import { updateClassRoomByPaymentId } from "../mentoring/classRoom";
 import { ClassRoomStatus } from "@/types/classRoom";
