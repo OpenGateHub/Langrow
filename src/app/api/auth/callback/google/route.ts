@@ -121,12 +121,11 @@ export async function GET(req: NextRequest) {
         { status: 500 }
       );
     }
+    
+    console.log('Integración con Google Calendar completada exitosamente para userId:', userId);
+    // Redirigir a la raíz que funciona correctamente
+    return NextResponse.redirect(new URL('/', req.url));
 
-    console.log(
-      "Integración con Google Calendar completada exitosamente para userId:",
-      userId
-    );
-    return NextResponse.redirect(new URL("/home", req.url));
   } catch (error: any) {
     console.error(
       "Error al intercambiar el código por tokens de Google:",

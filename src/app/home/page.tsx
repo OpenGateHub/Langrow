@@ -109,6 +109,15 @@ export default function HomePage() {
     );
   }
 
+  // Si el perfil está cargando, no mostrar nada hasta que esté listo
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <BlockUi isActive={true} />
+      </div>
+    );
+  }
+
   // Si aún no hay redirección pero tampoco debe redirigir
   if (profile && !profile.isZoomEnabled && !stateToken) {
     return (

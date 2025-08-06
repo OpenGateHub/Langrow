@@ -95,6 +95,13 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
           setInitialCheckDone(true);
           return;
         }
+        // Si no es usuario de Google y no tiene perfil, podría ser un error - redirigir al home
+        else if (!isGoogleUser && pathname !== '/auth/register' && pathname !== '/home') {
+          setRedirectionInProgress(true);
+          router.push('/home');
+          setInitialCheckDone(true);
+          return;
+        }
       }
 
       // Si tiene rol completo y está en auth, redirigir al home
