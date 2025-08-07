@@ -264,7 +264,7 @@ export default function Dashboard() {
                       {payment.external_ref}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                      "Pedro tapia"
+                      &quot;Pedro tapia&quot;
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                       <button 

@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const limit = parseInt(searchParams.get('limit') || '30');
 
-        let query = supabaseClient
+        const query = supabaseClient
             .from(SUPABASE_TABLES.PAYMENTS)
             .select(`
                 *
