@@ -294,7 +294,7 @@ export const getBankTokenByCode = async (code: string) => {
     try {
         const { data, error } = await supabaseClient
             .from(SUPABASE_TABLES.BANK_INFORMATION)
-            .select("tokenized, profile_id")
+            .select("tokenized, profile_id, bank_name")
             .eq("code", code)
             .eq("isActive", true)
             .single();
@@ -303,7 +303,6 @@ export const getBankTokenByCode = async (code: string) => {
             console.error("Error fetching bank info by bank code:", error);
             return null;
         }
-
         return data || null;
     } catch (error) {
         console.error("Unexpected error fetching bank info by Bank code:", error);

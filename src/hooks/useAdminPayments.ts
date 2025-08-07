@@ -1,0 +1,114 @@
+import { useEffect, useState } from "react";
+
+
+export type Payment = {
+    amount: number;
+    external_ref: string;
+    fecha: string;
+    payment_id: string;
+    profesor_id: string | null;
+    status: string;
+}
+
+export const useAdminPayments = () => {
+
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [payments, setPayments] = useState<Payment[]>([]);
+    const parseAmountToLocale = (amount: number | null) => {
+        if (amount === null || amount === undefined) return "0.00";
+        return amount.toLocaleString("es-AR", {
+            style: "currency",
+            currency: "ARS",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+    };
+    function parsePayments(dataArray:any[]) {
+        return dataArray.map(item => {
+            const paymentDetails = item.payment_details || {};
+            const metadata = paymentDetails.metadata || {};
+            
+            const data = {
+            payment_id: item.payment_id || null,
+            amount: paymentDetails.transaction_amount || null,
+            fecha:parseAmountToLocale(item.created_at || null),
+            status: paymentDetails.status || null,
+            external_ref: item.external_ref || null,
+            profesor_id: metadata.profesor_id || null
+            };
+            console.log("Parsed Payment Data:", data);
+            return data
+        });
+    }
+
+
+    const fetchAdminPayments = async (options?: {
+        page?: number;
+        limit?: number;
+        status?: string;
+        from?: string;
+        to?: string;
+        professor_id?: string;
+    }) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const params = new URLSearchParams();
+            if (options?.page) params.append('page', options.page.toString());
+            if (options?.limit) params.append('limit', options.limit.toString());
+            if (options?.status) params.append('status', options.status);
+            if (options?.from) params.append('from', options.from);
+            if (options?.to) params.append('to', options.to);
+            if (options?.professor_id) params.append('professor_id', options.professor_id);
+
+            const response = await fetch(`/api/admin/payments`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            console.log(response);
+
+            const result = await response.json();
+            console.log('API Response:', result);
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Error al consultar pagos');
+            }
+            if (result.data) {
+                console.log('Payments fetched:', result.data);
+                const parsedPayments = parsePayments(result.data);
+                console.log('Parsed Payments:', parsedPayments);
+                setPayments(parsedPayments);
+                return result;
+            } else {
+                throw new Error(result.message || 'Respuesta inválida del servidor');
+            }
+
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+            setError(errorMessage);
+            console.error('Error en fetchAdminPayments:', err);
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAdminPayments();
+    }, []);
+
+    return {
+        payments,
+        loading,
+        error,
+        setLoading,
+        setError,
+        fetchAdminPayments,
+    };
+
+
+}

@@ -2,18 +2,17 @@
 import React, { useState, useEffect } from "react";
 import { useProfileContext } from "@/context/ProfileContext";
 import { useRouter } from "next/navigation";
-import { PROFILE_ROLE_STRING } from "@/app/config";
+import { useUpdatePaymentStatus } from "@/hooks/useUpdatePaymentStatus";
+import { useBankInfo } from "@/hooks/useBankInfo";
+import { useAdminPayments, Payment } from "@/hooks/useAdminPayments";
 
-interface Payment {
-  id: string;
-  transaction_amount: number;
-  date_created: string;
-  status: string;
-  external_reference: string;
-  profesor: {
-    nombre: string;
-    apellido: string;
-  };
+interface BankInfo {
+  bank_name: string;
+  account_number: string;
+  account_type: string;
+  dni_number: string;
+  dni_type: string;
+  alias: string;
 }
 
 type SortField =
@@ -25,42 +24,46 @@ type SortField =
   | "profesor"
   | "";
 
-const mockPayments: Payment[] = [
-  {
-    id: "12345",
-    transaction_amount: 18000,
-    date_created: "2025-04-06T00:11:33Z",
-    status: "approved",
-    external_reference:
-      "reserva-clase-1743898243043-user_2tlwDBA8ovHFAOjFGFQsihh4qlL",
-    profesor: { nombre: "Juan", apellido: "Pérez" },
-  },
-  {
-    id: "12346",
-    transaction_amount: 16000,
-    date_created: "2025-04-05T20:11:33Z",
-    status: "pending",
-    external_reference:
-      "reserva-clase-1743898243044-user_2tlwDBA8ovHFAOjFGFQsihh4qlL",
-    profesor: { nombre: "María", apellido: "Gómez" },
-  },
-  {
-    id: "12347",
-    transaction_amount: 20000,
-    date_created: "2025-04-04T18:30:00Z",
-    status: "approved",
-    external_reference:
-      "reserva-clase-1743898243045-user_2tlwDBA8ovHFAOjFGFQsihh4qlL",
-    profesor: { nombre: "Carlos", apellido: "Sánchez" },
-  },
-];
-
 export default function Dashboard() {
   const router = useRouter();
   const { role } = useProfileContext();
+  const { updatePayment, loading: updateLoading, error: updateError } = useUpdatePaymentStatus();
+  const { getPlainBankInfoByCode, getMaskedBankInfo } = useBankInfo();
+  const {payments} = useAdminPayments()
+
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<SortField>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  
+  // Estados para el modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [bankInfo, setBankInfo] = useState<BankInfo | null>(null);
+  const [loadingBankInfo, setLoadingBankInfo] = useState(false);
+  const [bankInfoError, setBankInfoError] = useState<string | null>(null);
+
+  // Función para copiar al portapapeles
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert(`${label} copiado al portapapeles: ${text}`);
+    } catch (error) {
+      console.error("Error al copiar al portapapeles:", error);
+      // Fallback para navegadores que no soportan clipboard API
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand("copy");
+        alert(`${label} copiado al portapapeles: ${text}`);
+      } catch (fallbackError) {
+        alert("No se pudo copiar al portapapeles");
+      }
+      document.body.removeChild(textArea);
+    }
+  };
 
   useEffect(() => {
     if (role && role !== "org:admin") {
@@ -68,48 +71,68 @@ export default function Dashboard() {
     }
   }, [role, router]);
 
+  // Función para abrir el modal y consultar información bancaria
+  const handleViewPayment = async (payment: Payment) => {
+    setSelectedPayment(payment);
+    setIsModalOpen(true);
+    setBankInfoError(null);
+
+    if (payment?.profesor_id) {
+      setLoadingBankInfo(true);
+      try {
+        // CONSULTAR informacion masked de la cuenta bancaria del profesor
+        
+        const data = await getPlainBankInfoByCode("BNK-1754536484933-990");
+          setBankInfo(data as BankInfo);
+          console.log("Bank info data:", data);
+      } catch (error) {
+        setBankInfoError("Error al cargar la información bancaria");
+        console.error("Error fetching bank info:", error);
+      } finally {
+        setLoadingBankInfo(false);
+      }
+    }
+  };
+
+  // Función para cerrar el modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedPayment(null);
+    setBankInfo(null);
+    setBankInfoError(null);
+  };
+
+  // Función para marcar como pagado
+  const handleMarkAsPaid = async () => {    
+    try {
+      // await updatePayment({
+      //   collection_id: selectedPayment.id,
+      //   collection_status: "approved",
+      //   external_reference: selectedPayment.external_reference,
+      //   payment_id: selectedPayment.id,
+      //   status: "approved",
+      //   merchant_order_id: selectedPayment.id,
+      //   payment_type: "credit_card",
+      //   preference_id: selectedPayment.preference_id,
+      //   site_id: "MLA",
+      //   processing_mode: "aggregator",
+      // });
+      
+      if (!updateError) {
+        // Aquí podrías actualizar el estado si usaras state management
+        handleCloseModal();
+        alert("Pago marcado como aprobado exitosamente");
+      }
+    } catch (error) {
+      console.error("Error al marcar como pagado:", error);
+    }
+  };
+
   if (!role || role !== "org:admin") {
     return <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
       <p className="text-xl text-gray-600">Acceso no autorizado</p>
     </div>;
   }
-
-  // Filtrar pagos por id, external_reference o nombre completo del profesor
-  const filteredPayments = mockPayments.filter((payment) => {
-    const fullName = `${payment.profesor.nombre} ${payment.profesor.apellido}`.toLowerCase();
-    const term = searchTerm.toLowerCase();
-    return (
-      payment.id.toLowerCase().includes(term) ||
-      payment.external_reference.toLowerCase().includes(term) ||
-      fullName.includes(term)
-    );
-  });
-
-  // Ordenar pagos según el campo seleccionado
-  const sortedPayments = [...filteredPayments].sort((a, b) => {
-    if (!sortField) return 0;
-
-    if (sortField === "profesor") {
-      const nameA = `${a.profesor.nombre} ${a.profesor.apellido}`.toLowerCase();
-      const nameB = `${b.profesor.nombre} ${b.profesor.apellido}`.toLowerCase();
-      return sortOrder === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-    } else if (sortField === "date") {
-      const dateA = new Date(a.date_created).getTime();
-      const dateB = new Date(b.date_created).getTime();
-      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-    } else if (sortField === "transaction_amount") {
-      return sortOrder === "asc"
-        ? a.transaction_amount - b.transaction_amount
-        : b.transaction_amount - a.transaction_amount;
-    } else {
-      // Para "id", "status" o "external_reference"
-      const valA = (a as any)[sortField].toLowerCase();
-      const valB = (b as any)[sortField].toLowerCase();
-      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
-      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
-      return 0;
-    }
-  });
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -208,17 +231,23 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sortedPayments.length > 0 ? (
-                sortedPayments.map((payment) => (
-                  <tr key={payment.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                      {payment.id}
+              {payments.length > 0 ? (
+                payments.map((payment, index) => (  
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 max-w-[150px] overflow-hidden text-ellipsis">
+                      <span className="block overflow-hidden text-ellipsis whitespace-nowrap">
+                        {payment.payment_id}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                      ${payment.transaction_amount.toLocaleString("es-AR")}
+                      ${payment?.amount}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                      {new Date(payment.date_created).toLocaleString()}
+                      { new Date(payment?.fecha).toLocaleDateString("es-AR", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                      })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span
@@ -231,15 +260,18 @@ export default function Dashboard() {
                         {payment.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 break-words text-sm text-gray-800">
-                      {payment.external_reference}
+                    <td className="px-6 py-4 break-words text-sm text-gray-800 max-w-[200px]">
+                      {payment.external_ref}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                      {payment.profesor.nombre} {payment.profesor.apellido}
+                      "Pedro tapia"
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                      <button className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">
-                        Marcar como pagado
+                      <button 
+                        onClick={() => handleViewPayment(payment)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                      >
+                        Ver pago
                       </button>
                     </td>
                   </tr>
@@ -255,6 +287,156 @@ export default function Dashboard() {
           </table>
         </div>
       </div>
+
+      {/* Modal para ver información del pago */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">Información del Pago</h2>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {selectedPayment && (
+              <div className="space-y-4">
+                {/* Información del Pago */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-3 text-gray-700">Detalles del Pago</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">ID de Pago</p>
+                      <p className="text-gray-800">{selectedPayment.payment_id}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Monto</p>
+                      <p className="text-gray-800">${selectedPayment.amount.toLocaleString("es-AR")}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Estado</p>
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          selectedPayment.status === "approved"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {selectedPayment.status}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Fecha</p>
+                      <p className="text-gray-800">{selectedPayment.fecha}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-sm font-medium text-gray-600">Referencia Externa</p>
+                      <p className="text-gray-800 break-words">{selectedPayment.external_ref}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Profesor</p>
+                      <p className="text-gray-800">Nombre del profesor</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Información Bancaria del Profesor */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-3 text-gray-700">Información Bancaria del Profesor</h3>
+                  
+                  {loadingBankInfo ? (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                      <span className="ml-2 text-gray-600">Cargando información bancaria...</span>
+                    </div>
+                  ) : bankInfoError ? (
+                    <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded">
+                      {bankInfoError}
+                    </div>
+                  ) : bankInfo ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Banco</p>
+                        <p className="text-gray-800">{bankInfo.bank_name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Tipo de Cuenta</p>
+                        <p className="text-gray-800">{bankInfo.account_type}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Número de Cuenta</p>
+                        <button
+                          onClick={() => copyToClipboard(bankInfo.account_number, "Número de cuenta")}
+                          className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 py-1 rounded transition-colors text-left w-full cursor-pointer border-dashed border-2 border-transparent hover:border-blue-300"
+                          title="Click para copiar al portapapeles"
+                        >
+                          {bankInfo.account_number}
+                        </button>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">DNI</p>
+                        <p className="text-gray-800">{bankInfo.dni_number}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Tipo de DNI</p>
+                        <p className="text-gray-800">{bankInfo.dni_type}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Alias</p>
+                        {bankInfo.alias ? (
+                          <button
+                            onClick={() => copyToClipboard(bankInfo.alias, "Alias")}
+                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 py-1 rounded transition-colors text-left w-full cursor-pointer border-dashed border-2 border-transparent hover:border-blue-300"
+                            title="Click para copiar al portapapeles"
+                          >
+                            {bankInfo.alias}
+                          </button>
+                        ) : (
+                          <p className="text-gray-800">No especificado</p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-600">No se encontró información bancaria</p>
+                  )}
+                </div>
+
+                {/* Botones de Acción */}
+                <div className="flex space-x-4 pt-4">
+                  <button
+                    onClick={handleMarkAsPaid}
+                    disabled={updateLoading || selectedPayment.status === "approved"}
+                    className={`flex-1 px-4 py-2 rounded font-medium ${
+                      selectedPayment.status === "approved"
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-green-500 hover:bg-green-600 text-white"
+                    } ${updateLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    {updateLoading ? "Procesando..." : 
+                     selectedPayment.status === "approved" ? "Ya está pagado" : "Marcar como pagado"}
+                  </button>
+                  <button
+                    onClick={handleCloseModal}
+                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded font-medium"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+
+                {/* Mostrar errores */}
+                {updateError && (
+                  <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded">
+                    Error: {updateError}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
