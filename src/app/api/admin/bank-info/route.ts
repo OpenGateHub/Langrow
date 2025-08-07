@@ -126,7 +126,6 @@ export async function POST(req: NextRequest) {
 
     const { data } = validation;
     const tokenObj = await getBankTokenByCode(data.bankCode);
-
     if (!tokenObj || !tokenObj.tokenized) {
       return NextResponse.json(
         { result: false, message: "Token bancario no encontrado." },
@@ -146,6 +145,8 @@ export async function POST(req: NextRequest) {
       dni_type: encryptionService.decrypt(dni_type),
       dni_number: encryptionService.decrypt(dni_number),
       alias: encryptionService.decrypt(alias),
+      bank_name: tokenObj.bank_name,
+      profile_id: tokenObj.profile_id,
     };
 
     // ✅ Mejora 3: Agregar metadata útil al log

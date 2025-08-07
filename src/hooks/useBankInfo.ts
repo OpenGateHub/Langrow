@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 /**
  * Representa una cuenta bancaria registrada por un usuario o admin.
  */
 interface BankInfo {
-  bank_id: number;
+  bank_id: string;
   bank_name: string;
   account_number: string;
   account_type: string;
@@ -36,28 +36,11 @@ export function useBankInfo() {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * GET - Obtiene la lista completa de cuentas bancarias desde el backend (modo admin).
-   */
-  const fetchBanks = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/admin/bank");
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.message || "Error al obtener datos bancarios");
-      setBanks(json.data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /**
    * POST - Crea una nueva cuenta bancaria en el sistema (modo admin).
    * @param payload Objeto con los datos completos de la cuenta a registrar.
    * @returns La respuesta del backend o null si hay error.
    */
-  const createBank = async (payload: BankInfo) => {
+  const createBank = async (payload: Partial<BankInfo>) => {
     try {
       setLoading(true);
       const res = await fetch("/api/admin/bank", {
@@ -67,7 +50,6 @@ export function useBankInfo() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "Error al crear cuenta bancaria");
-      await fetchBanks(); // Actualiza la lista luego de crear
       return json;
     } catch (err: any) {
       setError(err.message);
@@ -92,7 +74,6 @@ export function useBankInfo() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "Error al actualizar cuenta bancaria");
-      await fetchBanks(); // Actualiza la lista luego de modificar
       return json;
     } catch (err: any) {
       setError(err.message);
@@ -106,13 +87,13 @@ export function useBankInfo() {
    * GET - Obtiene las cuentas bancarias del usuario autenticado con los datos enmascarados.
    * Usado en vistas donde el usuario final ve sus propias cuentas.
    */
-  const getMaskedBankInfo = async (): Promise<BankInfo[] | null> => {
+  const getMaskedBankInfo = async (): Promise<BankInfo | null> => {
     try {
       setLoading(true);
-      const res = await fetch("/api/bank-info");
+      const res = await fetch("/api/admin/bank-info");
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "Error al obtener información enmascarada");
-      return json.data;
+      return json.data[0];
     } catch (err: any) {
       setError(err.message);
       return null;
@@ -147,20 +128,47 @@ export function useBankInfo() {
   };
 
   /**
-   * Efecto inicial: carga automática de datos bancarios (modo admin) al montar el componente.
+   * POST - Crea una nueva cuenta bancaria desde input del usuario (modo seguro).
+   * Valida automáticamente permisos y asigna profile_id y bank_id internamente.
+   * @param userInput Datos ingresados por el usuario (sin campos sensibles).
+   * @returns La respuesta del backend o null si hay error.
    */
-  useEffect(() => {
-    fetchBanks();
-  }, []);
+  const createBankFromUserInput = async (userInput: {
+    bank_name: string;
+    account_number: string;
+    account_type: string;
+    dni_number: string;
+    dni_type: string;
+    alias?: string;
+    isPrimary?: boolean;
+    bank_id: string; // opcional, si se quiere asignar a un banco existente
+  }) => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/admin/bank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userInput),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || "Error al crear cuenta bancaria");
+      return json;
+    } catch (err: any) {
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return {
     banks,                   // Lista de cuentas disponibles (admin)
     loading,                 // Estado de carga general
     error,                   // Último error registrado
-    fetchBanks,              // Refresca la lista de cuentas
     createBank,              // Crea una nueva cuenta
     updateBank,              // Modifica una cuenta existente
     getMaskedBankInfo,       // Obtiene las cuentas del usuario autenticado (enmascaradas)
     getPlainBankInfoByCode,  // Consulta detallada por código único (admin)
+    createBankFromUserInput, // Crea una cuenta desde input del usuario (seguro)
   };
 }

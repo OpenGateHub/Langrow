@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import BlockUi from "@/app/components/BlockUi";
 import MessageModal from "@/app/components/Modal";
+import { useConfigurationBanks } from "@/hooks/useConfigurationBanks";
+import { useBankInfo } from "@/hooks/useBankInfo";
 
 export default function DatosCuentaPage() {
   const { user } = useUser();
   const router = useRouter();
-  
+  const configurationBanks = useConfigurationBanks()
+  const bankInfo = useBankInfo()
   // Estados para la contraseña
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -25,7 +27,10 @@ export default function DatosCuentaPage() {
     number: false,
     special: false
   });
-  
+  const [bankName, setBankName] = useState<string>("");
+  const [bankId, setBankId] = useState<string>("");
+
+
   // Estados para información bancaria
   const [isEditingBank, setIsEditingBank] = useState(false);
   const [accountHolder, setAccountHolder] = useState("");
@@ -34,6 +39,7 @@ export default function DatosCuentaPage() {
   const [bankAlias, setBankAlias] = useState("");
   const [bankError, setBankError] = useState("");
   const [bankSuccess, setBankSuccess] = useState("");
+  const [hasBankInfo, setHasBankInfo] = useState(false); // Nueva estado para controlar si tiene info bancaria
   
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -132,7 +138,9 @@ export default function DatosCuentaPage() {
     setBankSuccess("");
     
     // Validaciones básicas
-    if (!accountHolder.trim()) {
+    const currentAccountHolder = accountHolder || (user?.firstName + ' ' + user?.lastName) || '';
+    
+    if (!currentAccountHolder.trim()) {
       setBankError("El titular de la cuenta es requerido");
       setLoading(false);
       return;
@@ -175,24 +183,74 @@ export default function DatosCuentaPage() {
     }
     
     try {
-      // Aquí iría la llamada a la API para guardar la información bancaria
-      // Por ahora simulamos el guardado
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setBankSuccess("Información bancaria guardada exitosamente");
-      setIsEditingBank(false);
-      
-      // Limpiar mensaje de éxito después de 3 segundos
-      setTimeout(() => {
-        setBankSuccess("");
-      }, 3000);
+      // Crear la información bancaria usando el método seguro
+      const result = await bankInfo.createBankFromUserInput({
+        bank_name: bankName,
+        bank_id: bankId,
+        account_number: bankCBU,
+        account_type: "CA",
+        dni_number: documentNumber,
+        dni_type: "DNI",
+        alias: bankAlias,
+        isPrimary: true // Asignar como cuenta principal
+      });
+
+      if (result && result.result) {
+        setBankSuccess("Información bancaria guardada exitosamente");
+        setIsEditingBank(false);
+        setHasBankInfo(true); // Marcar que ya tiene información bancaria
+        
+        // Refrescar los datos bancarios desde el servidor
+        try {
+          const updatedBankData = await bankInfo.getMaskedBankInfo();
+          if (updatedBankData) {
+            console.log("Datos bancarios actualizados:", updatedBankData);
+            setAccountHolder(user?.firstName + ' ' + user?.lastName || "");
+            setDocumentNumber(updatedBankData.dni_number || "");
+            setBankCBU(updatedBankData.account_number || "");
+            setBankAlias(updatedBankData.alias || "");
+          }
+        } catch (refreshError) {
+          console.warn("Error al refrescar datos bancarios:", refreshError);
+          // No mostramos error al usuario, solo un warning en consola
+        }
+        
+        // Limpiar mensaje de éxito después de 3 segundos
+        setTimeout(() => {
+          setBankSuccess("");
+        }, 3000);
+      } else {
+        throw new Error(result?.message || "Error al crear la información bancaria");
+      }
       
     } catch (err: any) {
-      setBankError("Error al guardar la información bancaria");
+      setBankError(err.message || "Error al guardar la información bancaria");
     } finally {
       setLoading(false);
     }
   };
+
+
+  useEffect(()=> {
+    bankInfo.getMaskedBankInfo().then((data) => {
+      if (data) {
+        console.log("Datos bancarios obtenidos:", data);
+        setAccountHolder(user?.firstName + ' ' + user?.lastName || "");
+        setDocumentNumber(data.dni_number || "");
+        setBankCBU(data.account_number || "");
+        setBankAlias(data.alias || "");
+        setHasBankInfo(true); // Tiene información bancaria
+      } else {
+        // No tiene información bancaria, mostrar formulario por defecto
+        setHasBankInfo(false);
+        setIsEditingBank(true); // Mostrar formulario automáticamente
+      }
+    }).catch((error) => {
+      console.error("Error al obtener información bancaria:", error);
+      setHasBankInfo(false);
+      setIsEditingBank(true); // Mostrar formulario en caso de error también
+    });
+  }, [])
 
   if (!user) {
     return (
@@ -417,8 +475,8 @@ export default function DatosCuentaPage() {
           <div className="mb-8">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Información bancaria</h2>
             
-            {/* Si tiene datos bancarios, mostrarlos */}
-            {accountHolder && documentNumber && bankCBU && !isEditingBank ? (
+            {/* Si tiene datos bancarios y no está editando, mostrarlos */}
+            {hasBankInfo && !isEditingBank ? (
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
@@ -426,7 +484,17 @@ export default function DatosCuentaPage() {
                     <p className="text-sm text-gray-600">Tu información bancaria está configurada</p>
                   </div>
                   <button
-                    onClick={() => setIsEditingBank(true)}
+                    onClick={() => {
+                      setIsEditingBank(true);
+                      // Limpiar campos solo cuando es modo edición (no primera vez)
+                      setDocumentNumber("");
+                      setBankCBU("");
+                      setBankAlias("");
+                      setBankName("");
+                      setBankId("");
+                      setBankError("");
+                      setBankSuccess("");
+                    }}
                     className="text-secondary hover:text-secondary-hover text-sm font-medium"
                   >
                     Editar
@@ -455,9 +523,9 @@ export default function DatosCuentaPage() {
                 </div>
               </div>
             ) : (
-              /* Si no tiene datos o está editando, mostrar formulario */
-              <div className="bg-gray-50 rounded-lg ">
-                {!accountHolder && !documentNumber && !bankCBU && !isEditingBank && (
+              /* Mostrar formulario si no tiene datos o está editando */
+              <div className="bg-gray-50 rounded-lg p-4">
+                {!hasBankInfo && (
                   <div className="mb-4">
                     <p className="text-sm text-gray-600">Configura tu información bancaria para recibir los pagos de tus clases</p>
                   </div>
@@ -471,12 +539,16 @@ export default function DatosCuentaPage() {
                     <input
                       type="text"
                       id="accountHolder"
-                      value={accountHolder}
+                      value={accountHolder || (user?.firstName + ' ' + user?.lastName) || ''}
                       onChange={(e) => setAccountHolder(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary"
+                      disabled
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary bg-gray-100"
                       placeholder="Juan Pérez"
                       required
                     />
+                    <small className="text-gray-500">
+                      Solo puedes registrar cuentas a tu nombre.
+                    </small>
                   </div>
                   
                   <div>
@@ -493,6 +565,26 @@ export default function DatosCuentaPage() {
                       maxLength={8}
                       required
                     />
+                  </div>
+
+                     <div>
+                    <label htmlFor="documentNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                      Banco del titular
+                    </label>
+                    <select value={`${bankName}-${bankId}`} onChange={(e) => {
+                      const [name, id] = e.target.value.split('-');
+                      setBankName(name);
+                      setBankId(id);
+                    }}>
+                      <option defaultValue={""} disabled selected>Selecciona un banco</option>
+                      {
+                        configurationBanks.banks.map((bank) => (
+                          <option key={`${bank.name}-${bank.id}`} value={`${bank.name}-${bank.id}`}>
+                            {bank.name}
+                          </option>
+                        ))
+                      }
+                    </select>
                   </div>
                   
                   <div>
@@ -543,18 +635,33 @@ export default function DatosCuentaPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        setIsEditingBank(false);
-                        setAccountHolder("");
-                        setDocumentNumber("");
-                        setBankCBU("");
-                        setBankAlias("");
+                      onClick={async () => {
+                        if (hasBankInfo) {
+                          setIsEditingBank(false);
+                          try {
+                            const originalBankData = await bankInfo.getMaskedBankInfo();
+                            if (originalBankData) {
+                              console.log("Datos bancarios restaurados:", originalBankData);
+                              setAccountHolder(user?.firstName + ' ' + user?.lastName || "");
+                              setDocumentNumber(originalBankData.dni_number || "");
+                              setBankCBU(originalBankData.account_number || "");
+                              setBankAlias(originalBankData.alias || "");
+                            }
+                          } catch (restoreError) {
+                            console.warn("Error al restaurar datos bancarios:", restoreError);
+                          }
+                        }
                         setBankError("");
                         setBankSuccess("");
                       }}
-                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-400 transition-colors"
+                      className={`${
+                        hasBankInfo 
+                          ? "bg-gray-300 text-gray-700 hover:bg-gray-400" 
+                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      } px-4 py-2 rounded-md text-sm transition-colors`}
+                      disabled={!hasBankInfo}
                     >
-                      Cancelar
+                      {hasBankInfo ? "Cancelar" : "Debe configurar sus datos bancarios"}
                     </button>
                   </div>
                 </form>
