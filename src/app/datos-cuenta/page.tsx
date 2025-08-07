@@ -7,10 +7,12 @@ import BlockUi from "@/app/components/BlockUi";
 import MessageModal from "@/app/components/Modal";
 import { useConfigurationBanks } from "@/hooks/useConfigurationBanks";
 import { useBankInfo } from "@/hooks/useBankInfo";
+import { useProfileContext } from "@/context/ProfileContext";
 
 export default function DatosCuentaPage() {
   const { user } = useUser();
   const router = useRouter();
+  const { role } = useProfileContext();
   const configurationBanks = useConfigurationBanks()
   const bankInfo = useBankInfo()
   // Estados para la contraseña
@@ -471,203 +473,205 @@ export default function DatosCuentaPage() {
             )}
           </div>
 
-          {/* Información bancaria */}
-          <div className="mb-8">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Información bancaria</h2>
-            
-            {/* Si tiene datos bancarios y no está editando, mostrarlos */}
-            {hasBankInfo && !isEditingBank ? (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Datos para recibir pagos</p>
-                    <p className="text-sm text-gray-600">Tu información bancaria está configurada</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setIsEditingBank(true);
-                      // Limpiar campos solo cuando es modo edición (no primera vez)
-                      setDocumentNumber("");
-                      setBankCBU("");
-                      setBankAlias("");
-                      setBankName("");
-                      setBankId("");
-                      setBankError("");
-                      setBankSuccess("");
-                    }}
-                    className="text-secondary hover:text-secondary-hover text-sm font-medium"
-                  >
-                    Editar
-                  </button>
-                </div>
-                
-                <div className="bg-white rounded-md p-3 border">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+          {/* Información bancaria - Solo visible para profesores */}
+          {role === "org:profesor" && (
+            <div className="mb-8">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Información bancaria</h2>
+              
+              {/* Si tiene datos bancarios y no está editando, mostrarlos */}
+              {hasBankInfo && !isEditingBank ? (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="font-medium text-gray-700">Titular</p>
-                      <p className="text-gray-900">{accountHolder}</p>
+                      <p className="text-sm font-medium text-gray-700">Datos para recibir pagos</p>
+                      <p className="text-sm text-gray-600">Tu información bancaria está configurada</p>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-700">DNI</p>
-                      <p className="text-gray-900">{documentNumber}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-700">CBU</p>
-                      <p className="text-gray-900">{bankCBU}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-700">Alias</p>
-                      <p className="text-gray-900">{bankAlias || "No especificado"}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Mostrar formulario si no tiene datos o está editando */
-              <div className="bg-gray-50 rounded-lg p-4">
-                {!hasBankInfo && (
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-600">Configura tu información bancaria para recibir los pagos de tus clases</p>
-                  </div>
-                )}
-                
-                <form onSubmit={handleBankSubmit} className="space-y-4">
-                  <div>
-                    <label htmlFor="accountHolder" className="block text-sm font-medium text-gray-700 mb-1">
-                      Titular de la cuenta
-                    </label>
-                    <input
-                      type="text"
-                      id="accountHolder"
-                      value={accountHolder || (user?.firstName + ' ' + user?.lastName) || ''}
-                      onChange={(e) => setAccountHolder(e.target.value)}
-                      disabled
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary bg-gray-100"
-                      placeholder="Juan Pérez"
-                      required
-                    />
-                    <small className="text-gray-500">
-                      Solo puedes registrar cuentas a tu nombre.
-                    </small>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="documentNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                      DNI del titular
-                    </label>
-                    <input
-                      type="text"
-                      id="documentNumber"
-                      value={documentNumber}
-                      onChange={(e) => setDocumentNumber(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary"
-                      placeholder="12345678"
-                      maxLength={8}
-                      required
-                    />
-                  </div>
-
-                     <div>
-                    <label htmlFor="documentNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                      Banco del titular
-                    </label>
-                    <select value={`${bankName}-${bankId}`} onChange={(e) => {
-                      const [name, id] = e.target.value.split('-');
-                      setBankName(name);
-                      setBankId(id);
-                    }}>
-                      <option defaultValue={""} disabled selected>Selecciona un banco</option>
-                      {
-                        configurationBanks.banks.map((bank) => (
-                          <option key={`${bank.name}-${bank.id}`} value={`${bank.name}-${bank.id}`}>
-                            {bank.name}
-                          </option>
-                        ))
-                      }
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="bankCBU" className="block text-sm font-medium text-gray-700 mb-1">
-                      CBU (22 dígitos)
-                    </label>
-                    <input
-                      type="text"
-                      id="bankCBU"
-                      value={bankCBU}
-                      onChange={(e) => setBankCBU(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary"
-                      placeholder="0000007900000000000000"
-                      maxLength={22}
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="bankAlias" className="block text-sm font-medium text-gray-700 mb-1">
-                      Alias (opcional)
-                    </label>
-                    <input
-                      type="text"
-                      id="bankAlias"
-                      value={bankAlias}
-                      onChange={(e) => setBankAlias(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary"
-                      placeholder="juan.perez"
-                    />
-                  </div>
-                  
-                  {bankError && (
-                    <p className="text-sm text-red-600">{bankError}</p>
-                  )}
-                  
-                  {bankSuccess && (
-                    <p className="text-sm text-green-600">{bankSuccess}</p>
-                  )}
-                  
-                  <div className="flex space-x-3">
                     <button
-                      type="submit"
-                      disabled={loading}
-                      className="bg-secondary text-white px-4 py-2 rounded-md text-sm hover:bg-primary-hover transition-colors disabled:opacity-50"
-                    >
-                      {loading ? "Guardando..." : "Guardar información bancaria"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (hasBankInfo) {
-                          setIsEditingBank(false);
-                          try {
-                            const originalBankData = await bankInfo.getMaskedBankInfo();
-                            if (originalBankData) {
-                              console.log("Datos bancarios restaurados:", originalBankData);
-                              setAccountHolder(user?.firstName + ' ' + user?.lastName || "");
-                              setDocumentNumber(originalBankData.dni_number || "");
-                              setBankCBU(originalBankData.account_number || "");
-                              setBankAlias(originalBankData.alias || "");
-                            }
-                          } catch (restoreError) {
-                            console.warn("Error al restaurar datos bancarios:", restoreError);
-                          }
-                        }
+                      onClick={() => {
+                        setIsEditingBank(true);
+                        // Limpiar campos solo cuando es modo edición (no primera vez)
+                        setDocumentNumber("");
+                        setBankCBU("");
+                        setBankAlias("");
+                        setBankName("");
+                        setBankId("");
                         setBankError("");
                         setBankSuccess("");
                       }}
-                      className={`${
-                        hasBankInfo 
-                          ? "bg-gray-300 text-gray-700 hover:bg-gray-400" 
-                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      } px-4 py-2 rounded-md text-sm transition-colors`}
-                      disabled={!hasBankInfo}
+                      className="text-secondary hover:text-secondary-hover text-sm font-medium"
                     >
-                      {hasBankInfo ? "Cancelar" : "Debe configurar sus datos bancarios"}
+                      Editar
                     </button>
                   </div>
-                </form>
-              </div>
-            )}
-          </div>
+                  
+                  <div className="bg-white rounded-md p-3 border">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="font-medium text-gray-700">Titular</p>
+                        <p className="text-gray-900">{accountHolder}</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-700">DNI</p>
+                        <p className="text-gray-900">{documentNumber}</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-700">CBU</p>
+                        <p className="text-gray-900">{bankCBU}</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-700">Alias</p>
+                        <p className="text-gray-900">{bankAlias || "No especificado"}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Mostrar formulario si no tiene datos o está editando */
+                <div className="bg-gray-50 rounded-lg p-4">
+                  {!hasBankInfo && (
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600">Configura tu información bancaria para recibir los pagos de tus clases</p>
+                    </div>
+                  )}
+                  
+                  <form onSubmit={handleBankSubmit} className="space-y-4">
+                    <div>
+                      <label htmlFor="accountHolder" className="block text-sm font-medium text-gray-700 mb-1">
+                        Titular de la cuenta
+                      </label>
+                      <input
+                        type="text"
+                        id="accountHolder"
+                        value={accountHolder || (user?.firstName + ' ' + user?.lastName) || ''}
+                        onChange={(e) => setAccountHolder(e.target.value)}
+                        disabled
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary bg-gray-100"
+                        placeholder="Juan Pérez"
+                        required
+                      />
+                      <small className="text-gray-500">
+                        Solo puedes registrar cuentas a tu nombre.
+                      </small>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="documentNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                        DNI del titular
+                      </label>
+                      <input
+                        type="text"
+                        id="documentNumber"
+                        value={documentNumber}
+                        onChange={(e) => setDocumentNumber(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary"
+                        placeholder="12345678"
+                        maxLength={8}
+                        required
+                      />
+                    </div>
+
+                       <div>
+                      <label htmlFor="documentNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                        Banco del titular
+                      </label>
+                      <select value={`${bankName}-${bankId}`} onChange={(e) => {
+                        const [name, id] = e.target.value.split('-');
+                        setBankName(name);
+                        setBankId(id);
+                      }}>
+                        <option defaultValue={""} disabled selected>Selecciona un banco</option>
+                        {
+                          configurationBanks.banks.map((bank) => (
+                            <option key={`${bank.name}-${bank.id}`} value={`${bank.name}-${bank.id}`}>
+                              {bank.name}
+                            </option>
+                          ))
+                        }
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="bankCBU" className="block text-sm font-medium text-gray-700 mb-1">
+                        CBU (22 dígitos)
+                      </label>
+                      <input
+                        type="text"
+                        id="bankCBU"
+                        value={bankCBU}
+                        onChange={(e) => setBankCBU(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary"
+                        placeholder="0000007900000000000000"
+                        maxLength={22}
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="bankAlias" className="block text-sm font-medium text-gray-700 mb-1">
+                        Alias (opcional)
+                      </label>
+                      <input
+                        type="text"
+                        id="bankAlias"
+                        value={bankAlias}
+                        onChange={(e) => setBankAlias(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-secondary focus:border-secondary"
+                        placeholder="juan.perez"
+                      />
+                    </div>
+                    
+                    {bankError && (
+                      <p className="text-sm text-red-600">{bankError}</p>
+                    )}
+                    
+                    {bankSuccess && (
+                      <p className="text-sm text-green-600">{bankSuccess}</p>
+                    )}
+                    
+                    <div className="flex space-x-3">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="bg-secondary text-white px-4 py-2 rounded-md text-sm hover:bg-primary-hover transition-colors disabled:opacity-50"
+                      >
+                        {loading ? "Guardando..." : "Guardar información bancaria"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (hasBankInfo) {
+                            setIsEditingBank(false);
+                            try {
+                              const originalBankData = await bankInfo.getMaskedBankInfo();
+                              if (originalBankData) {
+                                console.log("Datos bancarios restaurados:", originalBankData);
+                                setAccountHolder(user?.firstName + ' ' + user?.lastName || "");
+                                setDocumentNumber(originalBankData.dni_number || "");
+                                setBankCBU(originalBankData.account_number || "");
+                                setBankAlias(originalBankData.alias || "");
+                              }
+                            } catch (restoreError) {
+                              console.warn("Error al restaurar datos bancarios:", restoreError);
+                            }
+                          }
+                          setBankError("");
+                          setBankSuccess("");
+                        }}
+                        className={`${
+                          hasBankInfo 
+                            ? "bg-gray-300 text-gray-700 hover:bg-gray-400" 
+                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        } px-4 py-2 rounded-md text-sm transition-colors`}
+                        disabled={!hasBankInfo}
+                      >
+                        {hasBankInfo ? "Cancelar" : "Debe configurar sus datos bancarios"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Información de la cuenta */}
           <div className="mb-8">
