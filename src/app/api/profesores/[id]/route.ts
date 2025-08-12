@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseClient } from "@/app/api/supabaseClient";
 import { SUPABASE_TABLES, PROFILE_ROLE } from "@/app/config";
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, context: { params: { id: string } }) {
   try {
-    const profesorId = await params.id;
+    const { id } = await context.params;
+    const profesorId = id;
     if (!profesorId) {
       return NextResponse.json({ result: false, message: "ID de profesor requerido" }, { status: 400 });
     }

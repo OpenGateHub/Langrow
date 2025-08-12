@@ -94,6 +94,11 @@ export default function Dashboard() {
     );
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchAdminPayments({ profesor_name: searchTerm });
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-lg p-6">
@@ -102,15 +107,16 @@ export default function Dashboard() {
         </h1>
 
         {/* Barra de búsqueda */}
-        <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
+        <form className="flex flex-col sm:flex-row items-center justify-between mb-4" onSubmit={handleSearch}>
           <input
             type="text"
-            placeholder="Buscar por ID, referencia o profesor..."
+            placeholder="Buscar por nombre de profesor..."
             className="w-full sm:w-1/2 border p-2 rounded mb-2 sm:mb-0"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-        </div>
+          <button type="submit" className="ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Buscar</button>
+        </form>
         {
           loading ? "Cargando..." : <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">

@@ -48,7 +48,7 @@ export const useAdminPayments = () => {
         status?: string;
         from?: string;
         to?: string;
-        professor_id?: string;
+        profesor_name?: string;
     }) => {
         try {
             setLoading(true);
@@ -60,9 +60,9 @@ export const useAdminPayments = () => {
             if (options?.status) params.append('status', options.status);
             if (options?.from) params.append('from', options.from);
             if (options?.to) params.append('to', options.to);
-            if (options?.professor_id) params.append('professor_id', options.professor_id);
+            if (options?.profesor_name) params.append('profesor_name', options.profesor_name);
 
-            const response = await fetch(`/api/admin/payments`, {
+            const response = await fetch(`/api/admin/payments?${params.toString()}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
