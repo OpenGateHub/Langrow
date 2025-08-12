@@ -33,11 +33,10 @@ export const useAdminPayments = () => {
             payment_id: item.payment_id || null,
             amount: paymentDetails.transaction_amount || null,
             fecha:parseAmountToLocale(item.created_at || null),
-            status: paymentDetails.status || null,
+            status: item.status || 'pending',
             external_ref: item.external_ref || null,
             profesor_id: metadata.profesor_id || null
             };
-            console.log("Parsed Payment Data:", data);
             return data
         });
     }
@@ -69,18 +68,14 @@ export const useAdminPayments = () => {
                     'Content-Type': 'application/json',
                 },
             });
-            console.log(response);
 
             const result = await response.json();
-            console.log('API Response:', result);
 
             if (!response.ok) {
                 throw new Error(result.message || 'Error al consultar pagos');
             }
             if (result.data) {
-                console.log('Payments fetched:', result.data);
                 const parsedPayments = parsePayments(result.data);
-                console.log('Parsed Payments:', parsedPayments);
                 setPayments(parsedPayments);
                 return result;
             } else {
