@@ -6,6 +6,7 @@ import { updateClassRoomByPaymentId } from "../mentoring/classRoom";
 import { ClassRoomStatus } from "@/types/classRoom";
 import { NotificationService } from "@/lib/services/notificationService";
 import { getStudentProfileById, getProfileByUserId } from "../profile/profile";
+import { supabaseClient } from "../supabaseClient";
 
 export async function POST(request: NextRequest) {
   try {
@@ -104,6 +105,52 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const profesorName = searchParams.get("profesor_name");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const from = searchParams.get("from") || undefined;
+    const to = searchParams.get("to") || undefined;
+
+    if (profesorName) {
+      // Buscar el profile del profesor por nombre (búsqueda parcial, insensible a mayúsculas)
+      const { data: profiles, error: profileError } = await supabaseClient
+        .from("UserProfile")
+        .select("id")
+        .ilike("name", `%${profesorName}%`)
+        .eq("role", 1) // 1 = org:profesor
+        .limit(1);
+      if (profileError) {
+        return NextResponse.json({ result: false, message: "Error buscando el profesor", error: profileError.message }, { status: 500 });
+      }
+      if (!profiles || profiles.length === 0) {
+        return NextResponse.json({ result: false, message: "No se encontró profesor con ese nombre" }, { status: 404 });
+      }
+      const profileId = profiles[0].id;
+      // Buscar pagos donde payment_details.metadata.profesor_id == profileId
+      const fromIndex = (page - 1) * limit;
+      const toIndex = fromIndex + limit - 1;
+      const { data: payments, error: paymentsError, count } = await supabaseClient
+        .from("Payments")
+        .select("*", { count: "exact" })
+        .filter("payment_details->metadata->>profesor_id", "eq", String(profileId))
+        .order("id", { ascending: false })
+        .range(fromIndex, toIndex);
+      if (paymentsError) {
+        return NextResponse.json({ result: false, message: "Error buscando pagos", error: paymentsError.message }, { status: 500 });
+      }
+      return NextResponse.json({
+        data: payments || [],
+        meta: {
+          total: count || 0,
+          page,
+          limit,
+          totalPages: Math.ceil((count || 0) / limit),
+        },
+      }, { status: 200 });
+    }
+
+    // Si no viene profesor_name, sigue el flujo original (por usuario autenticado)
     const user = await currentUser();
     if (!user) {
       return NextResponse.json(
@@ -119,12 +166,6 @@ export async function GET(request: NextRequest) {
         { status: 404 }
       );
     }
-
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const from = searchParams.get("from") || undefined;
-    const to = searchParams.get("to") || undefined;
 
     const result = await getPaymentByProfessorId(profile.id, page, limit, from, to);
 

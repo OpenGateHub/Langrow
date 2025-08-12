@@ -100,7 +100,6 @@ export const usePayments = (): UsePaymentsResult => {
               console.warn("No se pudo parsear payment_details:", e);
               items = [];
             }
-            console.log("Payment details:", items);
             return {
               id: payment.id,
               description: items[0]?.title || "Sin descripción",

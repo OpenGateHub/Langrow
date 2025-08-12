@@ -29,14 +29,36 @@ export async function GET(request: NextRequest) {
 
         const { searchParams } = new URL(request.url);
         const limit = parseInt(searchParams.get('limit') || '30');
+        const profesorName = searchParams.get('profesor_name');
 
-        const query = supabaseClient
+        let query = supabaseClient
             .from(SUPABASE_TABLES.PAYMENTS)
-            .select(`
-                *
-            `)
+            .select(`*`)
             .order('created_at', { ascending: false })
-            .limit(limit)
+            .limit(limit);
+
+        if (profesorName) {
+            // Buscar el profile del profesor por nombre (búsqueda parcial, insensible a mayúsculas)
+            const { data: profiles, error: profileError } = await supabaseClient
+                .from(SUPABASE_TABLES.PROFILES)
+                .select('id')
+                .ilike('name', `%${profesorName}%`)
+                .eq('role', 1)
+                .limit(1);
+            if (profileError) {
+                return NextResponse.json({ result: false, message: "Error buscando el profesor", error: profileError.message }, { status: 500 });
+            }
+            if (!profiles || profiles.length === 0) {
+                return NextResponse.json({ result: false, message: "No se encontró profesor con ese nombre" }, { status: 404 });
+            }
+            const profileId = profiles[0].id;
+            query = supabaseClient
+                .from(SUPABASE_TABLES.PAYMENTS)
+                .select(`*`)
+                .filter('payment_details->metadata->>profesor_id', 'eq', String(profileId))
+                .order('created_at', { ascending: false })
+                .limit(limit);
+        }
 
         const { data: payments_list, error: paymentsError } = await query;
 

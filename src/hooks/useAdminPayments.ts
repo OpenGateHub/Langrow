@@ -33,11 +33,10 @@ export const useAdminPayments = () => {
             payment_id: item.payment_id || null,
             amount: paymentDetails.transaction_amount || null,
             fecha:parseAmountToLocale(item.created_at || null),
-            status: paymentDetails.status || null,
+            status: item.status || 'pending',
             external_ref: item.external_ref || null,
             profesor_id: metadata.profesor_id || null
             };
-            console.log("Parsed Payment Data:", data);
             return data
         });
     }
@@ -49,7 +48,7 @@ export const useAdminPayments = () => {
         status?: string;
         from?: string;
         to?: string;
-        professor_id?: string;
+        profesor_name?: string;
     }) => {
         try {
             setLoading(true);
@@ -61,26 +60,22 @@ export const useAdminPayments = () => {
             if (options?.status) params.append('status', options.status);
             if (options?.from) params.append('from', options.from);
             if (options?.to) params.append('to', options.to);
-            if (options?.professor_id) params.append('professor_id', options.professor_id);
+            if (options?.profesor_name) params.append('profesor_name', options.profesor_name);
 
-            const response = await fetch(`/api/admin/payments`, {
+            const response = await fetch(`/api/admin/payments?${params.toString()}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
-            console.log(response);
 
             const result = await response.json();
-            console.log('API Response:', result);
 
             if (!response.ok) {
                 throw new Error(result.message || 'Error al consultar pagos');
             }
             if (result.data) {
-                console.log('Payments fetched:', result.data);
                 const parsedPayments = parsePayments(result.data);
-                console.log('Parsed Payments:', parsedPayments);
                 setPayments(parsedPayments);
                 return result;
             } else {
