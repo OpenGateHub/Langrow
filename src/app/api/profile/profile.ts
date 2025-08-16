@@ -82,3 +82,97 @@ export const getEmailbyUserProfileId = async (profileUserId: number) => {
         throw new Error("Error buscando el email del usuario en la base de datos");
     }
 };
+
+/**
+ * Busca profesores por nombre o email
+ * @param value - Nombre o email del profesor a buscar
+ * 
+*/
+export const getProfessorProfilebyString = async (value: string) => {
+  try {
+    const { data, error } = await supabaseClient
+      .from(SUPABASE_TABLES.PROFILES)
+      .select(
+        `
+          id,
+          userId,
+          name,
+          description,
+          reviews,
+          price,
+          rating,
+          location,
+          isActive,
+          createdAt,
+          updatedAt,
+          profileImg,
+          email
+        `
+      )
+      .eq("role", 1) // 1 = org:profesor
+      .eq("isActive", true)
+      .or(`name.ilike.%${value}%,email.ilike.%${value}%`);
+
+    if (error) {
+      throw new Error(
+        `Error al obtener el perfil del profesor: ${error.message}`
+      );
+    }
+    return data ?? [];
+  } catch (e) {
+    console.error(e);
+    throw new Error(
+      "Error buscando el perfil del profesor en la base de datos"
+    );
+  }
+};
+
+/**
+ * Obtiene los perfiles de profesores paginados
+ * @param page - Número de página (default: 1)
+ * @param limit - Número de resultados por página (default: 10)
+ * @returns Un objeto con los datos de los perfiles y el total de perfiles
+ */
+export const getProfessorProfiles = async (
+  page: number = 1,
+  limit: number = 10
+) => {
+  try {
+    const offset = (page - 1) * limit;
+    const { data, error, count } = await supabaseClient
+      .from(SUPABASE_TABLES.PROFILES)
+      .select(
+        `
+          id,
+          userId,
+          name,
+          description,
+          reviews,
+          price,
+          rating,
+          location,
+          isActive,
+          createdAt,
+          updatedAt,
+          profileImg,
+          email
+        `,
+        { count: "exact" }
+      )
+      .eq("role", 1) // 1 = org:profesor
+      .eq("isActive", true)
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      throw new Error(
+        `Error al obtener los perfiles de profesores: ${error.message}`
+      );
+    }
+    return { data: data ?? [], total: count ?? 0 };
+  } catch (e) {
+    console.error(e);
+    throw new Error(
+      "Error buscando los perfiles de profesores en la base de datos"
+    );
+  }
+};

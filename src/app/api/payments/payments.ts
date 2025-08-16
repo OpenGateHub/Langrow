@@ -83,7 +83,25 @@ export const getPaymentByProfessorId = async (
 
     let query = supabaseClient
       .from(SUPABASE_TABLES.PAYMENTS_VIEW)
-      .select("*", { count: "exact" })
+      .select(
+        `
+          id,
+          number,
+          created_at,
+          payment_id,
+          external_ref,
+          preference_id,
+          status,
+          payment_type,
+          updated_at,
+          is_paid,
+          paid_at,
+          receipt,
+          receipt_name,
+          payee
+        `,
+        { count: "exact" }
+      )
       .eq("receipt", professorId)
       .order("id", { ascending: false })
       .range(fromIndex, toIndex);
@@ -114,6 +132,70 @@ export const getPaymentByProfessorId = async (
     };
   } catch (error) {
     console.error("Error fetching payments by professor ID:", error);
+    return null;
+  }
+};
+
+export const getPayments = async (
+  page: number = 1,
+  limit: number = 10,
+  from?: string,
+  to?: string
+) => {
+  try {
+    const fromIndex = (page - 1) * limit;
+    const toIndex = fromIndex + limit - 1;
+
+    let query = supabaseClient
+      .from(SUPABASE_TABLES.PAYMENTS_VIEW)
+      .select(
+        `
+          id,
+          number,
+          created_at,
+          payment_id,
+          external_ref,
+          preference_id,
+          status,
+          payment_type,
+          updated_at,
+          is_paid,
+          paid_at,
+          receipt,
+          receipt_name,
+          payee
+        `,
+        { count: "exact" }
+      )
+      .order("id", { ascending: false })
+      .range(fromIndex, toIndex);
+
+    if (from) {
+      query = query.gte("created_at", from);
+    }
+
+    if (to) {
+      query = query.lte("created_at", to);
+    }
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error("Error fetching payments:", error);
+      return null;
+    }
+
+    return {
+      data: data || [],
+      meta: {
+        total: count || 0,
+        page,
+        limit,
+        totalPages: Math.ceil((count || 0) / limit),
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching payments:", error);
     return null;
   }
 };

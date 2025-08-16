@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from '@clerk/nextjs/server';
+import { currentUser } from "@clerk/nextjs/server";
 import { z as zod } from "zod";
-import { updatePaymentStatus, getPaymentByProfessorId } from "./payments";
+import {
+  updatePaymentStatus,
+  getPaymentByProfessorId,
+  getPayments 
+} from "./payments";
 import { updateClassRoomByPaymentId } from "../mentoring/classRoom";
 import { ClassRoomStatus } from "@/types/classRoom";
 import { NotificationService } from "@/lib/services/notificationService";
-import { getStudentProfileById, getProfileByUserId } from "../profile/profile";
-import { supabaseClient } from "../supabaseClient";
+import {
+  getStudentProfileById,
+  getProfileByUserId,
+} from "../profile/profile";
+import { PROFILE_ROLE_STRING } from "@/app/config";
 
 export async function POST(request: NextRequest) {
   try {
@@ -92,8 +99,6 @@ export async function POST(request: NextRequest) {
             { status: 200 }
         );
     }
-
-
   } catch (error) {
     console.error("Error processing payment:", error);
     return NextResponse.json(
@@ -106,51 +111,12 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const profesorName = searchParams.get("profesor_name");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const from = searchParams.get("from") || undefined;
     const to = searchParams.get("to") || undefined;
+    const professorIdParam = searchParams.get("professor_id") || undefined;
 
-    if (profesorName) {
-      // Buscar el profile del profesor por nombre (búsqueda parcial, insensible a mayúsculas)
-      const { data: profiles, error: profileError } = await supabaseClient
-        .from("UserProfile")
-        .select("id")
-        .ilike("name", `%${profesorName}%`)
-        .eq("role", 1) // 1 = org:profesor
-        .limit(1);
-      if (profileError) {
-        return NextResponse.json({ result: false, message: "Error buscando el profesor", error: profileError.message }, { status: 500 });
-      }
-      if (!profiles || profiles.length === 0) {
-        return NextResponse.json({ result: false, message: "No se encontró profesor con ese nombre" }, { status: 404 });
-      }
-      const profileId = profiles[0].id;
-      // Buscar pagos donde payment_details.metadata.profesor_id == profileId
-      const fromIndex = (page - 1) * limit;
-      const toIndex = fromIndex + limit - 1;
-      const { data: payments, error: paymentsError, count } = await supabaseClient
-        .from("Payments")
-        .select("*", { count: "exact" })
-        .filter("payment_details->metadata->>profesor_id", "eq", String(profileId))
-        .order("id", { ascending: false })
-        .range(fromIndex, toIndex);
-      if (paymentsError) {
-        return NextResponse.json({ result: false, message: "Error buscando pagos", error: paymentsError.message }, { status: 500 });
-      }
-      return NextResponse.json({
-        data: payments || [],
-        meta: {
-          total: count || 0,
-          page,
-          limit,
-          totalPages: Math.ceil((count || 0) / limit),
-        },
-      }, { status: 200 });
-    }
-
-    // Si no viene profesor_name, sigue el flujo original (por usuario autenticado)
     const user = await currentUser();
     if (!user) {
       return NextResponse.json(
@@ -158,31 +124,78 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+    const userRole = user?.unsafeMetadata?.formRole ?? null;
 
-    const profile = await getProfileByUserId(user.id);
-    if (!profile) {
-      return NextResponse.json(
-        { result: false, message: "Profile not found" },
-        { status: 404 }
-      );
+    switch (userRole) {
+      case PROFILE_ROLE_STRING.ADMIN:
+        let payments;
+        if (professorIdParam) {
+          const id = parseInt(professorIdParam);
+          payments = await getPaymentByProfessorId(id, page, limit, from, to);
+          if (!payments || payments.data.length === 0) {
+            return NextResponse.json(
+              { result: false, message: "No payments found for this professor" },
+              { status: 404 }
+            );
+          }
+
+        } else {
+          payments = await getPayments(page, limit, from, to);
+          if (!payments || payments.data.length === 0) {
+            return NextResponse.json(
+              { result: false, message: "No payments found" },
+              { status: 404 }
+            );
+          }
+        }
+        return NextResponse.json(
+          {
+            data: payments.data,
+            meta: payments.meta,
+          },
+          { status: 200 }
+        );
+      case PROFILE_ROLE_STRING.PROFESOR:
+        const profile = await getProfileByUserId(user.id);
+        if (!profile) {
+          return NextResponse.json(
+            { result: false, message: "Profile not found" },
+            { status: 404 }
+          );
+        }
+
+        const result = await getPaymentByProfessorId(
+          profile.id,
+          page,
+          limit,
+          from,
+          to
+        );
+
+        if (!result || result.data.length === 0) {
+          return NextResponse.json(
+            { result: false, message: "No payments found for this professor" },
+            { status: 404 }
+          );
+        }
+
+        return NextResponse.json(
+          {
+            data: result.data,
+            meta: result.meta,
+          },
+          { status: 200 }
+        );
+      default:
+        return NextResponse.json(
+          {
+            result: false,
+            message:
+              "Access denied. Only professors or admins can access this endpoint.",
+          },
+          { status: 403 }
+        );
     }
-
-    const result = await getPaymentByProfessorId(profile.id, page, limit, from, to);
-
-    if (!result || result.data.length === 0) {
-      return NextResponse.json(
-        { result: false, message: "No payments found for this professor" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        data: result.data,
-        meta: result.meta,
-      },
-      { status: 200 }
-    );
   } catch (error) {
     console.error("Error fetching payments:", error);
     return NextResponse.json(
@@ -190,4 +203,5 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
