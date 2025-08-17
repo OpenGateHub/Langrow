@@ -62,7 +62,7 @@ export const useAdminPayments = () => {
             if (options?.to) params.append('to', options.to);
             if (options?.profesor_name) params.append('profesor_name', options.profesor_name);
 
-            const response = await fetch(`/api/admin/payments?${params.toString()}`, {
+            const response = await fetch(`/api/payments?${params.toString()}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
