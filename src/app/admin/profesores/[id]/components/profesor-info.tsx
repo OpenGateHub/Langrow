@@ -17,17 +17,17 @@ export const ProfesorInfo = (props:ProfesorProfile) => {
                                     className="w-16 h-16 text-gray-300"
                                     fill="none"
                                     stroke="currentColor"
-                                    stroke-width="1.5"
+                                    strokeWidth="1.5"
                                     viewBox="0 0 24 24"
                                 >
                                     <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
                                         d="M15.75 7.5a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
                                     />
                                     <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
                                         d="M4.5 19.5a7.5 7.5 0 1115 0v.75A2.25 2.25 0 0117.25 22.5h-10.5A2.25 2.25 0 014.5 20.25V19.5z"
                                     />
                                 </svg>
@@ -60,17 +60,17 @@ export const ProfesorInfo = (props:ProfesorProfile) => {
                                 className="w-4 h-4 mr-1 text-gray-400"
                                 fill="none"
                                 stroke="currentColor"
-                                stroke-width="2"
+                                strokeWidth="2"
                                 viewBox="0 0 24 24"
                             >
                                 <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
                                     d="M16 12a4 4 0 01-8 0V8a4 4 0 018 0v4z"
                                 />
                                 <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
                                     d="M12 16v2m0 0h-2m2 0h2"
                                 />
                             </svg>

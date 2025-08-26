@@ -301,6 +301,8 @@ export type Database = {
           preference_id: string | null
           status: string | null
           updated_at: string | null
+          is_paid: boolean | null
+          paid_at: string | null
         }
         Insert: {
           created_at?: string
@@ -322,7 +324,9 @@ export type Database = {
           payment_type?: string | null
           preference_id?: string | null
           status?: string | null
-          updated_at?: string | null
+          updated_at?: string | null,
+          is_paid?: boolean | null
+          paid_at?: string | null
         }
         Relationships: []
       }

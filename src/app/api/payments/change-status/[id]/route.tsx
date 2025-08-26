@@ -15,20 +15,20 @@ export async function POST(
             return NextResponse.json({ result: false, message: "payment id es requerido" }, { status: 400 });
         }
         const body = await req.json();
-        const { status } = body;
-        if (!status) {
-            return NextResponse.json({ result: false, message: "status es requerido en el body" }, { status: 400 });
+        const { is_paid } = body;
+        if (typeof is_paid === 'undefined') {
+            return NextResponse.json({ result: false, message: "is_paid es requerido en el body" }, { status: 400 });
         }
         const { data, error } = await supabaseClient
             .from(SUPABASE_TABLES.PAYMENTS)
             .update({
-                status,
+                is_paid: is_paid,
+                paid_at: is_paid ? new Date().toISOString() : null
             })
             .eq("payment_id", paymentId)
             .select();
 
         if (error) {
-            console.log("Error al actualizar el status del pago:", error);
             return NextResponse.json({ result: false, message: "No se pudo actualizar el status del pago" }, { status: 500 });
         }
         return NextResponse.json({ result: true, data }, { status: 200 });

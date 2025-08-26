@@ -48,7 +48,7 @@ export const ProfesorDetailPage = () => {
             {isLoading && <p>Cargando...</p>}
             { profesor &&    <>
                 <ProfesorInfo {...profesor} />
-                <PaymentsSection/>
+                <PaymentsSection profesorId={profesor.id.toString()}/>
             </>}
         </div>
     );
