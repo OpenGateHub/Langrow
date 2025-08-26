@@ -60,7 +60,7 @@ export const PaymentsSection = ({ profesorId }: { profesorId: string }) => {
         }).then((res) => {
             console.log(res);
             getPayments();
-            toast.success(`Pago marcado como ${isPaid ? 'pagado' : 'pendiente de pago'}`);
+            toast.success(`Pago marcado como ${isPaid ? 'pagado' : 'por pagar'}`);
         }).finally(() => {
             setIsLoadingUpdate(false);
         })
@@ -86,7 +86,41 @@ export const PaymentsSection = ({ profesorId }: { profesorId: string }) => {
     }, [profesorId]);
 
     if (isLoading) {
-        return <div>Cargando...</div>;
+        return (
+            <div className="w-full max-w-6xl mx-auto">
+                <header className="mb-8 text-center">
+                    <div className="h-8 w-1/3 mx-auto bg-gray-200 rounded animate-pulse mb-2"></div>
+                    <div className="h-4 w-1/2 mx-auto bg-gray-200 rounded animate-pulse"></div>
+                </header>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <section className="lg:col-span-2">
+                        <div className="bg-white rounded-2xl shadow p-8">
+                            <div className="h-6 w-1/4 bg-gray-200 rounded animate-pulse mb-6"></div>
+                            <ul className="space-y-4">
+                                {Array.from({ length: 4 }).map((_, idx) => (
+                                    <li key={idx} className="flex items-center justify-between bg-gray-50 rounded-xl px-6 py-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-full bg-gray-200 animate-pulse" />
+                                            <div>
+                                                <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
+                                                <div className="h-3 w-24 bg-gray-200 rounded animate-pulse mb-1"></div>
+                                                <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <div className="h-4 w-16 bg-gray-200 rounded animate-pulse mb-2"></div>
+                                            <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
+                                            <div className="h-6 w-24 bg-gray-200 rounded animate-pulse mt-2"></div>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </section>
+                    <div className="bg-white rounded-2xl shadow p-8 h-80 animate-pulse" />
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -125,7 +159,7 @@ export const PaymentsSection = ({ profesorId }: { profesorId: string }) => {
                                 Pagos
                             </h2>
                             <ul className="space-y-4">
-                                {payments.map((item) => (
+                                {payments?.map((item) => (
                                     <Fragment key={item.id}>
                                         <li className="flex items-center justify-between bg-gray-50 rounded-xl px-6 py-4">
                                             <div className="flex items-center gap-4">
@@ -214,7 +248,7 @@ export const PaymentsSection = ({ profesorId }: { profesorId: string }) => {
                             </ul>
                         </div>
                     </section>
-                    <BankInfo />
+                    <BankInfo profesorId={profesorId} />
                 </div>
             </main>
         </>

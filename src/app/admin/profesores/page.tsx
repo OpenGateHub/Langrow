@@ -82,20 +82,35 @@ export default function PagosAdminPage() {
                     </tr>
                 </thead>
                 <tbody>
-                    <div>{isLoading ? <div>Cargando...</div> : null}</div>
-                    {profesors?.data?.map((profesor) => (
-                        <tr key={profesor.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 overflow-hidden text-ellipsi">{profesor.name}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 overflow-hidden text-ellipsi">{profesor.location}</td>
-                            <td className="px-6 py-4 flex justify-center whitespace-nowrap text-sm text-gray-800 overflow-hidden text-ellipsi">
-                                <Link href={`/admin/profesores/${profesor.userId}`}>
-                                    <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-                                        Ver más
-                                    </button>
-                                </Link>
-                            </td>
-                        </tr>
-                    ))}
+                    {isLoading ? (
+                        Array.from({ length: 6 }).map((_, idx) => (
+                            <tr key={idx}>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                                </td>
+                                <td className="px-6 py-4 flex justify-center whitespace-nowrap">
+                                    <div className="h-8 w-20 bg-gray-200 rounded animate-pulse"></div>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        profesors?.data?.map((profesor) => (
+                            <tr key={profesor.id}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 overflow-hidden text-ellipsi">{profesor.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 overflow-hidden text-ellipsi">{profesor.location}</td>
+                                <td className="px-6 py-4 flex justify-center whitespace-nowrap text-sm text-gray-800 overflow-hidden text-ellipsi">
+                                    <Link href={`/admin/profesores/${profesor.userId}`}>
+                                        <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                                            Ver más
+                                        </button>
+                                    </Link>
+                                </td>
+                            </tr>
+                        ))
+                    )}
                 </tbody>
             </table>
         </div>

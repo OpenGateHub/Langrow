@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const profileId = params.id;
+    const profileId = (await params).id;
     if (!profileId) {
       return NextResponse.json({ result: false, message: "profileId es requerido" }, { status: 400 });
     }
