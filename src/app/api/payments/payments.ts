@@ -36,7 +36,7 @@ export const updatePaymentStatus = async (
 ) => {
   try {
     // Construir el payload de actualización
-    const updateData: Record<string, any> = { status };
+    const updateData: Record<string, any> = { status};
 
     if (details !== undefined && details !== null) {
       updateData.payment_details = details;
@@ -86,7 +86,6 @@ export const getPaymentByProfessorId = async (
       .select(
         `
           id,
-          number,
           created_at,
           payment_id,
           external_ref,
@@ -98,13 +97,21 @@ export const getPaymentByProfessorId = async (
           paid_at,
           receipt,
           receipt_name,
-          payee
+          payee,
+          description:payment_details->description,
+          currency: payment_details->currency_id,
+          date_approved: payment_details->date_approved,
+          net_amount: payment_details->transaction_details->net_received_amount,
+          gross_amount: payment_details->transaction_details->installment_amount
         `,
         { count: "exact" }
       )
       .eq("receipt", professorId)
       .order("id", { ascending: false })
       .range(fromIndex, toIndex);
+
+
+    console.log(query)
 
     if (from) {
       query = query.gte("created_at", from);
@@ -121,6 +128,7 @@ export const getPaymentByProfessorId = async (
       return null;
     }
 
+    console.log(data)
     return {
       data: data || [],
       meta: {
@@ -151,7 +159,6 @@ export const getPayments = async (
       .select(
         `
           id,
-          number,
           created_at,
           payment_id,
           external_ref,

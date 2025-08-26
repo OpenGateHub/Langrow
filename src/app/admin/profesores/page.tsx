@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function PagosAdminPage() {
@@ -9,6 +10,7 @@ export default function PagosAdminPage() {
             id: number;
             name: string;
             location: string;
+            userId: string
         }[];
     }>({
         count: 0,
@@ -16,7 +18,7 @@ export default function PagosAdminPage() {
     });
     const [filter, setFilter] = useState("");
 
-    const getProfile = () => {
+    const getProfiles = () => {
         setIsLoading(true);
         fetch(`/api/profile?filter=${filter}`)
             .then((response) => response.json())
@@ -34,14 +36,16 @@ export default function PagosAdminPage() {
 
     const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        getProfile();
+        getProfiles();
     };
     useEffect(() => {
-        getProfile();
+        getProfiles();
     }, []);
 
     return (
-        <div className="bg-white min-h-screen max-w-7xl mx-auto p-8 mt-8">
+        <div className="min-h-screen bg-gray-100 p-8">
+            
+        <div className="bg-white min-h-screen max-w-7xl mx-auto p-8 mt-8 ">
             <form
                 className="flex flex-col sm:flex-row items-center justify-between mb-4"
                 onSubmit={handleSearch}
@@ -72,21 +76,44 @@ export default function PagosAdminPage() {
                             Location
                         </th>
                           <th
-                            className="cursor-pointer px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Acciones
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <div>{isLoading ? <div>Cargando...</div> : null}</div>
-                    {profesors?.data?.map((profesor) => (
-                        <tr key={profesor.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 max-w-[150px] overflow-hidden text-ellipsi">{profesor.name}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 max-w-[150px] overflow-hidden text-ellipsi">{profesor.location}</td>
-                        </tr>
-                    ))}
+                    {isLoading ? (
+                        Array.from({ length: 6 }).map((_, idx) => (
+                            <tr key={idx}>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                                </td>
+                                <td className="px-6 py-4 flex justify-center whitespace-nowrap">
+                                    <div className="h-8 w-20 bg-gray-200 rounded animate-pulse"></div>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        profesors?.data?.map((profesor) => (
+                            <tr key={profesor.id}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 overflow-hidden text-ellipsi">{profesor.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 overflow-hidden text-ellipsi">{profesor.location}</td>
+                                <td className="px-6 py-4 flex justify-center whitespace-nowrap text-sm text-gray-800 overflow-hidden text-ellipsi">
+                                    <Link href={`/admin/profesores/${profesor.userId}`}>
+                                        <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                                            Ver más
+                                        </button>
+                                    </Link>
+                                </td>
+                            </tr>
+                        ))
+                    )}
                 </tbody>
             </table>
+        </div>
         </div>
     );
 }
